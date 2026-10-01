@@ -13,3 +13,7 @@ export * from './SimInput';
 export * from './Simulation';
 export * from './entities/Burger';
 export * from './entities/Ingredient';
+export * from './entities/createEnemy';
+export * from './entities/Enemy';
+export * from './entities/EnemyBrain';
+export * from './entities/pepper';

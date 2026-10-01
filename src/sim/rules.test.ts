@@ -17,6 +17,7 @@ import {
   RESPAWN_TICKS,
   STUN_TICKS,
   TICK_MS,
+  TICK_SECONDS,
   TICKS_PER_SECOND
 } from './rules';
 
@@ -48,5 +49,11 @@ describe('rules', () => {
     expect(FALL_STAGGER_TICKS).toBe(7);
     expect(DECISION_MIN_TICKS).toBe(30);
     expect(DECISION_MAX_TICKS).toBe(66);
+  });
+
+  it('advances less per tick than the alignment window, so ladders cannot be skipped', () => {
+    expect(CLIMB_SPEED * TICK_SECONDS).toBeLessThan(2 * ARRIVAL_THRESHOLD);
+    expect(ENEMY_SPEED * TICK_SECONDS).toBeLessThan(2 * ARRIVAL_THRESHOLD);
+    expect(CHEF_SPEED * TICK_SECONDS).toBeLessThan(2 * ARRIVAL_THRESHOLD);
   });
 });
