@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/xantar.jpg" alt="Xantar: a chef carrying a burger and chased by angry fried eggs and hot dogs" />
+</p>
+
 <h1 align="center">Xantar</h1>
 
 <p align="center"><em>An own take on the classic arcade BurgerTime (Data East, 1982)</em></p>
