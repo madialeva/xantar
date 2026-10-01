@@ -4,8 +4,8 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Phaser-4-8A2BE2" alt="Phaser 4" />
-  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite" />
   <img src="https://img.shields.io/badge/Electron-44-47848F?logo=electron&logoColor=white" alt="Electron" />
   <a href="LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License" /></a>
   <img src="https://img.shields.io/badge/platforms-Browser%20%2F%20Desktop-blue" alt="Browser and desktop" />
@@ -21,28 +21,31 @@ It is written in **TypeScript** with the **Phaser** engine and bundled with
 **Vite**. The same code runs in the browser and ships as a desktop application
 through **Electron** (like VS Code or Discord).
 
-> **Note:** this repository currently holds an initial **proof of concept
-> (POC)**. Its purpose was to explore and validate the game's core mechanics
-> (moving over ingredients, chain falls, enemies and pepper); it is not the
-> final version. The final game will be developed on top of this POC.
+Xantar is under active development towards **version 1.0.0**. In-game texts are
+currently in Spanish; English and Spanish will be selectable (see the roadmap).
 
 ---
 
-## Status
+## Roadmap
 
-| Status | Feature                                                |
-| :----: | ------------------------------------------------------ |
-|   ✅   | Title screen ("CLICK TO PLAY")                         |
-|   ✅   | Chef controllable across platforms and ladders         |
-|   ✅   | Ingredients that fall in chains and stack on the plate |
-|   ✅   | Three chasing enemies (hot dog, pickle, egg)           |
-|   ✅   | Pepper to stun enemies                                 |
-|   ✅   | Scoring, lives and levels                              |
-|   ✅   | Desktop application (Electron)                         |
-|   ⬜   | Bonus food (ice cream, coffee, fries)                  |
-|   ⬜   | Music and sound effects in-game                        |
-|   ⬜   | Touch controls for mobile                              |
-|   ⬜   | Public web deployment                                  |
+Work is tracked as GitHub issues. The table shows what is already built and what
+comes next.
+
+| Status | Feature                                                                                                   | Target | Issue |
+| :----: | --------------------------------------------------------------------------------------------------------- | :----: | :---: |
+|   ✅   | Playable game: chef, ladders, chain-falling ingredients, three chasing enemies, pepper, scoring and lives |   —    |   —   |
+|   ✅   | Title screen and desktop application (Electron)                                                           |   —    |   —   |
+|   ✅   | Deterministic simulation core at a fixed 60 Hz step, independent of the renderer and the frame rate       |   —    |  #2   |
+|   ✅   | Levels described as data, validated on load, and automated tests of the game rules                        |   —    |  #2   |
+|   ⬜   | Level model: tile pieces, ingredient segments, navigation graph and validator; turn around mid-ladder     | v1.0.0 |  #3   |
+|   ⬜   | Enemies riding ingredients (an extra level per rider)                                                     | v1.0.0 |  #9   |
+|   ⬜   | Modern vector visuals: SVG art, themes and side panels                                                    | v1.0.0 |  #4   |
+|   ⬜   | Game state machine, pause, high score, Spanish and English                                                | v1.0.0 |  #5   |
+|   ⬜   | Gamepad and touch controls, music and sound effects, CI and a hardened desktop app                        | v1.0.0 |  #6   |
+|   ⬜   | Replay recording and debug tooling                                                                        | v1.0.0 |  #8   |
+|   ⬜   | In-game level editor with JSON import/export                                                              | later  |  #7   |
+|   ⬜   | Bonus food (ice cream, coffee, fries)                                                                     | later  |   —   |
+|   ⬜   | Public web deployment                                                                                     | later  |   —   |
 
 ---
 
@@ -83,7 +86,8 @@ You can also play with the `W`, `A`, `S`, `D` keys.
 - If they touch you, you **lose a life**.
 - You can **crush them** by dropping an ingredient on top of them. They respawn
   after a few seconds.
-- Crushing enemies in a row increases the scoring multiplier.
+- Crushing enemies in a row increases the scoring multiplier, which resets when
+  you lose a life.
 
 ### Pepper
 
@@ -104,7 +108,9 @@ You can also play with the `W`, `A`, `S`, `D` keys.
 
 - You have **3 lives**.
 - Every touch from a non-stunned enemy costs a life.
-- Complete all four burgers to advance to the next level (difficulty increases).
+- Complete all four burgers to advance to the next level: the board is rebuilt
+  and your score, lives and pepper carry over (every level uses the same layout
+  for now).
 - When you lose every life, **GAME OVER** appears; press `Enter` to restart.
 
 ---
@@ -151,6 +157,8 @@ built; publishing for several platforms requires building on each of them.
 | **TypeScript**       | Game language (strict typing)         |
 | **Phaser 4**         | Game engine (scenes, objects, tweens) |
 | **Vite**             | Dev server and web bundling           |
+| **Vitest**           | Unit tests of the game rules          |
+| **Oxlint**           | Linting with type-aware rules         |
 | **Electron**         | Desktop application wrapper           |
 | **electron-builder** | Installer generation                  |
 

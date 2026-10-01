@@ -33,7 +33,7 @@ Xantar es un único proyecto que produce **dos artefactos** a partir del mismo c
 
 El código del juego no cambia entre ambos destinos; solo cambia el envoltorio. La lógica de escritorio vive exclusivamente en la carpeta `electron/`.
 
-Estado actual del juego: una POC de una sola pantalla inspirada en **BurgerTime** (1982). `TapScene` es la pantalla de título ("CLICK PARA JUGAR") y `GameScene` contiene el juego completo: chef, ingredientes que caen al recorrerlos, enemigos, pimienta, puntuación y vidas.
+Estado actual del juego: un juego de una sola pantalla con un nivel clásico, inspirado en **BurgerTime** (1982). `TapScene` es la pantalla de título ("CLICK PARA JUGAR") y `GameScene` es la vista del juego: ejecuta el núcleo de simulación (`src/sim/`: chef, ingredientes que caen al recorrerlos, enemigos, pimienta, puntuación y vidas) y lo dibuja. La hoja de ruta está en el README y en las issues de GitHub.
 
 ---
 
@@ -305,7 +305,7 @@ En el juego se puede consultar con `(window as any).xantar?.isDesktop`. En el fu
 
 **Compilación**: `scripts/build-electron.mjs` usa esbuild para convertir `electron/*.ts` a CommonJS en `dist-electron/` y genera un `dist-electron/package.json` con `{"type":"commonjs"}`. Esto es necesario porque el `package.json` raíz es ESM (`"type": "module"`) y Electron carga `main.js` como CommonJS.
 
-### 8.5 El juego actual (POC tipo BurgerTime)
+### 8.5 El juego actual (tipo BurgerTime)
 
 **Arquitectura: núcleo y vista.** Las reglas viven en `src/sim/`, que es TypeScript puro y no depende de Phaser, del DOM ni de Node (Oxlint lo impide en `.oxlintrc.json`). La capa de Phaser (`src/scenes`, `src/objects`) solo presenta: lee el estado de la simulación, recoge la entrada y reacciona a sus eventos. Las dependencias van siempre de la vista al núcleo.
 
@@ -614,10 +614,8 @@ Notas:
 
 ## 15. Próximos pasos
 
-Ideas para continuar el desarrollo (a decidir):
+La hoja de ruta vigente está en el README (tabla *Roadmap*) y se gestiona con issues de GitHub y milestones por versión. Ideas pendientes sin issue propia:
 
-- Pulir la POC de BurgerTime y decidir las siguientes mecánicas (bonus, más enemigos, sonido).
-- Añadir sprites y un atlas de animaciones (y valorar entonces el protocolo local para Electron si se usan atlas JSON).
-- Estructurar el estado del juego y la puntuación.
-- Añadir menús (pausa, game over) y persistencia de récords (localStorage en web, IPC en escritorio).
-- Preparar CI para publicar la web en GitHub Pages y generar instaladores de las tres plataformas.
+- Alimentos de bonus (helado, café, patatas) y más tipos de enemigos.
+- Publicar la web (por ejemplo en GitHub Pages) cuando exista el CI.
+- Valorar el protocolo local para Electron si se usan atlas JSON de sprites.
