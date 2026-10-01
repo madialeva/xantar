@@ -41,23 +41,26 @@ Estado actual del juego: una POC de una sola pantalla inspirada en **BurgerTime*
 
 | Tecnología | Versión | Función |
 |-----------|---------|---------|
-| **Node.js** | 20.19+ / 22.12+ (probado con 24.x) | Entorno de desarrollo y build |
-| **TypeScript** | ^5.9.3 | Lenguaje tipado (se compila a JS) |
+| **Node.js** | >=22.12 (desarrollo con 24 LTS, ver `.nvmrc`) | Entorno de desarrollo y build |
+| **TypeScript** | ^7.0.2 | Lenguaje tipado; compilador nativo (`tsc`) para comprobar tipos |
 | **Phaser** | ^4.2.1 | Motor de juego |
-| **Vite** | ^7.3.6 | Servidor de desarrollo, bundler y build web |
-| **Electron** | ^44.3.0 | Contenedor de escritorio (Chromium + Node) |
+| **Vite** | ^8.3 | Servidor de desarrollo, bundler y build web |
+| **Vitest** | ^5.0 | Pruebas unitarias del núcleo de simulación |
+| **Oxlint** + **oxlint-tsgolint** | ^1.86 / ^7.0 | Linter con reglas con información de tipos (sobre el compilador de TS 7) |
+| **Prettier** | ^3.9 | Formato del código |
+| **Electron** | ^44.5 | Contenedor de escritorio (Chromium + Node) |
 | **electron-builder** | ^26.15.3 | Generación de instaladores |
 | **esbuild** | ^0.28.2 | Compila el proceso principal de Electron |
 | **concurrently** | ^10.0.5 | Lanza Vite + Electron a la vez en desarrollo |
-| **wait-on** | ^9.1.0 | Espera a que el servidor de Vite esté listo antes de abrir Electron |
+| **wait-on** | ^9.5 | Espera a que el servidor de Vite esté listo antes de abrir Electron |
 | **cross-env** | ^10.1.0 | Variables de entorno multiplataforma |
-| **@types/node** | ^26.5.1 | Tipos de Node para el proceso Electron |
+| **@types/node** | ^26.6 | Tipos de Node para el proceso Electron |
 
 ---
 
 ## 3. Requisitos previos
 
-- **Node.js** (incluye `npm`). Recomendado Node 22 LTS o superior.
+- **Node.js** 22.12 o superior (incluye `npm`). Se desarrolla con Node 24 LTS: el fichero `.nvmrc` lo fija para `nvm use`.
 - Un **navegador moderno** (Chrome, Firefox, Edge o Safari recientes).
 - Opcional: en Linux, `xvfb` si vas a ejecutar Electron en un entorno sin pantalla (por ejemplo CI).
 
@@ -124,7 +127,8 @@ xantar/
 ├── tsconfig.json                # Config TS del renderer (DOM)
 ├── tsconfig.electron.json       # Config TS del proceso Electron (Node)
 ├── vite.config.ts               # Config de Vite (base relativa, puerto, etc.)
-├── eslint.config.js             # Configuración de ESLint (flat config)
+├── .oxlintrc.json               # Configuración de Oxlint (reglas y fronteras de src/sim)
+├── .nvmrc                       # Versión de Node de desarrollo
 ├── .prettierrc.json             # Reglas de estilo de Prettier
 ├── .prettierignore              # Exclusiones de Prettier
 ├── .editorconfig                # Convenciones básicas de editor
@@ -154,8 +158,10 @@ xantar/
 | `npm run build:desktop` | Typecheck + build web + Electron + instaladores en `release/` |
 | `npm run build:desktop:dir` | Igual, pero sin instalador (app desempaquetada, más rápido) |
 | `npm run typecheck` | Comprueba tipos del renderer **y** del proceso Electron |
-| `npm run lint` | Analiza el código con ESLint |
-| `npm run lint:fix` | ESLint corrigiendo lo que pueda automáticamente |
+| `npm run lint` | Analiza el código con Oxlint (reglas con tipos) |
+| `npm run lint:fix` | Oxlint corrigiendo lo que pueda automáticamente |
+| `npm run test` | Ejecuta las pruebas unitarias (Vitest) |
+| `npm run test:watch` | Vitest en modo observador |
 | `npm run format` | Formatea todo el código con Prettier |
 | `npm run format:check` | Comprueba el formato sin modificar ficheros (ideal para CI) |
 
@@ -461,11 +467,13 @@ Phaser va dentro del bundle de Vite, por lo que **no** se incluye `node_modules/
 ## 11. Convenciones de TypeScript
 
 - **Tipado estricto** activado (`strict`, `noUnusedLocals`, `noUnusedParameters`, `noImplicitOverride`) tanto en `tsconfig.json` como en `tsconfig.electron.json`.
-- **Campos privados** con `#` (estándar ES2022), como ya se hace en las escenas.
+- **Campos privados** con `#` (estándar ES2022) para el interior de las clases; `protected` solo en puntos de extensión deliberados y `readonly` para lo que no cambia tras construirse.
+- **TypeScript 7** (compilador nativo): `npm run typecheck` usa su `tsc`. El editor puede usar otra versión de TypeScript para el servidor de lenguaje; no afecta a la comprobación de tipos del proyecto.
+- **Diseño**: orientado a objetos por defecto (objetos con estado y comportamiento, inyección de dependencias por constructor, composición sobre herencia), con estilo funcional para cálculo sin estado, eventos y datos inmutables. La lógica de dominio vive en `src/sim/` sin depender de Phaser; el detalle está en `AGENTS.md`.
 - **Sin comentarios** en el código salvo que aporten algo que el código no exprese.
 - El renderer (`tsconfig.json`) solo incluye librerías de navegador (`DOM`); **no** tiene acceso a APIs de Node (`types: []`). Esto evita usar por error `fs`, `path`, etc. en el juego.
 - El proceso Electron (`tsconfig.electron.json`) es lo contrario: solo Node, sin DOM.
-- El idioma de documentación y comentarios es **español**; los identificadores pueden ser español o inglés.
+- Código, identificadores y comentarios van en **inglés**; este manual es la única documentación en español.
 
 ---
 
@@ -485,6 +493,10 @@ Son avisos de aceleración de vídeo por hardware; no impiden jugar. Ignóralos 
 
 ### Aviso de npm: `packages have install scripts not yet covered by allowScripts`
 Es una función de seguridad de npm 11. Electron descarga su binario en el `postinstall`; si no se ejecuta, la primera vez que lances `electron` lo descargará igualmente. Si un `npm install` limpio no deja Electron operativo, ejecuta `npm approve-scripts electron` o `npm rebuild electron`.
+
+### Electron se cierra al instante o responde `bad option`
+
+Comprueba `echo $ELECTRON_RUN_AS_NODE`. Algunas terminales de editor lo definen y hacen que Electron se comporte como Node. Ejecuta con `env -u ELECTRON_RUN_AS_NODE ./release/linux-unpacked/xantar` o desactívalo en esa terminal.
 
 ### El puerto 5173 está ocupado
 Vite está configurado con `strictPort: true`, así que fallará en vez de cambiar de puerto. Libera el puerto o cámbialo en `vite.config.ts` (y también en el script `dev:desktop`, que usa `wait-on tcp:127.0.0.1:5173`).
@@ -512,7 +524,7 @@ El soporte de **TypeScript** y el **depurador de JS/TS** (`js-debug`) vienen int
 
 | Extensión | ID | Para qué |
 |-----------|----|----------|
-| ESLint | `dbaeumer.vscode-eslint` | Detección de errores y malas prácticas |
+| Oxc | `oxc.oxc-vscode` | Diagnósticos de Oxlint en el editor |
 | Prettier | `esbenp.prettier-vscode` | Formato consistente al guardar |
 | EditorConfig | `EditorConfig.EditorConfig` | Respetar indentación y finales de línea entre editores |
 | Error Lens | `usernamehw.errorlens` | Muestra los errores TS en la misma línea, sin abrir la pestaña de problemas |
@@ -544,24 +556,28 @@ La lista está guardada en `.vscode/extensions.json`, de modo que al abrir el pr
 
 ### 14.3 Lint y formato
 
-El proyecto incluye **ESLint 10** (flat config) + **typescript-eslint** + **Prettier**, integrados con VS Code a través de `.vscode/settings.json`: al guardar, Prettier formatea y ESLint corrige lo que puede.
+El proyecto usa **Oxlint** (con **oxlint-tsgolint** para las reglas con información de tipos) para el análisis y **Prettier** para el formato. En el editor, Prettier formatea al guardar y la extensión de Oxc muestra los diagnósticos.
 
 Ficheros de configuración:
 
 | Fichero | Función |
 |---------|---------|
-| `eslint.config.js` | Configuración de ESLint (flat config) |
+| `.oxlintrc.json` | Configuración de Oxlint: reglas, entornos por carpeta y fronteras de `src/sim/` |
 | `.prettierrc.json` | Reglas de estilo de Prettier |
 | `.prettierignore` | Rutas que Prettier no debe tocar (builds, docs, tooling) |
 | `.editorconfig` | Convenciones básicas de editor (2 espacios, LF, UTF-8) |
-| `.vscode/settings.json` | Formato al guardar, fix de ESLint al guardar y versión TS del workspace |
-| `.vscode/extensions.json` | Extensiones recomendadas del workspace |
+| `.vscode/settings.json` | Configuración local del editor (no se publica) |
+| `.vscode/extensions.json` | Extensiones recomendadas del workspace (no se publica) |
 
-Reglas destacadas de `eslint.config.js`:
+Reglas destacadas de `.oxlintrc.json`:
 
+- Categoría `correctness` en error, más reglas con tipos: `no-floating-promises`, `no-misused-promises`, `await-thenable`, `unbound-method` y `switch-exhaustiveness-check`.
 - `no-empty` con `allowEmptyCatch: true`: permite `catch {}` vacíos (se usan en `TapScene` para que un fallo de audio no rompa la escena).
-- `no-unused-vars` se desactiva en TypeScript y lo sustituye `@typescript-eslint/no-unused-vars` (aviso, ignorando parámetros con prefijo `_`).
-- `eslint-config-prettier` se aplica al final para desactivar las reglas de estilo que chocarían con Prettier.
+- `no-unused-vars` (aviso) ignora parámetros y capturas con prefijo `_`.
+- Entorno de navegador por defecto y Node solo en `electron/` y `scripts/`.
+- **Fronteras de `src/sim/`**: no puede importar Phaser, Node, `scenes/`, `objects/` ni `config`, ni usar globales de navegador, `Date` o `Math.random` (se inyecta un `Rng`). Garantiza que el núcleo sea puro y determinista.
+
+El análisis con tipos usa un `tsconfig` por ejecución, por eso `npm run lint` lanza dos: una para el renderer (`tsconfig.json`) y otra para `electron/` y `scripts/` (`tsconfig.electron.json`).
 
 Comandos:
 
@@ -575,7 +591,7 @@ npm run format:check  # solo comprobar (útil en CI)
 Notas:
 
 - `.prettierignore` excluye `docs/`, `.opencode/` y `openspec/` para no reformatear la documentación ni ficheros de herramientas.
-- En CI, encadena `npm run lint && npm run format:check && npm run typecheck`.
+- En CI, encadena `npm run lint && npm run format:check && npm run typecheck && npm run test`.
 
 ---
 

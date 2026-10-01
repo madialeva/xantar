@@ -455,7 +455,7 @@ export default class GameScene extends Phaser.Scene {
       : doc.webkitExitFullscreen
         ? Promise.resolve(doc.webkitExitFullscreen())
         : Promise.resolve();
-    exit.finally(() => {
+    void exit.finally(() => {
       window.location.href = 'index.html';
     });
   }

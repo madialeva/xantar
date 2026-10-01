@@ -104,14 +104,10 @@ export default class TapScene extends Phaser.Scene {
       webkitRequestFullscreen?: () => Promise<void>;
       mozRequestFullScreen?: () => Promise<void>;
     };
-    const requestFS = (el.requestFullscreen ||
-      el.webkitRequestFullscreen ||
-      el.mozRequestFullScreen) as (() => Promise<void>) | undefined;
-    if (requestFS) {
-      requestFS
-        .call(el)
-        .then(() => afterFullscreen())
-        .catch(() => afterFullscreen());
+    const request =
+      el.requestFullscreen?.() ?? el.webkitRequestFullscreen?.() ?? el.mozRequestFullScreen?.();
+    if (request !== undefined) {
+      request.then(() => afterFullscreen()).catch(() => afterFullscreen());
     } else {
       afterFullscreen();
     }

@@ -158,7 +158,7 @@ built; publishing for several platforms requires building on each of them.
 
 ## Requirements
 
-- **Node.js** 20.19+ or 22.12+ (tested with 24).
+- **Node.js** 22.12+ (tested with 24).
 - A modern browser (Chrome, Firefox, Edge or Safari).
 - For desktop packaging, the tooling that belongs to each operating system.
 
@@ -176,7 +176,8 @@ The project supports web and desktop development from the same code:
 | `npm run build:desktop:dir` | Unpacked desktop app           |
 | `npm run build:desktop`     | Installers into `release/`     |
 | `npm run typecheck`         | Type checking                  |
-| `npm run lint` / `format`   | ESLint and Prettier            |
+| `npm run lint` / `format`   | Oxlint and Prettier            |
+| `npm run test`              | Unit tests (Vitest)            |
 
 The full technical documentation (architecture, internal mechanics and
 workflow) lives in [`docs/MANUAL.md`](docs/MANUAL.md).
