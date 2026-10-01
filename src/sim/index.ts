@@ -11,3 +11,5 @@ export * from './entities/MovingEntity';
 export * from './GameStats';
 export * from './SimInput';
 export * from './Simulation';
+export * from './entities/Burger';
+export * from './entities/Ingredient';
