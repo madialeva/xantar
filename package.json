@@ -6,6 +6,9 @@
   "description": "Juego Phaser en TypeScript con Vite",
   "author": "Xantar",
   "main": "dist-electron/main.js",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "vite",
     "dev:desktop": "npm run build:electron && concurrently -k -s first \"vite\" \"wait-on tcp:127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .\"",
@@ -15,8 +18,10 @@
     "build:desktop:dir": "npm run typecheck && npm run build && npm run build:electron && electron-builder --dir",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.electron.json --noEmit",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "oxlint --type-aware src vite.config.ts && oxlint --type-aware --tsconfig tsconfig.electron.json electron scripts",
+    "lint:fix": "oxlint --type-aware --fix src vite.config.ts && oxlint --type-aware --fix --tsconfig tsconfig.electron.json electron scripts",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
@@ -49,21 +54,19 @@
     }
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@types/node": "^26.5.1",
+    "@types/node": "^26.6.3",
     "concurrently": "^10.0.5",
     "cross-env": "^10.1.0",
-    "electron": "^44.3.0",
+    "electron": "^44.5.1",
     "electron-builder": "^26.15.3",
     "esbuild": "^0.28.2",
-    "eslint": "^10.10.0",
-    "eslint-config-prettier": "^10.1.8",
-    "globals": "^17.12.0",
+    "oxlint": "^1.86.0",
+    "oxlint-tsgolint": "^7.0.2003",
     "phaser": "^4.2.1",
-    "prettier": "^3.9.6",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.70.0",
-    "vite": "^7.3.6",
-    "wait-on": "^9.1.0"
+    "prettier": "^3.9.9",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3",
+    "wait-on": "^9.5.1"
   }
 }

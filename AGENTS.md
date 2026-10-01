@@ -15,8 +15,10 @@ mechanics will be refined and extended over time.
 
 ## Stack and constraints
 
-- Phaser `^4.2.1`, TypeScript `~5.9`, Vite `~7`, Electron `~44`,
-  electron-builder `~26`.
+- Phaser `^4.2.1`, TypeScript `^7` (native compiler), Vite `^8`, Vitest `^5`,
+  Oxlint (+ tsgolint) for linting, Prettier for formatting, Electron `^44`,
+  electron-builder `^26`. Node `>=22.12` (development on Node 24, see
+  `.nvmrc`).
 - Fixed logical resolution **640×480** with `Phaser.Scale.FIT`, built on a
   **32 px grid** (20×15). Keep coordinates tied to `src/config.ts`; do not
   hardcode screen positions.
@@ -40,11 +42,12 @@ mechanics will be refined and extended over time.
 | `npm run build:desktop`           | Type-check + web + Electron + installers in `release/` |
 | `npm run build:desktop:dir`       | Same, unpacked app (fast local test)                   |
 | `npm run typecheck`               | Type-check renderer **and** Electron process           |
-| `npm run lint` / `lint:fix`       | ESLint                                                 |
+| `npm run lint` / `lint:fix`       | Oxlint with type-aware rules                           |
+| `npm run test` / `test:watch`     | Vitest (simulation core and pure logic)                |
 | `npm run format` / `format:check` | Prettier                                               |
 
 Before handing off a change, run `npm run lint && npm run format:check &&
-npm run typecheck && npm run build` and keep a runnable build. Opening
+npm run typecheck && npm run test && npm run build` and keep a runnable build. Opening
 `index.html` directly does **not** work: use the Vite dev server or the built
 `dist/`.
 
@@ -61,11 +64,15 @@ npm run typecheck && npm run build` and keep a runnable build. Opening
   `electron/` and uses `tsconfig.electron.json`.
 - Code, identifiers and comments in English.
 - No comments unless they add information the code cannot express.
-- Formatting/lint are enforced by Prettier and ESLint.
+- Formatting is enforced by Prettier and linting by Oxlint (with type-aware
+  rules). `src/sim/` has extra lint guards: no Phaser, DOM or Node imports, no
+  browser globals, no `Date` and no `Math.random` (inject an `Rng`).
 - Dependencies follow the latest stable versions that are compatible with each
   other; no compatibility paths for old Node versions or browsers. The minimum
   Node version is the one required by the toolchain (currently Vite and
   Vitest).
+- Run Electron from a shell where `ELECTRON_RUN_AS_NODE` is unset (some editor
+  terminals set it, which makes the app behave as plain Node).
 
 ## Design philosophy
 
@@ -126,9 +133,10 @@ tool. This is a deliberate choice of the author: keep it when adding code.
   documented exception to the English rule: architecture, tooling and
   workflows. Keep it in sync with structural changes.
 - This `AGENTS.md` is durable context versioned in the repository, so it
-  survives clones/moves. `openspec/`, `.opencode/`, `.claude/` and `.vscode/`
-  are private working material and are git-ignored: do not reference them from
-  published files such as `README.md`.
+  survives clones/moves. `openspec/` (specs, changes and their archive) is
+  versioned too: it is the project's design record, written in Spanish.
+  `.opencode/`, `.claude/` and `.vscode/` are private working material and are
+  git-ignored: do not reference them from published files such as `README.md`.
 
 ## OpenSpec
 
@@ -157,6 +165,10 @@ English inside the Spanish text.
 - The agent does **not** commit on its own: work stays uncommitted until the
   user validates it, including visual verification. Push only when the user
   asks.
+- Commits, pull request descriptions, issues and comments carry no
+  `Co-Authored-By` trailer, "Generated with ..." line or any other AI
+  attribution: the author is the only author. This overrides the default
+  attribution of the tooling.
 - Leave the working tree in a compiling, runnable state after each change.
 - Prefer small, reviewable increments; the game is a POC that will grow.
 

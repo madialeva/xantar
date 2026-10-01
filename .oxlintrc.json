@@ -1,0 +1,127 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript"],
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "browser": true
+  },
+  "rules": {
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error",
+    "typescript/await-thenable": "error",
+    "typescript/unbound-method": "error",
+    "typescript/switch-exhaustiveness-check": "error",
+    "no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    "no-empty": [
+      "error",
+      {
+        "allowEmptyCatch": true
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["electron/**/*.ts", "scripts/**/*.mjs", "*.config.ts"],
+      "env": {
+        "browser": false,
+        "node": true
+      }
+    },
+    {
+      "files": ["src/sim/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "phaser",
+                "message": "The simulation core must not depend on Phaser."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "phaser/*",
+                  "node:*",
+                  "**/scenes/*",
+                  "**/objects/*",
+                  "**/config",
+                  "**/config.ts"
+                ],
+                "message": "The simulation core must not depend on the view layer or on Node."
+              }
+            ]
+          }
+        ],
+        "no-restricted-globals": [
+          "error",
+          {
+            "name": "window",
+            "message": "The simulation core must not use browser globals."
+          },
+          {
+            "name": "document",
+            "message": "The simulation core must not use browser globals."
+          },
+          {
+            "name": "navigator",
+            "message": "The simulation core must not use browser globals."
+          },
+          {
+            "name": "localStorage",
+            "message": "The simulation core must not use browser globals."
+          },
+          {
+            "name": "sessionStorage",
+            "message": "The simulation core must not use browser globals."
+          },
+          {
+            "name": "setTimeout",
+            "message": "Durations are measured in ticks."
+          },
+          {
+            "name": "setInterval",
+            "message": "Durations are measured in ticks."
+          },
+          {
+            "name": "requestAnimationFrame",
+            "message": "The simulation core must not use browser globals."
+          },
+          {
+            "name": "performance",
+            "message": "The simulation core must not read the wall clock."
+          },
+          {
+            "name": "Date",
+            "message": "The simulation core must not read the wall clock."
+          }
+        ],
+        "no-restricted-properties": [
+          "error",
+          {
+            "object": "Math",
+            "property": "random",
+            "message": "Use the injected Rng."
+          }
+        ]
+      }
+    }
+  ],
+  "ignorePatterns": [
+    "dist/**",
+    "dist-electron/**",
+    "release/**",
+    "node_modules/**",
+    "public/**",
+    "tmp/**"
+  ]
+}

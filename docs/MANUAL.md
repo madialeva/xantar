@@ -41,23 +41,26 @@ Estado actual del juego: una POC de una sola pantalla inspirada en **BurgerTime*
 
 | Tecnología | Versión | Función |
 |-----------|---------|---------|
-| **Node.js** | 20.19+ / 22.12+ (probado con 24.x) | Entorno de desarrollo y build |
-| **TypeScript** | ^5.9.3 | Lenguaje tipado (se compila a JS) |
+| **Node.js** | >=22.12 (desarrollo con 24 LTS, ver `.nvmrc`) | Entorno de desarrollo y build |
+| **TypeScript** | ^7.0.2 | Lenguaje tipado; compilador nativo (`tsc`) para comprobar tipos |
 | **Phaser** | ^4.2.1 | Motor de juego |
-| **Vite** | ^7.3.6 | Servidor de desarrollo, bundler y build web |
-| **Electron** | ^44.3.0 | Contenedor de escritorio (Chromium + Node) |
+| **Vite** | ^8.3 | Servidor de desarrollo, bundler y build web |
+| **Vitest** | ^5.0 | Pruebas unitarias del núcleo de simulación |
+| **Oxlint** + **oxlint-tsgolint** | ^1.86 / ^7.0 | Linter con reglas con información de tipos (sobre el compilador de TS 7) |
+| **Prettier** | ^3.9 | Formato del código |
+| **Electron** | ^44.5 | Contenedor de escritorio (Chromium + Node) |
 | **electron-builder** | ^26.15.3 | Generación de instaladores |
 | **esbuild** | ^0.28.2 | Compila el proceso principal de Electron |
 | **concurrently** | ^10.0.5 | Lanza Vite + Electron a la vez en desarrollo |
-| **wait-on** | ^9.1.0 | Espera a que el servidor de Vite esté listo antes de abrir Electron |
+| **wait-on** | ^9.5 | Espera a que el servidor de Vite esté listo antes de abrir Electron |
 | **cross-env** | ^10.1.0 | Variables de entorno multiplataforma |
-| **@types/node** | ^26.5.1 | Tipos de Node para el proceso Electron |
+| **@types/node** | ^26.6 | Tipos de Node para el proceso Electron |
 
 ---
 
 ## 3. Requisitos previos
 
-- **Node.js** (incluye `npm`). Recomendado Node 22 LTS o superior.
+- **Node.js** 22.12 o superior (incluye `npm`). Se desarrolla con Node 24 LTS: el fichero `.nvmrc` lo fija para `nvm use`.
 - Un **navegador moderno** (Chrome, Firefox, Edge o Safari recientes).
 - Opcional: en Linux, `xvfb` si vas a ejecutar Electron en un entorno sin pantalla (por ejemplo CI).
 
@@ -105,15 +108,21 @@ xantar/
 │   └── build-electron.mjs       # Compila electron/*.ts -> dist-electron/ (CJS)
 ├── src/                         # Código del juego (renderer)
 │   ├── main.ts                  # Punto de entrada: config de Phaser + new Phaser.Game()
-│   ├── config.ts                # Constantes: rejilla, filas, carriles, colores, puntuación
-│   ├── level.ts                 # Generación de escaleras y utilidades de navegación
-│   ├── objects/
-│   │   ├── Chef.ts              # Chef controlado por el jugador
-│   │   ├── Enemy.ts             # Enemigos (hot dog, pepinillo, huevo) con IA
-│   │   └── Ingredient.ts        # Ingrediente de hamburguesa (cae y se apila)
+│   ├── config.ts                # Solo de la vista: tamaño de tile, colores, alturas de dibujo
+│   ├── sim/                     # Núcleo de simulación (TypeScript puro, sin Phaser ni DOM)
+│   │   ├── Simulation.ts        # Agregado raíz: orquesta el tick, órdenes y estado de solo lectura
+│   │   ├── GameStats.ts         # Puntos, vidas, pimientas, nivel y combo
+│   │   ├── rules.ts             # Constantes de reglas en tiles y ticks
+│   │   ├── rng.ts, events.ts, stepper.ts, geometry.ts, SimInput.ts
+│   │   ├── level/               # LevelData (datos), loadLevel (validación) y Level (consultas)
+│   │   ├── entities/            # Chef, Enemy (+ EnemyBrain), Ingredient, Burger, pepper
+│   │   └── testing/             # Niveles y dobles de prueba compartidos por los tests
+│   ├── levels/
+│   │   └── classic.ts           # Nivel actual expresado como LevelData
+│   ├── objects/                 # Vistas Phaser (sin lógica): ChefView, EnemyView, IngredientView
 │   └── scenes/
 │       ├── TapScene.ts          # Pantalla "CLICK/TOCA PARA JUGAR" + música
-│       └── GameScene.ts         # Juego: tablero, lógica y HUD
+│       └── GameScene.ts         # Adaptador: ejecuta la simulación a paso fijo y la dibuja
 ├── docs/
 │   └── MANUAL.md                # Este manual de desarrollador
 ├── .vscode/
@@ -124,7 +133,8 @@ xantar/
 ├── tsconfig.json                # Config TS del renderer (DOM)
 ├── tsconfig.electron.json       # Config TS del proceso Electron (Node)
 ├── vite.config.ts               # Config de Vite (base relativa, puerto, etc.)
-├── eslint.config.js             # Configuración de ESLint (flat config)
+├── .oxlintrc.json               # Configuración de Oxlint (reglas y fronteras de src/sim)
+├── .nvmrc                       # Versión de Node de desarrollo
 ├── .prettierrc.json             # Reglas de estilo de Prettier
 ├── .prettierignore              # Exclusiones de Prettier
 ├── .editorconfig                # Convenciones básicas de editor
@@ -154,8 +164,10 @@ xantar/
 | `npm run build:desktop` | Typecheck + build web + Electron + instaladores en `release/` |
 | `npm run build:desktop:dir` | Igual, pero sin instalador (app desempaquetada, más rápido) |
 | `npm run typecheck` | Comprueba tipos del renderer **y** del proceso Electron |
-| `npm run lint` | Analiza el código con ESLint |
-| `npm run lint:fix` | ESLint corrigiendo lo que pueda automáticamente |
+| `npm run lint` | Analiza el código con Oxlint (reglas con tipos) |
+| `npm run lint:fix` | Oxlint corrigiendo lo que pueda automáticamente |
+| `npm run test` | Ejecuta las pruebas unitarias (Vitest) |
+| `npm run test:watch` | Vitest en modo observador |
 | `npm run format` | Formatea todo el código con Prettier |
 | `npm run format:check` | Comprueba el formato sin modificar ficheros (ideal para CI) |
 
@@ -295,27 +307,28 @@ En el juego se puede consultar con `(window as any).xantar?.isDesktop`. En el fu
 
 ### 8.5 El juego actual (POC tipo BurgerTime)
 
-**Rejilla y mapa** (`src/config.ts`, `src/level.ts`):
+**Arquitectura: núcleo y vista.** Las reglas viven en `src/sim/`, que es TypeScript puro y no depende de Phaser, del DOM ni de Node (Oxlint lo impide en `.oxlintrc.json`). La capa de Phaser (`src/scenes`, `src/objects`) solo presenta: lee el estado de la simulación, recoge la entrada y reacciona a sus eventos. Las dependencias van siempre de la vista al núcleo.
 
-- Mundo lógico de 640x480 con baldosas de 32 px (`TILE`), 20 columnas x 15 filas.
-- 4 plataformas (`PLATFORM_ROWS = [3, 6, 9, 12]`) y un plato en la fila 14 (`PLATE_ROW`).
-- 4 carriles (`LANES`) donde se apilan las hamburguesas.
-- Escaleras en las columnas `LADDER_COLS = [0, 9, 10, 19]`, que conectan plataformas consecutivas.
-- `level.ts` genera `LADDERS` y ofrece `bestLadderTowards()` para la IA.
+- **Paso fijo.** `GameScene` alimenta un `FixedStepper` con el tiempo de cada fotograma y ejecuta en `Simulation` el número de *ticks* resultante (60 por segundo, con un máximo por fotograma). El resultado no depende del framerate. La vista interpola entre el estado de los dos últimos ticks (`prevX`/`prevY` y `alpha`).
+- **Unidades lógicas.** El núcleo trabaja en tiles (1 unidad = 1 tile) y ticks. La vista convierte a píxeles con `TILE` (`src/config.ts`). Una entidad sobre la fila `r` está en `y = r`; la línea de plataforma en `y = r + 0,5`; el centro de la columna `c` en `x = c + 0,5`.
+- **Nivel como datos.** `Simulation` recibe un `Level` cargado con `loadLevel(LevelData)`. `src/levels/classic.ts` define el nivel actual (4 plataformas a todo el ancho, escaleras en las columnas 0, 9, 10 y 19, 4 columnas de 4 ingredientes con su plato). `loadLevel` valida la integridad, fusiona tramos de plataforma y deriva las columnas de caída.
+- **Eventos.** `Simulation.step(input)` devuelve los `SimEvent` del tick (`ingredientLanded`, `enemySquashed`, `burgerDone`, `chefHit`, `levelCleared`, `gameOver`…). La vista los traduce a efectos (destello, nube de pimienta, pantallas de fin) y, más adelante, a sonido.
+- **Aleatoriedad.** Se inyecta un `Rng` (`SeededRng`, con semilla). Con la misma semilla y la misma secuencia de entradas, la partida es idéntica.
 
-**Entidades** (`src/objects/`):
+**Modelo de objetos del núcleo** (`src/sim/`):
 
-- `Chef`: se mueve en horizontal por la plataforma y sube/baja por las escaleras. `facing` indica hacia dónde lanza la pimienta.
-- `Enemy`: tres tipos (`hotdog`, `pickle`, `egg`). IA voraz: en la misma fila persigue al chef en horizontal; si no, elige la escalera más cercana que le acerque y sube/baja. Tiene aturdimiento y aplastamiento.
-- `Ingredient`: 4 piezas por hamburguesa (`bunBottom`, `patty`, `lettuce`, `bunTop`) con estados `idle`, `falling` y `stacked`.
+- `Simulation`: agregado raíz. Cada tick ejecuta chef → hamburguesas → enemigos → pimienta → contacto. Estado de partida: `playing`, `levelClear`, `gameOver`; órdenes `startBoard`, `nextLevel`, `newGame`.
+- `Chef`: movimiento horizontal por su tramo de plataforma y escaleras (no puede invertir el sentido a mitad de escalera).
+- `Enemy` + `EnemyBrain` (Strategy): tres tipos (`hotdog`, `pickle`, `egg`) que hoy comparten `ChaseBrain` (en la misma fila persigue al chef; si no, va a la escalera más cercana que le acerque). Tiene aturdimiento, aplastamiento y reaparición.
+- `Ingredient` (State: `idle`, `waiting`, `falling`, `stacked`) y `Burger` (columna de ingredientes + plato): reacción en cadena, apilado y finalización.
 
-**Mecánica principal** (en `GameScene`):
+**Mecánica principal:**
 
-1. El chef recorre un ingrediente de lado a lado (`checkTraversal`); al alcanzar el extremo opuesto se dispara `triggerIngredient`.
-2. `triggerIngredient` desplaza **una plataforma hacia abajo** todos los ingredientes del carril desde el disparado hacia abajo (reacción en cadena, procesando de abajo hacia arriba). El más bajo cae al plato y el resto baja un nivel; repitiendo el proceso se ensambla la hamburguesa en orden.
-3. Un ingrediente que cae sobre un enemigo lo aplasta (`squashEnemiesBetween`); dicho enemigo reaparece a los 2,5 s.
-4. Cuando las 4 piezas de un carril están en el plato, la hamburguesa se completa (+400 puntos y +1 pimienta). Al completar los 4 carriles se sube de nivel.
-5. Cada ingrediente desplazado da 50 puntos; aplastar enemigos da 100 x combo.
+1. El chef recorre un ingrediente de lado a lado; al alcanzar el extremo opuesto se activa.
+2. Se activan él y los ingredientes inmóviles de su columna situados por debajo: caen **una plataforma**, el más bajo primero y con 7 ticks entre cada uno (reacción en cadena). Los que están sobre la última plataforma caen al plato y se apilan en orden; repitiendo el proceso se ensambla la hamburguesa.
+3. Un ingrediente que empieza a caer aplasta a los enemigos de su columna entre la fila de origen y la de destino; reaparecen a los 150 ticks (2,5 s) en un punto de reaparición.
+4. Cuando todas las piezas de una columna han **aterrizado** en el plato, la hamburguesa se completa (+400 puntos y +1 pimienta). Al completar todas se sube de nivel.
+5. Cada ingrediente activado da 50 puntos; aplastar enemigos da 100 x combo.
 
 **Controles**:
 
@@ -416,6 +429,16 @@ Opción recomendada (CI): un workflow de GitHub Actions que ejecute `npm ci && n
 
 ---
 
+### 9.5 Añadir o cambiar una regla de juego
+
+1. La regla va en el núcleo (`src/sim/`), nunca en la escena. Localiza el objeto que la posee (`Chef`, `Enemy`, `Ingredient`, `Burger` o `Simulation`) y modifica su comportamiento.
+2. Si necesita un número, añádelo a `src/sim/rules.ts` en tiles y ticks (no en píxeles ni milisegundos).
+3. Si el cambio es observable por la vista, emite un `SimEvent` (`src/sim/events.ts`) con los datos necesarios y trátalo en `GameScene.#handleEvents`.
+4. Escribe la prueba junto al código (`*.test.ts`) con un nivel mínimo (`src/sim/testing/levels.ts`) y un `Rng` falso (`StubRng`) si interviene el azar. `npm run test:watch` ayuda a iterar.
+5. Comprueba que se mantiene el determinismo (`Simulation.determinism.test.ts`) y ejecuta `npm run lint && npm run typecheck && npm run test`.
+
+---
+
 ## 10. Build y empaquetado
 
 ### 10.1 Web
@@ -461,11 +484,13 @@ Phaser va dentro del bundle de Vite, por lo que **no** se incluye `node_modules/
 ## 11. Convenciones de TypeScript
 
 - **Tipado estricto** activado (`strict`, `noUnusedLocals`, `noUnusedParameters`, `noImplicitOverride`) tanto en `tsconfig.json` como en `tsconfig.electron.json`.
-- **Campos privados** con `#` (estándar ES2022), como ya se hace en las escenas.
+- **Campos privados** con `#` (estándar ES2022) para el interior de las clases; `protected` solo en puntos de extensión deliberados y `readonly` para lo que no cambia tras construirse.
+- **TypeScript 7** (compilador nativo): `npm run typecheck` usa su `tsc`. El editor puede usar otra versión de TypeScript para el servidor de lenguaje; no afecta a la comprobación de tipos del proyecto.
+- **Diseño**: orientado a objetos por defecto (objetos con estado y comportamiento, inyección de dependencias por constructor, composición sobre herencia), con estilo funcional para cálculo sin estado, eventos y datos inmutables. La lógica de dominio vive en `src/sim/` sin depender de Phaser; el detalle está en `AGENTS.md`.
 - **Sin comentarios** en el código salvo que aporten algo que el código no exprese.
 - El renderer (`tsconfig.json`) solo incluye librerías de navegador (`DOM`); **no** tiene acceso a APIs de Node (`types: []`). Esto evita usar por error `fs`, `path`, etc. en el juego.
 - El proceso Electron (`tsconfig.electron.json`) es lo contrario: solo Node, sin DOM.
-- El idioma de documentación y comentarios es **español**; los identificadores pueden ser español o inglés.
+- Código, identificadores y comentarios van en **inglés**; este manual es la única documentación en español.
 
 ---
 
@@ -485,6 +510,10 @@ Son avisos de aceleración de vídeo por hardware; no impiden jugar. Ignóralos 
 
 ### Aviso de npm: `packages have install scripts not yet covered by allowScripts`
 Es una función de seguridad de npm 11. Electron descarga su binario en el `postinstall`; si no se ejecuta, la primera vez que lances `electron` lo descargará igualmente. Si un `npm install` limpio no deja Electron operativo, ejecuta `npm approve-scripts electron` o `npm rebuild electron`.
+
+### Electron se cierra al instante o responde `bad option`
+
+Comprueba `echo $ELECTRON_RUN_AS_NODE`. Algunas terminales de editor lo definen y hacen que Electron se comporte como Node. Ejecuta con `env -u ELECTRON_RUN_AS_NODE ./release/linux-unpacked/xantar` o desactívalo en esa terminal.
 
 ### El puerto 5173 está ocupado
 Vite está configurado con `strictPort: true`, así que fallará en vez de cambiar de puerto. Libera el puerto o cámbialo en `vite.config.ts` (y también en el script `dev:desktop`, que usa `wait-on tcp:127.0.0.1:5173`).
@@ -512,7 +541,7 @@ El soporte de **TypeScript** y el **depurador de JS/TS** (`js-debug`) vienen int
 
 | Extensión | ID | Para qué |
 |-----------|----|----------|
-| ESLint | `dbaeumer.vscode-eslint` | Detección de errores y malas prácticas |
+| Oxc | `oxc.oxc-vscode` | Diagnósticos de Oxlint en el editor |
 | Prettier | `esbenp.prettier-vscode` | Formato consistente al guardar |
 | EditorConfig | `EditorConfig.EditorConfig` | Respetar indentación y finales de línea entre editores |
 | Error Lens | `usernamehw.errorlens` | Muestra los errores TS en la misma línea, sin abrir la pestaña de problemas |
@@ -544,24 +573,28 @@ La lista está guardada en `.vscode/extensions.json`, de modo que al abrir el pr
 
 ### 14.3 Lint y formato
 
-El proyecto incluye **ESLint 10** (flat config) + **typescript-eslint** + **Prettier**, integrados con VS Code a través de `.vscode/settings.json`: al guardar, Prettier formatea y ESLint corrige lo que puede.
+El proyecto usa **Oxlint** (con **oxlint-tsgolint** para las reglas con información de tipos) para el análisis y **Prettier** para el formato. En el editor, Prettier formatea al guardar y la extensión de Oxc muestra los diagnósticos.
 
 Ficheros de configuración:
 
 | Fichero | Función |
 |---------|---------|
-| `eslint.config.js` | Configuración de ESLint (flat config) |
+| `.oxlintrc.json` | Configuración de Oxlint: reglas, entornos por carpeta y fronteras de `src/sim/` |
 | `.prettierrc.json` | Reglas de estilo de Prettier |
 | `.prettierignore` | Rutas que Prettier no debe tocar (builds, docs, tooling) |
 | `.editorconfig` | Convenciones básicas de editor (2 espacios, LF, UTF-8) |
-| `.vscode/settings.json` | Formato al guardar, fix de ESLint al guardar y versión TS del workspace |
-| `.vscode/extensions.json` | Extensiones recomendadas del workspace |
+| `.vscode/settings.json` | Configuración local del editor (no se publica) |
+| `.vscode/extensions.json` | Extensiones recomendadas del workspace (no se publica) |
 
-Reglas destacadas de `eslint.config.js`:
+Reglas destacadas de `.oxlintrc.json`:
 
+- Categoría `correctness` en error, más reglas con tipos: `no-floating-promises`, `no-misused-promises`, `await-thenable`, `unbound-method` y `switch-exhaustiveness-check`.
 - `no-empty` con `allowEmptyCatch: true`: permite `catch {}` vacíos (se usan en `TapScene` para que un fallo de audio no rompa la escena).
-- `no-unused-vars` se desactiva en TypeScript y lo sustituye `@typescript-eslint/no-unused-vars` (aviso, ignorando parámetros con prefijo `_`).
-- `eslint-config-prettier` se aplica al final para desactivar las reglas de estilo que chocarían con Prettier.
+- `no-unused-vars` (aviso) ignora parámetros y capturas con prefijo `_`.
+- Entorno de navegador por defecto y Node solo en `electron/` y `scripts/`.
+- **Fronteras de `src/sim/`**: no puede importar Phaser, Node, `scenes/`, `objects/` ni `config`, ni usar globales de navegador, `Date` o `Math.random` (se inyecta un `Rng`). Garantiza que el núcleo sea puro y determinista.
+
+El análisis con tipos usa un `tsconfig` por ejecución, por eso `npm run lint` lanza dos: una para el renderer (`tsconfig.json`) y otra para `electron/` y `scripts/` (`tsconfig.electron.json`).
 
 Comandos:
 
@@ -575,7 +608,7 @@ npm run format:check  # solo comprobar (útil en CI)
 Notas:
 
 - `.prettierignore` excluye `docs/`, `.opencode/` y `openspec/` para no reformatear la documentación ni ficheros de herramientas.
-- En CI, encadena `npm run lint && npm run format:check && npm run typecheck`.
+- En CI, encadena `npm run lint && npm run format:check && npm run typecheck && npm run test`.
 
 ---
 
