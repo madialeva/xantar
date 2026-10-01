@@ -165,9 +165,10 @@ English inside the Spanish text.
 - The agent does **not** commit on its own: work stays uncommitted until the
   user validates it, including visual verification. Push only when the user
   asks.
-- Commits carry no `Co-Authored-By` trailer or any other AI attribution line:
-  the author is the only author. This overrides the default attribution of the
-  tooling.
+- Commits, pull request descriptions, issues and comments carry no
+  `Co-Authored-By` trailer, "Generated with ..." line or any other AI
+  attribution: the author is the only author. This overrides the default
+  attribution of the tooling.
 - Leave the working tree in a compiling, runnable state after each change.
 - Prefer small, reviewable increments; the game is a POC that will grow.
 
