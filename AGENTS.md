@@ -10,8 +10,9 @@ assets.
 
 The game is written in **TypeScript** with **Phaser 4** and bundled with
 **Vite**. The same code runs in the browser and ships as a desktop app through
-**Electron + electron-builder**. It is currently a single-screen POC; the
-mechanics will be refined and extended over time.
+**Electron + electron-builder**. It is currently a single-screen game with one
+classic level; the mechanics and the content will be extended over time. The
+roadmap lives in the GitHub issues and in the README.
 
 ## Stack and constraints
 
@@ -170,7 +171,7 @@ English inside the Spanish text.
   attribution: the author is the only author. This overrides the default
   attribution of the tooling.
 - Leave the working tree in a compiling, runnable state after each change.
-- Prefer small, reviewable increments; the game is a POC that will grow.
+- Prefer small, reviewable increments; the game will keep growing.
 
 ## GitHub workflow (issues, branches, PRs)
 
