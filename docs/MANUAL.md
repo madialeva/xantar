@@ -108,15 +108,21 @@ xantar/
 │   └── build-electron.mjs       # Compila electron/*.ts -> dist-electron/ (CJS)
 ├── src/                         # Código del juego (renderer)
 │   ├── main.ts                  # Punto de entrada: config de Phaser + new Phaser.Game()
-│   ├── config.ts                # Constantes: rejilla, filas, carriles, colores, puntuación
-│   ├── level.ts                 # Generación de escaleras y utilidades de navegación
-│   ├── objects/
-│   │   ├── Chef.ts              # Chef controlado por el jugador
-│   │   ├── Enemy.ts             # Enemigos (hot dog, pepinillo, huevo) con IA
-│   │   └── Ingredient.ts        # Ingrediente de hamburguesa (cae y se apila)
+│   ├── config.ts                # Solo de la vista: tamaño de tile, colores, alturas de dibujo
+│   ├── sim/                     # Núcleo de simulación (TypeScript puro, sin Phaser ni DOM)
+│   │   ├── Simulation.ts        # Agregado raíz: orquesta el tick, órdenes y estado de solo lectura
+│   │   ├── GameStats.ts         # Puntos, vidas, pimientas, nivel y combo
+│   │   ├── rules.ts             # Constantes de reglas en tiles y ticks
+│   │   ├── rng.ts, events.ts, stepper.ts, geometry.ts, SimInput.ts
+│   │   ├── level/               # LevelData (datos), loadLevel (validación) y Level (consultas)
+│   │   ├── entities/            # Chef, Enemy (+ EnemyBrain), Ingredient, Burger, pepper
+│   │   └── testing/             # Niveles y dobles de prueba compartidos por los tests
+│   ├── levels/
+│   │   └── classic.ts           # Nivel actual expresado como LevelData
+│   ├── objects/                 # Vistas Phaser (sin lógica): ChefView, EnemyView, IngredientView
 │   └── scenes/
 │       ├── TapScene.ts          # Pantalla "CLICK/TOCA PARA JUGAR" + música
-│       └── GameScene.ts         # Juego: tablero, lógica y HUD
+│       └── GameScene.ts         # Adaptador: ejecuta la simulación a paso fijo y la dibuja
 ├── docs/
 │   └── MANUAL.md                # Este manual de desarrollador
 ├── .vscode/
@@ -301,27 +307,28 @@ En el juego se puede consultar con `(window as any).xantar?.isDesktop`. En el fu
 
 ### 8.5 El juego actual (POC tipo BurgerTime)
 
-**Rejilla y mapa** (`src/config.ts`, `src/level.ts`):
+**Arquitectura: núcleo y vista.** Las reglas viven en `src/sim/`, que es TypeScript puro y no depende de Phaser, del DOM ni de Node (Oxlint lo impide en `.oxlintrc.json`). La capa de Phaser (`src/scenes`, `src/objects`) solo presenta: lee el estado de la simulación, recoge la entrada y reacciona a sus eventos. Las dependencias van siempre de la vista al núcleo.
 
-- Mundo lógico de 640x480 con baldosas de 32 px (`TILE`), 20 columnas x 15 filas.
-- 4 plataformas (`PLATFORM_ROWS = [3, 6, 9, 12]`) y un plato en la fila 14 (`PLATE_ROW`).
-- 4 carriles (`LANES`) donde se apilan las hamburguesas.
-- Escaleras en las columnas `LADDER_COLS = [0, 9, 10, 19]`, que conectan plataformas consecutivas.
-- `level.ts` genera `LADDERS` y ofrece `bestLadderTowards()` para la IA.
+- **Paso fijo.** `GameScene` alimenta un `FixedStepper` con el tiempo de cada fotograma y ejecuta en `Simulation` el número de *ticks* resultante (60 por segundo, con un máximo por fotograma). El resultado no depende del framerate. La vista interpola entre el estado de los dos últimos ticks (`prevX`/`prevY` y `alpha`).
+- **Unidades lógicas.** El núcleo trabaja en tiles (1 unidad = 1 tile) y ticks. La vista convierte a píxeles con `TILE` (`src/config.ts`). Una entidad sobre la fila `r` está en `y = r`; la línea de plataforma en `y = r + 0,5`; el centro de la columna `c` en `x = c + 0,5`.
+- **Nivel como datos.** `Simulation` recibe un `Level` cargado con `loadLevel(LevelData)`. `src/levels/classic.ts` define el nivel actual (4 plataformas a todo el ancho, escaleras en las columnas 0, 9, 10 y 19, 4 columnas de 4 ingredientes con su plato). `loadLevel` valida la integridad, fusiona tramos de plataforma y deriva las columnas de caída.
+- **Eventos.** `Simulation.step(input)` devuelve los `SimEvent` del tick (`ingredientLanded`, `enemySquashed`, `burgerDone`, `chefHit`, `levelCleared`, `gameOver`…). La vista los traduce a efectos (destello, nube de pimienta, pantallas de fin) y, más adelante, a sonido.
+- **Aleatoriedad.** Se inyecta un `Rng` (`SeededRng`, con semilla). Con la misma semilla y la misma secuencia de entradas, la partida es idéntica.
 
-**Entidades** (`src/objects/`):
+**Modelo de objetos del núcleo** (`src/sim/`):
 
-- `Chef`: se mueve en horizontal por la plataforma y sube/baja por las escaleras. `facing` indica hacia dónde lanza la pimienta.
-- `Enemy`: tres tipos (`hotdog`, `pickle`, `egg`). IA voraz: en la misma fila persigue al chef en horizontal; si no, elige la escalera más cercana que le acerque y sube/baja. Tiene aturdimiento y aplastamiento.
-- `Ingredient`: 4 piezas por hamburguesa (`bunBottom`, `patty`, `lettuce`, `bunTop`) con estados `idle`, `falling` y `stacked`.
+- `Simulation`: agregado raíz. Cada tick ejecuta chef → hamburguesas → enemigos → pimienta → contacto. Estado de partida: `playing`, `levelClear`, `gameOver`; órdenes `startBoard`, `nextLevel`, `newGame`.
+- `Chef`: movimiento horizontal por su tramo de plataforma y escaleras (no puede invertir el sentido a mitad de escalera).
+- `Enemy` + `EnemyBrain` (Strategy): tres tipos (`hotdog`, `pickle`, `egg`) que hoy comparten `ChaseBrain` (en la misma fila persigue al chef; si no, va a la escalera más cercana que le acerque). Tiene aturdimiento, aplastamiento y reaparición.
+- `Ingredient` (State: `idle`, `waiting`, `falling`, `stacked`) y `Burger` (columna de ingredientes + plato): reacción en cadena, apilado y finalización.
 
-**Mecánica principal** (en `GameScene`):
+**Mecánica principal:**
 
-1. El chef recorre un ingrediente de lado a lado (`checkTraversal`); al alcanzar el extremo opuesto se dispara `triggerIngredient`.
-2. `triggerIngredient` desplaza **una plataforma hacia abajo** todos los ingredientes del carril desde el disparado hacia abajo (reacción en cadena, procesando de abajo hacia arriba). El más bajo cae al plato y el resto baja un nivel; repitiendo el proceso se ensambla la hamburguesa en orden.
-3. Un ingrediente que cae sobre un enemigo lo aplasta (`squashEnemiesBetween`); dicho enemigo reaparece a los 2,5 s.
-4. Cuando las 4 piezas de un carril están en el plato, la hamburguesa se completa (+400 puntos y +1 pimienta). Al completar los 4 carriles se sube de nivel.
-5. Cada ingrediente desplazado da 50 puntos; aplastar enemigos da 100 x combo.
+1. El chef recorre un ingrediente de lado a lado; al alcanzar el extremo opuesto se activa.
+2. Se activan él y los ingredientes inmóviles de su columna situados por debajo: caen **una plataforma**, el más bajo primero y con 7 ticks entre cada uno (reacción en cadena). Los que están sobre la última plataforma caen al plato y se apilan en orden; repitiendo el proceso se ensambla la hamburguesa.
+3. Un ingrediente que empieza a caer aplasta a los enemigos de su columna entre la fila de origen y la de destino; reaparecen a los 150 ticks (2,5 s) en un punto de reaparición.
+4. Cuando todas las piezas de una columna han **aterrizado** en el plato, la hamburguesa se completa (+400 puntos y +1 pimienta). Al completar todas se sube de nivel.
+5. Cada ingrediente activado da 50 puntos; aplastar enemigos da 100 x combo.
 
 **Controles**:
 
@@ -419,6 +426,16 @@ Como `vite.config.ts` usa `base: './'`, las rutas son relativas y el build funci
 Opción sencilla: mover el contenido de `dist/` a la rama/carpeta que sirva GitHub Pages tras `npm run build`.
 
 Opción recomendada (CI): un workflow de GitHub Actions que ejecute `npm ci && npm run build` y publique `dist/` con `actions/upload-pages-artifact` + `actions/deploy-pages`.
+
+---
+
+### 9.5 Añadir o cambiar una regla de juego
+
+1. La regla va en el núcleo (`src/sim/`), nunca en la escena. Localiza el objeto que la posee (`Chef`, `Enemy`, `Ingredient`, `Burger` o `Simulation`) y modifica su comportamiento.
+2. Si necesita un número, añádelo a `src/sim/rules.ts` en tiles y ticks (no en píxeles ni milisegundos).
+3. Si el cambio es observable por la vista, emite un `SimEvent` (`src/sim/events.ts`) con los datos necesarios y trátalo en `GameScene.#handleEvents`.
+4. Escribe la prueba junto al código (`*.test.ts`) con un nivel mínimo (`src/sim/testing/levels.ts`) y un `Rng` falso (`StubRng`) si interviene el azar. `npm run test:watch` ayuda a iterar.
+5. Comprueba que se mantiene el determinismo (`Simulation.determinism.test.ts`) y ejecuta `npm run lint && npm run typecheck && npm run test`.
 
 ---
 
