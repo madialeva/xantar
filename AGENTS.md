@@ -133,9 +133,10 @@ tool. This is a deliberate choice of the author: keep it when adding code.
   documented exception to the English rule: architecture, tooling and
   workflows. Keep it in sync with structural changes.
 - This `AGENTS.md` is durable context versioned in the repository, so it
-  survives clones/moves. `openspec/`, `.opencode/`, `.claude/` and `.vscode/`
-  are private working material and are git-ignored: do not reference them from
-  published files such as `README.md`.
+  survives clones/moves. `openspec/` (specs, changes and their archive) is
+  versioned too: it is the project's design record, written in Spanish.
+  `.opencode/`, `.claude/` and `.vscode/` are private working material and are
+  git-ignored: do not reference them from published files such as `README.md`.
 
 ## OpenSpec
 
