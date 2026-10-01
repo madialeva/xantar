@@ -614,8 +614,7 @@ Notas:
 
 ## 15. Próximos pasos
 
-La hoja de ruta vigente está en el README (tabla *Roadmap*) y se gestiona con issues de GitHub y milestones por versión. Ideas pendientes sin issue propia:
+La hoja de ruta vigente está en el README (tabla *Roadmap*) y se gestiona con issues de GitHub y milestones por versión. Pendientes para después de la v1.0.0: alimentos de bonus (#13) y publicación de la web (#14). Ideas sin issue propia:
 
-- Alimentos de bonus (helado, café, patatas) y más tipos de enemigos.
-- Publicar la web (por ejemplo en GitHub Pages) cuando exista el CI.
+- Más tipos de enemigos.
 - Valorar el protocolo local para Electron si se usan atlas JSON de sprites.

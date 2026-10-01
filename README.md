@@ -44,8 +44,8 @@ comes next.
 |   ⬜   | Gamepad and touch controls, music and sound effects, CI and a hardened desktop app                        | v1.0.0 |  #6   |
 |   ⬜   | Replay recording and debug tooling                                                                        | v1.0.0 |  #8   |
 |   ⬜   | In-game level editor with JSON import/export                                                              | later  |  #7   |
-|   ⬜   | Bonus food (ice cream, coffee, fries)                                                                     | later  |   —   |
-|   ⬜   | Public web deployment                                                                                     | later  |   —   |
+|   ⬜   | Bonus food (ice cream, coffee, fries)                                                                     | later  |  #13  |
+|   ⬜   | Public web deployment                                                                                     | later  |  #14  |
 
 ---
 
