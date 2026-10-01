@@ -50,7 +50,9 @@ npm run typecheck && npm run build` and keep a runnable build. Opening
 
 ## Code conventions
 
-- ES2022 with private `#` fields, as used in the scene/object classes.
+- ES2022 with ES private `#` fields for class internals (runtime-private, not
+  the TypeScript `private` keyword); `protected` only for deliberate subclass
+  extension points; `readonly` for fields that never change after construction.
 - Type-only imports are required (`verbatimModuleSyntax` is on): use
   `import { type Foo } from ...` for types.
 - `override` is mandatory when overriding base members (`noImplicitOverride`).
@@ -60,6 +62,55 @@ npm run typecheck && npm run build` and keep a runnable build. Opening
 - Code, identifiers and comments in English.
 - No comments unless they add information the code cannot express.
 - Formatting/lint are enforced by Prettier and ESLint.
+- Dependencies follow the latest stable versions that are compatible with each
+  other; no compatibility paths for old Node versions or browsers. The minimum
+  Node version is the one required by the toolchain (currently Vite and
+  Vitest).
+
+## Design philosophy
+
+The code is **object-oriented first**, in the Java/C# tradition, and uses the
+functional and structural features of TypeScript where they are the better
+tool. This is a deliberate choice of the author: keep it when adding code.
+
+- **Objects model things with identity, state and lifecycle** (the simulation,
+  chef, enemies, ingredients, the level…). State is encapsulated and the
+  behavior lives with the data it works on. Avoid anemic data bags operated by
+  free functions.
+- **Program to interfaces.** Collaborators (random source, event sink, input
+  source, audio…) are injected through constructors as interfaces, so they can
+  be substituted in tests. Prefer **composition over inheritance**; inheritance
+  only for a real is-a with shared behavior, at most two levels. Where behavior
+  varies (enemy AI, entity states, game phases), use Strategy/State objects
+  instead of `switch` chains on a type tag.
+- **Dependency injection is manual constructor injection**, wired in a single
+  composition root (the scene or `main.ts` creates the objects and passes their
+  collaborators). No DI container, no decorators or `reflect-metadata`: they add
+  runtime weight and magic that TypeScript does not need. Factories and plain
+  functions are acceptable injection points.
+- The author is experienced in Java/.NET OOP and delegates the choice of the
+  most idiomatic, modern TypeScript approach to the agent: recommend and justify
+  when a different technique serves better than the classic OO one.
+- **Use design patterns by name when they fit** (Strategy, State, Observer,
+  Factory, Command), without ceremony.
+- **Functional where it is the better tool:** pure functions for stateless
+  computation (geometry, unit conversion, level loading and validation,
+  scoring); immutable data (`readonly`, discriminated unions for events and
+  values); array pipelines (`map`/`filter`/`reduce`) and higher-order functions
+  instead of hand-written loops when clearer. In those pure parts, return new
+  values instead of mutating arguments.
+- **Idiomatic TypeScript, not transliterated Java:** structural typing and
+  interfaces without an `I` prefix; module-level functions instead of
+  static-only utility classes; union types or `as const` objects instead of
+  `enum`; no getter/setter boilerplate (use `readonly` fields; accessors only to
+  enforce an invariant); no namespaces.
+- **Layering:** domain logic (rules, state, AI, level data) must not depend on
+  Phaser, the DOM or Node. The Phaser layer (scenes, game objects) only
+  presents: it reads the domain model, collects input and reacts to its events.
+  Dependencies flow view → domain, never the reverse. The domain core lives in
+  `src/sim/`.
+- Every domain object is testable without a canvas; add the test with the
+  behavior.
 
 ## Language and files
 
@@ -111,13 +162,47 @@ English inside the Spanish text.
 
 ## GitHub workflow (issues, branches, PRs)
 
-Repository: `git@github.com:madialeva/xantar.git` (default branch `main`).
+Repository: `git@github.com:madialeva/xantar.git`.
 
-1. OpenSpec proposal approved by the user.
-2. GitHub issue for the change, linking its `openspec/changes/<name>/` folder.
-3. Branch from `main`, named like `change/<slug>`.
-4. Implementation on the branch. The agent never commits on its own; the user
-   validates first (including running the game).
-5. PR toward `main` with `Closes #<n>` in the description; the user reviews the
-   diff.
-6. Squash merge as the norm (one change = one clean commit on `main`).
+There is no `main`/`master`. The long-lived, default branch is
+`develop/vX.Y.Z` (for example `develop/v1.0.0`), which holds the version
+currently under development. Releasing cuts `release/vX.Y.Z` from it and tags
+`vX.Y.Z`; hotfixes bump the patch digit. When a new cycle starts,
+`develop/vX.Y.Z` is created from the released tag and becomes the default
+branch. The program version lives as the single source of truth in
+`package.json` (`version`) and must match the branch suffix. Until the CI
+workflow exists, check it by hand when cutting a branch; the CI change adds the
+automatic check on `develop/**` and `release/**` pushes.
+
+Each OpenSpec change is tracked on GitHub with this cycle:
+
+1. Planned changes may have a GitHub issue **before** their OpenSpec proposal
+   exists (roadmap issue: scope and rationale, in English). The proposal is
+   written when the change is picked up.
+2. OpenSpec proposal approved by the user.
+3. The change has a GitHub issue (create it if it does not exist yet) linking
+   its `openspec/changes/` folder, assigned to the milestone of its target
+   version (one milestone per version, named `vX.Y.Z`; the Projects board, if
+   any, stays light: Todo / In progress / Done). While active, the change
+   folder is named `is<n>-<slug>` after its issue; the date prefix is added
+   only when the change is archived.
+4. Branch created from the issue (Development panel → "Create a branch"; name
+   like `change/is<n>-<slug>`) starting from `develop/vX.Y.Z`.
+5. Implementation on the branch + push (pushes are done by the user). The agent
+   never commits on its own: work stays uncommitted on the branch until the
+   user validates it (including running the game); commit only after the user
+   explicitly confirms.
+6. PR toward `develop/vX.Y.Z` with `Closes #<n>` in the description → the CI
+   (once it exists) validates the PR → the user reviews the diff.
+7. Squash merge as the norm (one change = one clean commit on the development
+   branch). Exception: PRs whose intermediate commits have standalone value
+   (e.g. massive deletions separated from new code) → normal merge.
+8. The last commit on the branch may be the archiving of the change (only
+   after user confirmation), so merged PR = closed issue (automatic via
+   `Closes`) = archived change.
+9. After archiving a change, always review its Non-Goals section. For each
+   line leaving useful pending work, create a follow-up issue (English) that
+   explains the pending scope, links the archived change, keeps the relation to
+   the original Non-Goal, and carries the milestone of the version where it is
+   planned. Skip Non-Goals already covered by an existing roadmap issue: link
+   to that issue instead of duplicating it.

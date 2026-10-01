@@ -13,3 +13,5 @@ release/
 .claude
 openspec
 
+# Temporal folder
+tmp/
