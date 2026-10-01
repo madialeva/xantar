@@ -6,3 +6,8 @@ export * from './stepper';
 export * from './level/Level';
 export * from './level/LevelData';
 export * from './level/loadLevel';
+export * from './entities/Chef';
+export * from './entities/MovingEntity';
+export * from './GameStats';
+export * from './SimInput';
+export * from './Simulation';

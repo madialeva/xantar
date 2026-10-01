@@ -9,7 +9,7 @@ export type SimEvent =
       readonly type: 'ingredientLanded';
       readonly burgerId: number;
       readonly ingredientId: number;
-      readonly stackSlot: number;
+      readonly stackSlot: number | null;
     }
   | {
       readonly type: 'enemySquashed';
