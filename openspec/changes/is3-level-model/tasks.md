@@ -23,8 +23,8 @@
 
 ## 4. Validador
 
-- [ ] 4.1 Implementar `LevelIssue`, `LevelRule` y `validateLevel` con las siete reglas de D7; verificar con una prueba por regla (error o aviso, código y posición), una prueba con varias incidencias a la vez y una prueba de que el nivel clásico no produce ninguna
-- [ ] 4.2 Implementar `loadLevel(documento, { registry, requirePlayable })` y `loadLevelJson`; verificar con pruebas de carga estricta con error, carga permisiva, solo avisos y mensaje con la lista de errores
+- [x] 4.1 Implementar `LevelIssue`, `LevelRule` y `validateLevel` con las siete reglas de D7; verificar con una prueba por regla (error o aviso, código y posición), una prueba con varias incidencias a la vez y una prueba de que el nivel clásico no produce ninguna
+- [x] 4.2 Implementar `loadLevel(documento, { registry, requirePlayable })` y `loadLevelJson`; verificar con pruebas de carga estricta con error, carga permisiva, solo avisos y mensaje con la lista de errores
 
 ## 5. Núcleo de juego sobre el modelo nuevo
 
