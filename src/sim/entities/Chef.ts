@@ -1,5 +1,5 @@
 import { clamp, columnCenter } from '../geometry';
-import type { Level } from '../level/Level';
+import type { Level } from '../legacy-level/Level';
 import { ARRIVAL_THRESHOLD, CHEF_SPEED, CLIMB_SPEED, EDGE_MARGIN, TICK_SECONDS } from '../rules';
 import type { SimInput } from '../SimInput';
 import { MovingEntity, type PositionSnapshot } from './MovingEntity';

@@ -1,5 +1,5 @@
 import { columnCenter } from '../geometry';
-import type { Ladder, Level } from '../level/Level';
+import type { Ladder, Level } from '../legacy-level/Level';
 import type { Rng } from '../rng';
 import { DECISION_MAX_TICKS, DECISION_MIN_TICKS, ENEMY_REVERSE_CHANCE } from '../rules';
 import type { ChefSnapshot } from './Chef';

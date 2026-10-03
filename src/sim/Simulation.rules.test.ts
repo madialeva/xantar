@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { SimEvent } from './events';
-import { loadLevel } from './level/loadLevel';
-import type { LevelData } from './level/LevelData';
+import { loadLevel } from './legacy-level/loadLevel';
+import type { LevelData } from './legacy-level/LevelData';
 import { START_LIVES, START_PEPPERS, STUN_TICKS } from './rules';
 import { NO_INPUT, type SimInput } from './SimInput';
 import { Simulation } from './Simulation';

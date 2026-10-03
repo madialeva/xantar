@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { IngredientSpec } from '../level/Level';
+import type { IngredientSpec } from '../legacy-level/Level';
 import { chefAt } from '../testing/chef';
 import { FALL_STAGGER_TICKS, FALL_TICKS } from '../rules';
 import {

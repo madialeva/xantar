@@ -3,8 +3,8 @@
 ## 1. Rama y preparación
 
 - [x] 1.1 Crear la rama de trabajo `change/is3-level-model` desde la issue #3 (panel Development) a partir de `develop/v1.0.0` actualizada, hacer checkout local y verificar con `git branch --show-current` y `git log --oneline -1` que parte del último commit de `develop/v1.0.0` (los push los hace el autor)
-- [ ] 1.2 Habilitar `resolveJsonModule` en `tsconfig.json` y verificar con un JSON temporal importado desde `src/` que `npm run typecheck` y `npm run build` lo aceptan; borrar el JSON temporal después
-- [ ] 1.3 Renombrar de forma mecánica el modelo de nivel de #2 para liberar los nombres definitivos (`Level` → `LegacyLevel`, `LevelData` → `LegacyLevelData`, `loadLevel` → `loadLegacyLevel`, con sus ficheros y pruebas) sin cambiar comportamiento; verificar con `npm run lint && npm run typecheck && npm run test` en verde
+- [x] 1.2 Habilitar `resolveJsonModule` en `tsconfig.json` y verificar con un JSON temporal importado desde `src/` que `npm run typecheck` y `npm run build` lo aceptan; borrar el JSON temporal después
+- [x] 1.3 Mover de forma mecánica el modelo de nivel de #2 a `src/sim/legacy-level/` (con sus pruebas e imports) para liberar los nombres definitivos de `src/sim/level/`, sin cambiar comportamiento; verificar con `npm run lint && npm run typecheck && npm run test` en verde
 
 ## 2. Formato, registro de piezas y carga
 

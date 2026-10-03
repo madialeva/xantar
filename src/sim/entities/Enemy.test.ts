@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { EventQueue } from '../events';
-import { loadLevel } from '../level/loadLevel';
+import { loadLevel } from '../legacy-level/loadLevel';
 import { ENEMY_SPEED, RESPAWN_TICKS, STUN_TICKS } from '../rules';
 import { chefAt } from '../testing/chef';
 import { tinyLevelData } from '../testing/levels';

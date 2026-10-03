@@ -1,7 +1,7 @@
 import type { EventSink } from '../events';
 import type { GameStats } from '../GameStats';
-import type { BurgerColumn, Plate } from '../level/Level';
-import type { Level } from '../level/Level';
+import type { BurgerColumn, Plate } from '../legacy-level/Level';
+import type { Level } from '../legacy-level/Level';
 import { FALL_STAGGER_TICKS, SCORE } from '../rules';
 import type { ChefSnapshot } from './Chef';
 import {

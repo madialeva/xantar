@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { classicLevel } from '../levels/classic';
-import { loadLevel } from './level/loadLevel';
+import { loadLevel } from './legacy-level/loadLevel';
 import { SeededRng } from './rng';
 import { NO_INPUT } from './SimInput';
 import { Simulation } from './Simulation';

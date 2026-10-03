@@ -1,4 +1,4 @@
-import type { LevelData } from '../sim/level/LevelData';
+import type { LevelData } from '../sim/legacy-level/LevelData';
 
 const PLATFORM_ROWS = [3, 6, 9, 12] as const;
 const LADDER_COLS = [0, 9, 10, 19] as const;

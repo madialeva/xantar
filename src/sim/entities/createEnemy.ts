@@ -1,5 +1,5 @@
 import type { EventSink } from '../events';
-import type { EnemyKind } from '../level/LevelData';
+import type { EnemyKind } from '../legacy-level/LevelData';
 import { ChaseBrain, type EnemyBrain } from './EnemyBrain';
 import { Enemy } from './Enemy';
 

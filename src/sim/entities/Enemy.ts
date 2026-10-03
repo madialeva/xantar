@@ -1,7 +1,7 @@
 import type { EventSink } from '../events';
 import { clamp, columnCenter } from '../geometry';
-import type { Ladder, Level, Spawn } from '../level/Level';
-import type { EnemyKind } from '../level/LevelData';
+import type { Ladder, Level, Spawn } from '../legacy-level/Level';
+import type { EnemyKind } from '../legacy-level/LevelData';
 import type { Rng } from '../rng';
 import {
   ARRIVAL_THRESHOLD,

@@ -1,4 +1,4 @@
-import type { LevelData } from '../level/LevelData';
+import type { LevelData } from '../legacy-level/LevelData';
 
 export const tinyLevelData: LevelData = {
   cols: 8,

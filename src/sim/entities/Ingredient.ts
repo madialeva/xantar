@@ -1,6 +1,6 @@
 import { isWithin } from '../geometry';
-import type { IngredientKind } from '../level/LevelData';
-import type { IngredientSpec } from '../level/Level';
+import type { IngredientKind } from '../legacy-level/LevelData';
+import type { IngredientSpec } from '../legacy-level/Level';
 import { FALL_TICKS, TRAVERSAL_REACH, TRAVERSAL_TOLERANCE } from '../rules';
 import type { ChefSnapshot } from './Chef';
 

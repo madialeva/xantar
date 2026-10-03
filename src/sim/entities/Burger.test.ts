@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { classicLevel } from '../../levels/classic';
 import { EventQueue, type SimEvent } from '../events';
 import { GameStats } from '../GameStats';
-import { loadLevel } from '../level/loadLevel';
+import { loadLevel } from '../legacy-level/loadLevel';
 import { FALL_STAGGER_TICKS, FALL_TICKS, START_PEPPERS } from '../rules';
 import { chefAt } from '../testing/chef';
 import { Burger, type CrushTarget } from './Burger';

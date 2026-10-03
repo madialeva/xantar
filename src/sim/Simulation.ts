@@ -5,7 +5,7 @@ import type { Enemy, EnemySnapshot } from './entities/Enemy';
 import { isHitByPepper, pepperCloudFor } from './entities/pepper';
 import { EventQueue, type SimEvent } from './events';
 import { GameStats, type StatsSnapshot } from './GameStats';
-import type { Level } from './level/Level';
+import type { Level } from './legacy-level/Level';
 import type { Rng } from './rng';
 import { CONTACT_X, CONTACT_Y, SCORE } from './rules';
 import type { SimInput } from './SimInput';

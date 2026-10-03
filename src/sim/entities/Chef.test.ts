@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loadLevel } from '../level/loadLevel';
+import { loadLevel } from '../legacy-level/loadLevel';
 import { NO_INPUT, type SimInput } from '../SimInput';
 import { tinyLevelData } from '../testing/levels';
 import { CHEF_SPEED, EDGE_MARGIN } from '../rules';
