@@ -17,9 +17,9 @@
 
 ## 3. Grafo de navegación
 
-- [ ] 3.1 Implementar `PlatformEdge`, `LadderEdge` y la derivación del grafo desde las casillas del nivel (tramos de plataforma, tramos de escalera entre cruces consecutivos, escaleras colgantes registradas aparte) y exponerlo como `Level.graph`; verificar con pruebas del nivel clásico (cuatro tramos de plataforma y doce de escalera), plataforma interrumpida, escalera colgante y cruces consecutivos
-- [ ] 3.2 Implementar `NavPlace` (valor inmutable), `graph.positionOf`, `graph.platformAt` y `graph.ladderNear` con los límites de 12/32 y el enganche a 0,6 casillas; verificar con pruebas de posición en plataforma y escalera, límites del tramo y selección de escalera hacia arriba y hacia abajo
-- [ ] 3.3 Implementar `graph.shortestPath` (Dijkstra con desempate determinista) y `graph.reachableFrom`; verificar con pruebas de mismo tramo, una escalera, elección de la escalera de menor recorrido total en un nivel irregular, empate, sin camino, destino sobre una escalera, origen sobre una escalera y alcanzabilidad desde el inicio del chef
+- [x] 3.1 Implementar `PlatformEdge`, `LadderEdge` y la derivación del grafo desde las casillas del nivel (tramos de plataforma, tramos de escalera entre cruces consecutivos, escaleras colgantes registradas aparte) y exponerlo como `Level.graph`; verificar con pruebas del nivel clásico (cuatro tramos de plataforma y doce de escalera), plataforma interrumpida, escalera colgante y cruces consecutivos
+- [x] 3.2 Implementar `NavPlace` (valor inmutable), `graph.positionOf`, `graph.platformAt` y `graph.ladderNear` con los límites de 12/32 y el enganche a 0,6 casillas; verificar con pruebas de posición en plataforma y escalera, límites del tramo y selección de escalera hacia arriba y hacia abajo
+- [x] 3.3 Implementar `graph.shortestPath` (Dijkstra con desempate determinista) y `graph.reachableFrom`; verificar con pruebas de mismo tramo, una escalera, elección de la escalera de menor recorrido total en un nivel irregular, empate, sin camino, destino sobre una escalera, origen sobre una escalera y alcanzabilidad desde el inicio del chef
 
 ## 4. Validador
 

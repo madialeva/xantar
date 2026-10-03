@@ -1,4 +1,5 @@
 import { columnCenter } from '../geometry';
+import { buildNavigationGraph } from '../nav/buildNavigationGraph';
 import type { EnemyKind, IngredientKind } from './kinds';
 import {
   destinationPlateId,
@@ -98,6 +99,7 @@ export class LevelAssembly implements LevelBuilder {
       rows: this.#rows,
       segments: this.#segments,
       terrain,
+      graph: buildNavigationGraph(terrain),
       ingredients,
       plates,
       chefStart: this.#spawnOf(chef),

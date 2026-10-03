@@ -1,3 +1,4 @@
+import type { NavigationGraph } from '../nav/NavigationGraph';
 import type { EnemyKind, IngredientKind } from './kinds';
 import type { Landing, Terrain } from './Terrain';
 
@@ -37,6 +38,7 @@ export interface LevelParts {
   readonly rows: number;
   readonly segments: number;
   readonly terrain: Terrain;
+  readonly graph: NavigationGraph;
   readonly ingredients: readonly IngredientSpec[];
   readonly plates: readonly PlateSpec[];
   readonly chefStart: Spawn;
@@ -49,6 +51,7 @@ export class Level {
   readonly rows: number;
   readonly segments: number;
   readonly terrain: Terrain;
+  readonly graph: NavigationGraph;
   readonly ingredients: readonly IngredientSpec[];
   readonly plates: readonly PlateSpec[];
   readonly chefStart: Spawn;
@@ -60,6 +63,7 @@ export class Level {
     this.rows = parts.rows;
     this.segments = parts.segments;
     this.terrain = parts.terrain;
+    this.graph = parts.graph;
     this.ingredients = parts.ingredients;
     this.plates = parts.plates;
     this.chefStart = parts.chefStart;

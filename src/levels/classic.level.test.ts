@@ -59,4 +59,12 @@ describe('classic level', () => {
     const copy = assembleLevel(parseLevelJson(serializeLevel(document)));
     expect(copy).toEqual(level);
   });
+
+  it('answers the path of an enemy decision fast enough to run every time one is needed', () => {
+    const from = level.graph.placeAt(3, 1.5);
+    const to = level.graph.placeAt(12, 18.5);
+    const started = performance.now();
+    for (let i = 0; i < 1000; i++) level.graph.shortestPath(from, to);
+    expect(performance.now() - started).toBeLessThan(1000);
+  });
 });
