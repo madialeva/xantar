@@ -167,6 +167,67 @@ describe('Chef on ladders', () => {
   });
 });
 
+describe('Chef stepping off a ladder', () => {
+  const floors = levelFromGrid({
+    structure: ['........', '===+====', '...H....', '===+====', '...H....', '===+===='],
+    actors: ['........', '........', '........', '........', '........', '......C.']
+  });
+  const nav = floors.graph;
+  const onFloors = (row: number, x: number): Chef => new Chef(nav.placeAt(row, x));
+
+  const climbUntil = (chef: Chef, input: Partial<SimInput>, reached: () => boolean): void => {
+    for (let i = 0; i < 400 && !reached(); i++) run(chef, press(input), 1, nav);
+  };
+
+  it('steps onto an intermediate platform when it reaches its height going up', () => {
+    const chef = onFloors(5, 3.5);
+    climbUntil(chef, { up: true }, () => chef.isClimbing && chef.y <= 3.3);
+    expect(chef.isClimbing).toBe(true);
+    run(chef, press({ left: true, up: true }), 1, nav);
+    expect([chef.onPlatform, chef.row, chef.facing]).toEqual([true, 3, -1]);
+    expect(chef.x).toBeLessThan(3.5);
+    expect(chef.y).toBe(3);
+  });
+
+  it('steps onto an intermediate platform going down', () => {
+    const chef = onFloors(1, 3.5);
+    climbUntil(chef, { down: true }, () => chef.isClimbing && chef.y >= 2.7);
+    run(chef, press({ right: true, down: true }), 1, nav);
+    expect([chef.onPlatform, chef.row, chef.facing]).toEqual([true, 3, 1]);
+    expect(chef.x).toBeGreaterThan(3.5);
+  });
+
+  it('steps off after stopping next to a platform', () => {
+    const chef = onFloors(5, 3.5);
+    climbUntil(chef, { up: true }, () => chef.isClimbing && chef.y <= 3.3);
+    run(chef, NO_INPUT, 10, nav);
+    run(chef, press({ right: true }), 1, nav);
+    expect([chef.onPlatform, chef.row]).toEqual([true, 3]);
+  });
+
+  it('ignores lateral input far from a platform', () => {
+    const chef = onFloors(5, 3.5);
+    run(chef, press({ up: true }), 1, nav);
+    run(chef, press({ up: true }), 30, nav);
+    const y = chef.y;
+    run(chef, press({ left: true }), 10, nav);
+    expect([chef.x, chef.y, chef.isClimbing]).toEqual([3.5, y, true]);
+  });
+
+  it('keeps going through the platform when only up is held', () => {
+    const chef = onFloors(5, 3.5);
+    run(chef, press({ up: true }), 400, nav);
+    expect([chef.row, chef.onPlatform]).toEqual([1, true]);
+  });
+
+  it('gives walking priority over grabbing a ladder on a platform', () => {
+    const chef = onFloors(5, 3.5);
+    run(chef, press({ up: true, right: true }), 10, nav);
+    expect(chef.isClimbing).toBe(false);
+    expect(chef.x).toBeGreaterThan(3.5);
+  });
+});
+
 describe('Chef reset', () => {
   it('returns to the given place without an interpolation streak', () => {
     const chef = chefAt(5, 6);

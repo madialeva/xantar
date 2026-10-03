@@ -1,7 +1,13 @@
 import type { LadderEdge, PlatformEdge } from '../nav/edges';
 import { NavPlace } from '../nav/NavPlace';
 import type { NavigationGraph } from '../nav/NavigationGraph';
-import { ARRIVAL_THRESHOLD, CHEF_SPEED, CLIMB_SPEED, TICK_SECONDS } from '../rules';
+import {
+  ARRIVAL_THRESHOLD,
+  CHEF_SPEED,
+  CLIMB_SPEED,
+  STEP_OFF_DISTANCE,
+  TICK_SECONDS
+} from '../rules';
 import type { SimInput } from '../SimInput';
 import { MovingEntity, type PositionSnapshot } from './MovingEntity';
 
@@ -75,8 +81,8 @@ export class Chef extends MovingEntity implements ChefSnapshot {
     const direction = axis(input.right, input.left);
     this.#isMoving = direction !== 0;
     if (direction !== 0) {
-      this.#facing = direction > 0 ? 1 : -1;
-      this.#place = this.#place.moveAlong(direction * CHEF_SPEED * TICK_SECONDS);
+      this.#walk(direction);
+      return;
     }
 
     const vertical = axis(input.down, input.up);
@@ -88,6 +94,9 @@ export class Chef extends MovingEntity implements ChefSnapshot {
   }
 
   #stepLadder(ladder: LadderEdge, input: SimInput): void {
+    const direction = axis(input.right, input.left);
+    if (direction !== 0 && this.#stepOff(ladder, direction)) return;
+
     const vertical = axis(input.down, input.up);
     this.#isMoving = vertical !== 0;
     if (vertical === 0) return;
@@ -99,6 +108,25 @@ export class Chef extends MovingEntity implements ChefSnapshot {
     } else {
       this.#place = NavPlace.onLadder(ladder, along);
     }
+  }
+
+  #stepOff(ladder: LadderEdge, direction: -1 | 1): boolean {
+    const along = this.#place.along;
+    if (along <= STEP_OFF_DISTANCE) {
+      this.#arriveAt(ladder.top, ladder.topRow, ladder.x);
+    } else if (along >= ladder.length - STEP_OFF_DISTANCE) {
+      this.#arriveAt(ladder.bottom, ladder.bottomRow, ladder.x);
+    } else {
+      return false;
+    }
+    this.#isMoving = true;
+    this.#walk(direction);
+    return true;
+  }
+
+  #walk(direction: -1 | 1): void {
+    this.#facing = direction > 0 ? 1 : -1;
+    this.#place = this.#place.moveAlong(direction * CHEF_SPEED * TICK_SECONDS);
   }
 
   #arriveAt(platform: PlatformEdge, row: number, x: number): void {

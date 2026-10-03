@@ -72,7 +72,8 @@ must bring them all the way down to the plate.
 | Back to the title                 | `Esc` or the `✕` button |
 
 You can also play with the `W`, `A`, `S`, `D` keys. On a ladder you only move
-while you hold up or down, so you can stop and turn around anywhere on it.
+while you hold up or down, so you can stop and turn around anywhere on it. When
+you reach the height of a platform, press left or right to step onto it.
 
 ### Ingredients and falls
 

@@ -14,6 +14,7 @@ export const ENEMY_SPEED = fromPx(68);
 export const ARRIVAL_THRESHOLD = fromPx(3);
 export const EDGE_MARGIN = fromPx(12);
 export const LADDER_GRAB_DISTANCE = 0.6;
+export const STEP_OFF_DISTANCE = 0.4;
 
 export const FALL_TICKS = fromMs(200);
 export const FALL_STAGGER_TICKS = 7;

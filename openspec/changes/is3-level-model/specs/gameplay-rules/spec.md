@@ -14,10 +14,14 @@ distancia horizontal no superior a 0,6 casillas de su posición; al engancharse
 SHALL centrarse en la columna de la escalera. Sobre una escalera, el chef SHALL
 moverse a 80/32 casillas por segundo únicamente mientras haya entrada arriba o
 abajo, SHALL poder detenerse al soltar la entrada y SHALL poder invertir el
-sentido en cualquier punto de la escalera. La entrada lateral SHALL ignorarse
-mientras esté sobre una escalera. Al alcanzar uno de sus extremos, el chef SHALL
-quedar sobre la plataforma de ese extremo, desde la que puede caminar o
-engancharse a otra escalera.
+sentido en cualquier punto de la escalera. Cuando el chef está a 0,4 casillas
+o menos de uno de los extremos de la escalera (la altura de una plataforma), la
+entrada lateral SHALL hacerle pasar a la plataforma de ese extremo y caminar en
+ese sentido; en el resto de la escalera la entrada lateral SHALL ignorarse. Al
+alcanzar uno de sus extremos, el chef SHALL quedar sobre la plataforma de ese
+extremo, desde la que puede caminar o engancharse a otra escalera. Sobre una
+plataforma, la entrada lateral SHALL tener prioridad sobre la vertical: con
+entrada lateral el chef camina y no se engancha a una escalera.
 
 #### Scenario: Subir por una escalera cercana
 - **WHEN** el chef está a 0,3 casillas de una escalera que sube y mantiene
@@ -39,8 +43,24 @@ engancharse a otra escalera.
 - **THEN** desciende por la misma escalera sin llegar a la plataforma superior
 
 #### Scenario: Entrada durante la subida
-- **WHEN** el chef está sobre una escalera y se pulsa izquierda
+- **WHEN** el chef está sobre una escalera lejos de sus extremos y se pulsa
+  izquierda
 - **THEN** la posición horizontal no cambia
+
+#### Scenario: Pasar a una plataforma intermedia
+- **WHEN** el chef sube por una escalera, llega a 0,4 casillas o menos de una
+  plataforma y se pulsa izquierda
+- **THEN** pasa a esa plataforma y camina hacia la izquierda
+
+#### Scenario: Pasar a una plataforma al bajar
+- **WHEN** el chef baja por una escalera, llega a 0,4 casillas o menos de una
+  plataforma y se pulsa derecha
+- **THEN** pasa a esa plataforma y camina hacia la derecha
+
+#### Scenario: Prioridad de la entrada lateral en la plataforma
+- **WHEN** el chef está en una plataforma junto a una escalera y se pulsan
+  arriba y derecha a la vez
+- **THEN** camina hacia la derecha y no se engancha a la escalera
 
 #### Scenario: Escaleras consecutivas
 - **WHEN** el chef llega a una plataforma que tiene otra escalera en la misma

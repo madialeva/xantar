@@ -320,7 +320,7 @@ En el juego se puede consultar con `(window as any).xantar?.isDesktop`. En el fu
 
 - `Simulation`: agregado raíz. Cada tick ejecuta chef → ingredientes → enemigos → pimienta → contacto. Estado de partida: `playing`, `levelClear`, `gameOver`; órdenes `startBoard`, `nextLevel`, `newGame`.
 - **Grafo de navegación** (`src/sim/nav/`): se deriva del nivel y tiene tramos de plataforma (`PlatformEdge`) y de escalera (`LadderEdge`) unidos en los cruces. La posición de chef y enemigos es un `NavPlace` (arista + desplazamiento); `graph.shortestPath` calcula el camino más corto y `graph.reachableFrom` la alcanzabilidad.
-- `Chef`: camina por su tramo de plataforma y se engancha a una escalera a ≤ 0,6 casillas del cruce. Sobre la escalera solo se mueve mientras pulsas arriba o abajo y puede parar e invertir en cualquier punto.
+- `Chef`: camina por su tramo de plataforma y se engancha a una escalera a ≤ 0,6 casillas del cruce. Sobre la escalera solo se mueve mientras pulsas arriba o abajo y puede parar e invertir en cualquier punto; a 0,4 casillas o menos de una plataforma, pulsar izquierda o derecha le hace pasar a ella. En plataforma, la entrada lateral tiene prioridad sobre engancharse a una escalera.
 - `Enemy` + `EnemyBrain` (Strategy): tres tipos (`hotdog`, `pickle`, `egg`) que hoy comparten `ChaseBrain`, que usa el camino más corto del grafo hacia el chef (en el mismo tramo de plataforma lo persigue en horizontal). Tiene aturdimiento, aplastamiento y reaparición en los marcadores de enemigo del nivel.
 - `Ingredient` (State: `idle`, `waiting`, `falling`, `stacked`) con sus segmentos pisables, `IngredientField` (pisado, cadena de caídas, aterrizajes) y `Plate` (apilado y finalización de la hamburguesa).
 

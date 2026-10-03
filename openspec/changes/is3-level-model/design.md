@@ -213,9 +213,15 @@ simple y suficiente).
   cruce), se centra y entra en ella por el extremo correspondiente (`along = length`
   si sube, `0` si baja) sin moverse ese tick. Sobre escalera: la entrada neta
   vertical (arriba y abajo a la vez se anulan) mueve `along` a 80/32; sin entrada
-  no se mueve; la entrada lateral se ignora; al acercarse a un extremo a menos de
-  3/32 en el sentido de avance, se coloca en la plataforma de ese extremo
-  centrado en la columna.
+  no se mueve; al acercarse a un extremo a menos de 3/32 en el sentido de avance,
+  se coloca en la plataforma de ese extremo centrado en la columna. La entrada
+  lateral se ignora salvo a 0,4 casillas o menos de un extremo
+  (`STEP_OFF_DISTANCE`), donde hace pasar al chef a la plataforma de ese extremo
+  y caminar en ese sentido: así se puede salir a una plataforma intermedia sin
+  soltar la tecla en un instante exacto. En plataforma, la entrada lateral tiene
+  prioridad sobre la vertical (con entrada lateral no se engancha a una
+  escalera); mantener solo arriba o abajo en un cruce sigue encadenando las
+  escaleras.
 - **Enemigo.** Mantiene `#place`, dirección y la intención de escalera
   (`{ ladder, direction }`). Camina; cuando llega al cruce de su escalera (< 3/32)
   entra en ella y la recorre entera a 68/32 en el sentido decidido; al llegar al
