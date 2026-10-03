@@ -41,7 +41,7 @@ Durante este grupo el árbol puede no compilar entero hasta el final de 5.5 (los
 - [x] 6.1 Reescribir `IngredientView` con `segments` segmentos de una casilla y los pisados más bajos; verificar con `npm run typecheck`
 - [x] 6.2 Adaptar `GameScene` para cargar `classic.level.json` con `parseLevelDocument` y `loadLevel`, dibujar plataformas, escaleras y platos desde el nivel y consumir `sim.ingredients` y `sim.plates`; verificar con `npm run typecheck` y `npm run build`
 - [x] 6.3 Eliminar `LegacyLevel*`, `Burger`, `src/levels/classic.ts`, las constantes obsoletas (`INGREDIENT_INSET`, `TRAVERSAL_TOLERANCE`, `TRAVERSAL_REACH`) y las exportaciones sobrantes de `src/sim/index.ts`; verificar con `grep` que no quedan referencias y con `npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build` en verde
-- [ ] 6.4 Prueba automatizada en Electron sobre `dist/` (script de humo de #2: capturas y consola) que verifique sin errores de consola el pisado de segmentos, la caída al plato, una parada a mitad de escalera y la inversión del sentido; dejar las capturas para el autor
+- [x] 6.4 Prueba automatizada en Electron sobre `dist/` (script de humo de #2: capturas y consola) que verifique sin errores de consola el pisado de segmentos, la caída al plato, una parada a mitad de escalera y la inversión del sentido; dejar las capturas para el autor
 
 ## 7. Documentación
 
