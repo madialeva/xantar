@@ -1,6 +1,11 @@
 import { PEPPER_CLOUD_LIFT, PEPPER_CLOUD_OFFSET, PEPPER_REACH_X, PEPPER_REACH_Y } from '../rules';
-import type { ChefSnapshot } from './Chef';
 import type { EnemySnapshot } from './Enemy';
+
+export interface PepperSource {
+  readonly x: number;
+  readonly y: number;
+  readonly facing: 1 | -1;
+}
 
 export interface PepperCloud {
   readonly x: number;
@@ -8,7 +13,7 @@ export interface PepperCloud {
   readonly direction: 1 | -1;
 }
 
-export const pepperCloudFor = (chef: ChefSnapshot): PepperCloud => ({
+export const pepperCloudFor = (chef: PepperSource): PepperCloud => ({
   x: chef.x + chef.facing * PEPPER_CLOUD_OFFSET,
   y: chef.y - PEPPER_CLOUD_LIFT,
   direction: chef.facing
@@ -16,7 +21,7 @@ export const pepperCloudFor = (chef: ChefSnapshot): PepperCloud => ({
 
 export const isHitByPepper = (
   cloud: PepperCloud,
-  chef: ChefSnapshot,
+  chef: PepperSource,
   enemy: EnemySnapshot
 ): boolean =>
   enemy.active &&

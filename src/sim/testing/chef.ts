@@ -1,12 +1,7 @@
-import type { ChefSnapshot } from '../entities/Chef';
+import type { ChefPosition } from '../entities/Chef';
 
-export const chefAt = (row: number, x: number): ChefSnapshot => ({
+export const chefAt = (row: number, x: number, onPlatform = true): ChefPosition => ({
   x,
-  y: row,
-  prevX: x,
-  prevY: row,
   row,
-  facing: 1,
-  isMoving: false,
-  isClimbing: false
+  onPlatform
 });

@@ -5,6 +5,10 @@ export interface PositionSnapshot {
   readonly prevY: number;
 }
 
+/**
+ * Base of the entities that move: keeps the current and the previous position so the view
+ * can interpolate between ticks.
+ */
 export abstract class MovingEntity implements PositionSnapshot {
   #x: number;
   #y: number;

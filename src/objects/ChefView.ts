@@ -2,6 +2,10 @@ import Phaser from 'phaser';
 import type { ChefSnapshot } from '../sim';
 import { interpolatedX, interpolatedY } from './interpolation';
 
+/**
+ * Phaser view of the chef: draws the character and syncs position and facing from the
+ * simulation snapshot, interpolated between ticks.
+ */
 export default class ChefView extends Phaser.GameObjects.Container {
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0);

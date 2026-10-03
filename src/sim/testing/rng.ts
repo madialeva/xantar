@@ -1,5 +1,8 @@
 import type { Rng } from '../rng';
 
+/**
+ * Test double of Rng that always answers from one fixed value.
+ */
 export class StubRng implements Rng {
   constructor(private readonly value = 0.99) {}
 

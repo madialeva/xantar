@@ -1,18 +1,12 @@
 import type { EventSink } from '../events';
-import { clamp, columnCenter } from '../geometry';
-import type { Ladder, Level, Spawn } from '../level/Level';
-import type { EnemyKind } from '../level/LevelData';
+import type { EnemyKind } from '../level/kinds';
+import type { LadderEdge } from '../nav/edges';
+import { NavPlace } from '../nav/NavPlace';
+import type { NavigationGraph } from '../nav/NavigationGraph';
 import type { Rng } from '../rng';
-import {
-  ARRIVAL_THRESHOLD,
-  EDGE_MARGIN,
-  ENEMY_SPEED,
-  RESPAWN_TICKS,
-  STUN_TICKS,
-  TICK_SECONDS
-} from '../rules';
+import { ARRIVAL_THRESHOLD, ENEMY_SPEED, RESPAWN_TICKS, STUN_TICKS, TICK_SECONDS } from '../rules';
 import type { ChefSnapshot } from './Chef';
-import type { EnemyBrain } from './EnemyBrain';
+import type { EnemyBrain, LadderIntent } from './EnemyBrain';
 import { MovingEntity, type PositionSnapshot } from './MovingEntity';
 
 export interface EnemySnapshot extends PositionSnapshot {
@@ -24,28 +18,56 @@ export interface EnemySnapshot extends PositionSnapshot {
   readonly stunTicksLeft: number;
   readonly facing: 1 | -1;
   readonly isClimbing: boolean;
+  readonly place: NavPlace;
 }
 
+interface Climb {
+  readonly ladder: LadderEdge;
+  readonly step: 1 | -1;
+}
+
+/**
+ * A chasing enemy. Walks the navigation graph, climbs ladders, can be stunned or crushed
+ * and respawns; where it goes is decided by its EnemyBrain.
+ */
 export class Enemy extends MovingEntity implements EnemySnapshot {
   readonly id: number;
   readonly kind: EnemyKind;
   readonly #brain: EnemyBrain;
   readonly #events: EventSink;
-  #row = 0;
+  readonly #graph: NavigationGraph;
+  readonly #spawns: readonly NavPlace[];
+  #place: NavPlace;
+  #row: number;
   #direction: 1 | -1 = 1;
   #active = true;
   #stunTicks = 0;
   #respawnTicks = 0;
   #decisionTicks = 0;
-  #pendingLadder: Ladder | undefined;
-  #climbTargetRow: number | null = null;
+  #pending: LadderIntent | undefined;
+  #climb: Climb | undefined;
 
-  constructor(id: number, kind: EnemyKind, brain: EnemyBrain, events: EventSink) {
-    super(0, 0);
+  constructor(
+    id: number,
+    kind: EnemyKind,
+    brain: EnemyBrain,
+    events: EventSink,
+    graph: NavigationGraph,
+    spawns: readonly NavPlace[]
+  ) {
+    super(spawns[0].point.x, spawns[0].point.y);
     this.id = id;
     this.kind = kind;
     this.#brain = brain;
     this.#events = events;
+    this.#graph = graph;
+    this.#spawns = spawns;
+    this.#place = spawns[0];
+    this.#row = spawns[0].platform?.row ?? 0;
+  }
+
+  get place(): NavPlace {
+    return this.#place;
   }
 
   get row(): number {
@@ -69,15 +91,16 @@ export class Enemy extends MovingEntity implements EnemySnapshot {
   }
 
   get isClimbing(): boolean {
-    return this.#climbTargetRow !== null;
+    return this.#climb !== undefined;
   }
 
-  reset(spawn: Spawn, rng: Rng): void {
-    this.#row = spawn.row;
-    this.teleportTo(spawn.x, spawn.row);
+  reset(place: NavPlace, rng: Rng): void {
+    this.#place = place;
+    this.#row = place.platform?.row ?? this.#row;
+    this.teleportTo(place.point.x, place.point.y);
     this.#direction = rng.chance(0.5) ? -1 : 1;
-    this.#climbTargetRow = null;
-    this.#pendingLadder = undefined;
+    this.#climb = undefined;
+    this.#pending = undefined;
     this.#decisionTicks = 0;
     this.#stunTicks = 0;
     this.#respawnTicks = 0;
@@ -94,71 +117,69 @@ export class Enemy extends MovingEntity implements EnemySnapshot {
     this.#respawnTicks = RESPAWN_TICKS;
   }
 
-  step(chef: ChefSnapshot, level: Level, rng: Rng): void {
+  step(chef: ChefSnapshot, rng: Rng): void {
     if (!this.#active) {
-      this.#stepRespawn(level, rng);
+      this.#stepRespawn(rng);
       return;
     }
     if (this.#stunTicks > 0) {
       this.#stunTicks -= 1;
       return;
     }
-    if (this.#climbTargetRow !== null) {
-      this.#stepClimb(this.#climbTargetRow);
+    if (this.#climb !== undefined) {
+      this.#stepClimb(this.#climb);
+      this.moveTo(this.#place.point.x, this.#place.point.y);
       return;
     }
 
     this.#decisionTicks -= 1;
     if (this.#decisionTicks <= 0) {
-      const intent = this.#brain.decide(this, chef, level, rng);
+      const intent = this.#brain.decide(this, chef, this.#graph, rng);
       this.#direction = intent.direction;
-      this.#pendingLadder = intent.ladder;
+      this.#pending = intent.ladder;
       this.#decisionTicks = this.#brain.nextDecisionDelay(rng);
     }
 
     if (
-      this.#pendingLadder !== undefined &&
-      Math.abs(columnCenter(this.#pendingLadder.col) - this.x) < ARRIVAL_THRESHOLD
+      this.#pending !== undefined &&
+      Math.abs(this.#pending.edge.x - this.x) < ARRIVAL_THRESHOLD
     ) {
-      this.#beginClimb(this.#pendingLadder, chef);
-      return;
+      this.#beginClimb(this.#pending);
+    } else {
+      this.#place = this.#place.moveAlong(this.#direction * ENEMY_SPEED * TICK_SECONDS);
     }
-
-    this.moveTo(this.#walkTo(level), this.y);
+    this.moveTo(this.#place.point.x, this.#place.point.y);
   }
 
-  #stepRespawn(level: Level, rng: Rng): void {
+  #stepRespawn(rng: Rng): void {
     if (this.#respawnTicks <= 0) return;
     this.#respawnTicks -= 1;
     if (this.#respawnTicks > 0) return;
-    const point = rng.pick(level.respawnPoints);
-    this.reset(point, rng);
+    this.reset(rng.pick(this.#spawns), rng);
     this.#events.emit({ type: 'enemyRespawned', enemyId: this.id, x: this.x, y: this.y });
   }
 
-  #walkTo(level: Level): number {
-    const next = this.x + this.#direction * ENEMY_SPEED * TICK_SECONDS;
-    const run = level.platformRunAt(this.#row, this.x);
-    if (run === undefined) return next;
-    return clamp(next, run.left + EDGE_MARGIN, run.right - EDGE_MARGIN);
+  #beginClimb({ edge, direction }: LadderIntent): void {
+    this.#pending = undefined;
+    this.#climb = { ladder: edge, step: direction === 'down' ? 1 : -1 };
+    this.#place = NavPlace.onLadder(edge, direction === 'down' ? 0 : edge.length);
   }
 
-  #beginClimb(ladder: Ladder, chef: ChefSnapshot): void {
-    const goingUp = chef.row < this.#row;
-    this.moveTo(columnCenter(ladder.col), this.y);
-    this.#climbTargetRow = goingUp ? ladder.topRow : ladder.bottomRow;
-    this.#pendingLadder = undefined;
-  }
-
-  #stepClimb(targetRow: number): void {
-    const direction = Math.sign(targetRow - this.y);
-    const y = this.y + direction * ENEMY_SPEED * TICK_SECONDS;
-    if (Math.abs(y - targetRow) < ARRIVAL_THRESHOLD) {
-      this.moveTo(this.x, targetRow);
-      this.#row = targetRow;
-      this.#climbTargetRow = null;
+  #stepClimb({ ladder, step }: Climb): void {
+    const along = this.#place.along + step * ENEMY_SPEED * TICK_SECONDS;
+    if (step < 0 && along <= ARRIVAL_THRESHOLD) {
+      this.#arrive(NavPlace.onPlatform(ladder.top, ladder.x), ladder.topRow);
+    } else if (step > 0 && along >= ladder.length - ARRIVAL_THRESHOLD) {
+      this.#arrive(NavPlace.onPlatform(ladder.bottom, ladder.x), ladder.bottomRow);
     } else {
-      this.moveTo(this.x, y);
+      this.#place = NavPlace.onLadder(ladder, along);
     }
+  }
+
+  #arrive(place: NavPlace, row: number): void {
+    this.#place = place;
+    this.#row = row;
+    this.#climb = undefined;
+    this.#decisionTicks = 0;
   }
 }

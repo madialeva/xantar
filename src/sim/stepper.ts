@@ -3,6 +3,10 @@ import { TICKS_PER_SECOND } from './rules';
 const EPSILON = 1e-9;
 const DEFAULT_MAX_STEPS = 5;
 
+/**
+ * Turns real elapsed time into a whole number of fixed 60 Hz ticks. Keeps the remainder
+ * for render interpolation and caps the catch-up after a long pause.
+ */
 export class FixedStepper {
   readonly #maxSteps: number;
   #accumulated = 0;

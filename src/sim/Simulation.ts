@@ -1,11 +1,14 @@
-import { Burger, type BurgerSnapshot, type CrushTarget } from './entities/Burger';
 import { Chef, type ChefSnapshot } from './entities/Chef';
 import { createEnemy } from './entities/createEnemy';
 import type { Enemy, EnemySnapshot } from './entities/Enemy';
+import { type CrushTarget, IngredientField } from './entities/IngredientField';
+import type { IngredientSnapshot } from './entities/Ingredient';
 import { isHitByPepper, pepperCloudFor } from './entities/pepper';
+import type { PlateSnapshot } from './entities/Plate';
 import { EventQueue, type SimEvent } from './events';
 import { GameStats, type StatsSnapshot } from './GameStats';
 import type { Level } from './level/Level';
+import type { NavPlace } from './nav/NavPlace';
 import type { Rng } from './rng';
 import { CONTACT_X, CONTACT_Y, SCORE } from './rules';
 import type { SimInput } from './SimInput';
@@ -17,6 +20,10 @@ export interface SimulationOptions {
   readonly rng: Rng;
 }
 
+/**
+ * Root of the game rules. Owns the level, the chef, the enemies, the ingredient field and
+ * the stats, advances one fixed tick at a time from an input and returns the events it caused.
+ */
 export class Simulation {
   readonly #level: Level;
   readonly #rng: Rng;
@@ -24,19 +31,26 @@ export class Simulation {
   readonly #stats = new GameStats(this.#events);
   readonly #chef: Chef;
   readonly #enemies: readonly Enemy[];
+  readonly #enemyPlaces: readonly NavPlace[];
+  readonly #chefPlace: NavPlace;
   readonly #crushTarget: CrushTarget = {
     crush: (left, right, fromRow, toRow) => this.#crushEnemies(left, right, fromRow, toRow)
   };
-  #burgers: readonly Burger[] = [];
+  #field: IngredientField;
   #status: GameStatus = 'playing';
 
   constructor(options: SimulationOptions) {
-    this.#level = options.level;
-    this.#rng = options.rng;
-    this.#chef = new Chef(options.level.chefStart.row, options.level.chefStart.x);
-    this.#enemies = options.level.enemyStarts.map((spawn, id) =>
-      createEnemy(id, spawn.kind, this.#events)
+    const { level, rng } = options;
+    this.#level = level;
+    this.#rng = rng;
+    const graph = level.graph;
+    this.#chefPlace = graph.placeAt(level.chefStart.row, level.chefStart.x);
+    this.#chef = new Chef(this.#chefPlace);
+    this.#enemyPlaces = level.enemySpawns.map((spawn) => graph.placeAt(spawn.row, spawn.x));
+    this.#enemies = level.enemySpawns.map((spawn, id) =>
+      createEnemy(id, spawn.kind, this.#events, graph, this.#enemyPlaces)
     );
+    this.#field = this.#newField();
     this.startBoard();
   }
 
@@ -56,8 +70,12 @@ export class Simulation {
     return this.#enemies;
   }
 
-  get burgers(): readonly BurgerSnapshot[] {
-    return this.#burgers;
+  get ingredients(): readonly IngredientSnapshot[] {
+    return this.#field.ingredients;
+  }
+
+  get plates(): readonly PlateSnapshot[] {
+    return this.#field.plates;
   }
 
   get stats(): StatsSnapshot {
@@ -70,20 +88,18 @@ export class Simulation {
     this.#chef.beginTick();
     for (const enemy of this.#enemies) enemy.beginTick();
 
-    this.#chef.step(input, this.#level);
-    for (const burger of this.#burgers) burger.step(this.#chef);
+    this.#chef.step(input, this.#level.graph);
+    this.#field.step(this.#chef);
     if (this.#checkLevelClear()) return this.#events.drain();
 
-    for (const enemy of this.#enemies) enemy.step(this.#chef, this.#level, this.#rng);
+    for (const enemy of this.#enemies) enemy.step(this.#chef, this.#rng);
     if (input.pepper) this.#throwPepper();
     this.#checkContact();
     return this.#events.drain();
   }
 
   startBoard(): void {
-    this.#burgers = this.#level.columns.map(
-      (column) => new Burger(column, this.#level, this.#events, this.#stats, this.#crushTarget)
-    );
+    this.#field = this.#newField();
     this.#resetPositions();
     this.#status = 'playing';
     this.#events.emit({ type: 'boardStarted' });
@@ -99,10 +115,13 @@ export class Simulation {
     this.startBoard();
   }
 
+  #newField(): IngredientField {
+    return new IngredientField(this.#level, this.#events, this.#stats, this.#crushTarget);
+  }
+
   #resetPositions(): void {
-    const start = this.#level.chefStart;
-    this.#chef.reset(start.row, start.x);
-    this.#enemies.forEach((enemy, index) => enemy.reset(this.#level.enemyStarts[index], this.#rng));
+    this.#chef.reset(this.#chefPlace);
+    this.#enemies.forEach((enemy, index) => enemy.reset(this.#enemyPlaces[index], this.#rng));
   }
 
   #crushEnemies(left: number, right: number, fromRow: number, toRow: number): void {
@@ -160,9 +179,7 @@ export class Simulation {
   }
 
   #checkLevelClear(): boolean {
-    if (this.#burgers.length === 0 || !this.#burgers.every((burger) => burger.isComplete)) {
-      return false;
-    }
+    if (!this.#field.isComplete) return false;
     this.#stats.advanceLevel();
     this.#status = 'levelClear';
     this.#events.emit({ type: 'levelCleared', level: this.#stats.level });

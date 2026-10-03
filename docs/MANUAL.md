@@ -33,7 +33,7 @@ Xantar es un único proyecto que produce **dos artefactos** a partir del mismo c
 
 El código del juego no cambia entre ambos destinos; solo cambia el envoltorio. La lógica de escritorio vive exclusivamente en la carpeta `electron/`.
 
-Estado actual del juego: un juego de una sola pantalla con un nivel clásico, inspirado en **BurgerTime** (1982). `TapScene` es la pantalla de título ("CLICK PARA JUGAR") y `GameScene` es la vista del juego: ejecuta el núcleo de simulación (`src/sim/`: chef, ingredientes que caen al recorrerlos, enemigos, pimienta, puntuación y vidas) y lo dibuja. La hoja de ruta está en el README y en las issues de GitHub.
+Estado actual del juego: un juego de una sola pantalla con un nivel clásico, inspirado en **BurgerTime** (1982). `TapScene` es la pantalla de título ("CLICK PARA JUGAR") y `GameScene` es la vista del juego: ejecuta el núcleo de simulación (`src/sim/`: chef, ingredientes de segmentos que se pisan y caen, enemigos, pimienta, puntuación y vidas) y lo dibuja. La hoja de ruta está en el README y en las issues de GitHub.
 
 ---
 
@@ -114,11 +114,12 @@ xantar/
 │   │   ├── GameStats.ts         # Puntos, vidas, pimientas, nivel y combo
 │   │   ├── rules.ts             # Constantes de reglas en tiles y ticks
 │   │   ├── rng.ts, events.ts, stepper.ts, geometry.ts, SimInput.ts
-│   │   ├── level/               # LevelData (datos), loadLevel (validación) y Level (consultas)
-│   │   ├── entities/            # Chef, Enemy (+ EnemyBrain), Ingredient, Burger, pepper
-│   │   └── testing/             # Niveles y dobles de prueba compartidos por los tests
+│   │   ├── level/               # Documento JSON, registro de piezas, ensamblado, Level y validación
+│   │   ├── nav/                 # Grafo de navegación, NavPlace y camino más corto
+│   │   ├── entities/            # Chef, Enemy (+ EnemyBrain), Ingredient, IngredientField, Plate, pepper
+│   │   └── testing/             # Niveles (cuadrículas) y dobles de prueba compartidos por los tests
 │   ├── levels/
-│   │   └── classic.ts           # Nivel actual expresado como LevelData
+│   │   └── classic.level.json   # Nivel clásico en el formato de nivel v1
 │   ├── objects/                 # Vistas Phaser (sin lógica): ChefView, EnemyView, IngredientView
 │   └── scenes/
 │       ├── TapScene.ts          # Pantalla "CLICK/TOCA PARA JUGAR" + música
@@ -311,30 +312,31 @@ En el juego se puede consultar con `(window as any).xantar?.isDesktop`. En el fu
 
 - **Paso fijo.** `GameScene` alimenta un `FixedStepper` con el tiempo de cada fotograma y ejecuta en `Simulation` el número de *ticks* resultante (60 por segundo, con un máximo por fotograma). El resultado no depende del framerate. La vista interpola entre el estado de los dos últimos ticks (`prevX`/`prevY` y `alpha`).
 - **Unidades lógicas.** El núcleo trabaja en tiles (1 unidad = 1 tile) y ticks. La vista convierte a píxeles con `TILE` (`src/config.ts`). Una entidad sobre la fila `r` está en `y = r`; la línea de plataforma en `y = r + 0,5`; el centro de la columna `c` en `x = c + 0,5`.
-- **Nivel como datos.** `Simulation` recibe un `Level` cargado con `loadLevel(LevelData)`. `src/levels/classic.ts` define el nivel actual (4 plataformas a todo el ancho, escaleras en las columnas 0, 9, 10 y 19, 4 columnas de 4 ingredientes con su plato). `loadLevel` valida la integridad, fusiona tramos de plataforma y deriva las columnas de caída.
+- **Nivel como datos.** `Simulation` recibe un `Level` cargado con `loadLevel(documento)`; el documento es un JSON versionado (ver 8.6). `src/levels/classic.level.json` es el nivel actual (4 plataformas a todo el ancho, escaleras en las columnas 0, 9, 10 y 19, 4 ingredientes por plato y 4 platos). `loadLevel` ensambla el nivel con el registro de piezas, deriva el grafo de navegación y, por defecto, rechaza los niveles con errores de jugabilidad (`validateLevel`).
 - **Eventos.** `Simulation.step(input)` devuelve los `SimEvent` del tick (`ingredientLanded`, `enemySquashed`, `burgerDone`, `chefHit`, `levelCleared`, `gameOver`…). La vista los traduce a efectos (destello, nube de pimienta, pantallas de fin) y, más adelante, a sonido.
 - **Aleatoriedad.** Se inyecta un `Rng` (`SeededRng`, con semilla). Con la misma semilla y la misma secuencia de entradas, la partida es idéntica.
 
 **Modelo de objetos del núcleo** (`src/sim/`):
 
-- `Simulation`: agregado raíz. Cada tick ejecuta chef → hamburguesas → enemigos → pimienta → contacto. Estado de partida: `playing`, `levelClear`, `gameOver`; órdenes `startBoard`, `nextLevel`, `newGame`.
-- `Chef`: movimiento horizontal por su tramo de plataforma y escaleras (no puede invertir el sentido a mitad de escalera).
-- `Enemy` + `EnemyBrain` (Strategy): tres tipos (`hotdog`, `pickle`, `egg`) que hoy comparten `ChaseBrain` (en la misma fila persigue al chef; si no, va a la escalera más cercana que le acerque). Tiene aturdimiento, aplastamiento y reaparición.
-- `Ingredient` (State: `idle`, `waiting`, `falling`, `stacked`) y `Burger` (columna de ingredientes + plato): reacción en cadena, apilado y finalización.
+- `Simulation`: agregado raíz. Cada tick ejecuta chef → ingredientes → enemigos → pimienta → contacto. Estado de partida: `playing`, `levelClear`, `gameOver`; órdenes `startBoard`, `nextLevel`, `newGame`.
+- **Grafo de navegación** (`src/sim/nav/`): se deriva del nivel y tiene tramos de plataforma (`PlatformEdge`) y de escalera (`LadderEdge`) unidos en los cruces. La posición de chef y enemigos es un `NavPlace` (arista + desplazamiento); `graph.shortestPath` calcula el camino más corto y `graph.reachableFrom` la alcanzabilidad.
+- `Chef`: camina por su tramo de plataforma y se engancha a una escalera a ≤ 0,6 casillas del cruce. Sobre la escalera solo se mueve mientras pulsas arriba o abajo y puede parar e invertir en cualquier punto; a 0,4 casillas o menos de una plataforma, pulsar izquierda o derecha le hace pasar a ella. En plataforma, la entrada lateral tiene prioridad sobre engancharse a una escalera.
+- `Enemy` + `EnemyBrain` (Strategy): tres tipos (`hotdog`, `pickle`, `egg`) que hoy comparten `ChaseBrain`, que usa el camino más corto del grafo hacia el chef (en el mismo tramo de plataforma lo persigue en horizontal). Tiene aturdimiento, aplastamiento y reaparición en los marcadores de enemigo del nivel.
+- `Ingredient` (State: `idle`, `waiting`, `falling`, `stacked`) con sus segmentos pisables, `IngredientField` (pisado, cadena de caídas, aterrizajes) y `Plate` (apilado y finalización de la hamburguesa).
 
 **Mecánica principal:**
 
-1. El chef recorre un ingrediente de lado a lado; al alcanzar el extremo opuesto se activa.
-2. Se activan él y los ingredientes inmóviles de su columna situados por debajo: caen **una plataforma**, el más bajo primero y con 7 ticks entre cada uno (reacción en cadena). Los que están sobre la última plataforma caen al plato y se apilan en orden; repitiendo el proceso se ensambla la hamburguesa.
-3. Un ingrediente que empieza a caer aplasta a los enemigos de su columna entre la fila de origen y la de destino; reaparecen a los 150 ticks (2,5 s) en un punto de reaparición.
-4. Cuando todas las piezas de una columna han **aterrizado** en el plato, la hamburguesa se completa (+400 puntos y +1 pimienta). Al completar todas se sube de nivel.
+1. Cada ingrediente tiene tantos segmentos como indique el nivel (`segments`: 2, 3 o 4). El chef **pisa** un segmento al entrar en su casilla caminando por la plataforma (no desde una escalera); los segmentos pisados se quedan pisados. Con todos pisados, el ingrediente se activa.
+2. El ingrediente cae hasta el primer soporte por debajo (plataforma o plato bajo cualquiera de sus casillas). Los ingredientes inmóviles de esa fila que solapan alguna de sus casillas son **golpeados** y caen también, recursivamente: el más bajo primero y con 7 ticks entre cada uno. Solo cae lo que se golpea.
+3. Un ingrediente que empieza a caer aplasta a los enemigos de sus casillas entre la fila de origen y la de destino; reaparecen a los 150 ticks (2,5 s) en uno de los marcadores de enemigo del nivel.
+4. Cuando han **aterrizado** en un plato todos los ingredientes que acaban en él (el destino se calcula al cargar el nivel), la hamburguesa se completa (+400 puntos y +1 pimienta). Al completar todos los platos se sube de nivel.
 5. Cada ingrediente activado da 50 puntos; aplastar enemigos da 100 x combo.
 
 **Controles**:
 
 | Acción | Tecla |
 |--------|-------|
-| Moverse / subir-bajar escaleras | Flechas o `WASD` |
+| Moverse / subir-bajar escaleras (en la escalera solo te mueves mientras pulsas arriba o abajo) | Flechas o `WASD` |
 | Lanzar pimienta | `Espacio` |
 | Confirmar (fin de nivel / game over) | `Enter` |
 | Salir al menú | `Esc` o botón `✕` |
@@ -342,6 +344,38 @@ En el juego se puede consultar con `(window as any).xantar?.isDesktop`. En el fu
 **Vidas y fin de partida**: 3 vidas. Tocar un enemigo no aturdido resta una vida; al llegar a 0 aparece *GAME OVER* y `Enter` reinicia.
 
 **Pendiente / ideas**: alimentos de bonus (helado, café, patatas), más enemigos, música y efectos de sonido, controles táctiles y puntuación persistente.
+
+### 8.6 Formato de nivel y registro de piezas
+
+Un nivel es un documento JSON versionado (`src/sim/level/`). Se lee con `parseLevelJson` o `parseLevelDocument`, se escribe con `serializeLevel` (una cadena por fila, apta para `git diff`) y se carga con `loadLevel`:
+
+```json
+{
+  "format": "xantar-level",
+  "version": 1,
+  "name": "Classic",
+  "cols": 20,
+  "rows": 15,
+  "segments": 4,
+  "layers": {
+    "structure":   ["....", "+==+", "H..H", "+==+", ".__."],
+    "ingredients": ["....", ".TT.", "....", ".BB.", "...."],
+    "actors":      ["....", "....", "....", ".C..", "...."]
+  }
+}
+```
+
+(Ejemplo abreviado: cada capa tiene `rows` cadenas de `cols` caracteres.) `segments` es opcional (2, 3 o 4; 4 por defecto): fija el número de segmentos de cada ingrediente y el ancho en casillas de ingredientes y platos, para pantallas de minihamburguesas.
+
+| Capa | Símbolo | Pieza |
+|------|---------|-------|
+| `structure` | `.` `=` `H` `+` `_` | vacío, plataforma, escalera, cruce (plataforma con escalera), plato |
+| `ingredients` | `T` `L` `P` `B` | pan superior, lechuga, carne, pan inferior |
+| `actors` | `C` `h` `p` `e` | inicio del chef, aparición de perrito, pepinillo y huevo |
+
+Reglas: una racha de casillas iguales de una pieza ancha (ingredientes y platos) se divide en unidades del tamaño `segments`; un segmento de ingrediente necesita casilla de plataforma debajo; los marcadores de enemigo son también los puntos de reaparición. Los errores estructurales lanzan `LevelError` con capa, fila y columna. Además, `validateLevel` informa de incidencias de jugabilidad (`ingredient-unreachable`, `ingredient-no-plate`, `ladder-dangling`, `no-ingredients` como errores; `plate-empty`, `platform-unreachable`, `spawn-unreachable` como avisos) y `loadLevel` rechaza por defecto los niveles con errores (`requirePlayable: false` los acepta, para el futuro editor).
+
+Cada símbolo lo define una `PieceDefinition` (id, símbolo, capa, ancho y qué aporta al nivel) del `PieceRegistry`. Las piezas no contienen nada gráfico.
 
 ---
 
@@ -431,11 +465,24 @@ Opción recomendada (CI): un workflow de GitHub Actions que ejecute `npm ci && n
 
 ### 9.5 Añadir o cambiar una regla de juego
 
-1. La regla va en el núcleo (`src/sim/`), nunca en la escena. Localiza el objeto que la posee (`Chef`, `Enemy`, `Ingredient`, `Burger` o `Simulation`) y modifica su comportamiento.
+1. La regla va en el núcleo (`src/sim/`), nunca en la escena. Localiza el objeto que la posee (`Chef`, `Enemy`, `Ingredient`, `IngredientField`, `Plate` o `Simulation`) y modifica su comportamiento.
 2. Si necesita un número, añádelo a `src/sim/rules.ts` en tiles y ticks (no en píxeles ni milisegundos).
 3. Si el cambio es observable por la vista, emite un `SimEvent` (`src/sim/events.ts`) con los datos necesarios y trátalo en `GameScene.#handleEvents`.
-4. Escribe la prueba junto al código (`*.test.ts`) con un nivel mínimo (`src/sim/testing/levels.ts`) y un `Rng` falso (`StubRng`) si interviene el azar. `npm run test:watch` ayuda a iterar.
+4. Escribe la prueba junto al código (`*.test.ts`) con un nivel mínimo hecho con cuadrículas de texto (`levelFromGrid`, `tinyGrid` en `src/sim/testing/grids.ts`) y un `Rng` falso (`StubRng`) si interviene el azar. `npm run test:watch` ayuda a iterar.
 5. Comprueba que se mantiene el determinismo (`Simulation.determinism.test.ts`) y ejecuta `npm run lint && npm run typecheck && npm run test`.
+
+### 9.6 Añadir una pieza al registro
+
+1. Define una `PieceDefinition` (`src/sim/level/pieces/`): `id`, `symbol` (un carácter, único en su capa), `layer`, `width` (un número, o `'unit'` para el tamaño de unidad del nivel) y `contribute(placement, builder)`, que llama a los métodos del `LevelBuilder` (`addPlatform`, `addLadder`, `addPlate`, `addIngredient`, `setChefStart`, `addEnemySpawn`).
+2. Regístrala: en `defaultPieces.ts` si forma parte de la versión actual del formato, o con `registry.register(...)` para pruebas y extensiones. Añadir piezas no cambia la versión del formato; cambiar el significado de un símbolo existente sí.
+3. Si la pieza necesita una regla nueva, impleméntala en el núcleo (receta 9.5) y, si procede, una regla de validación (`src/sim/level/validation/rules.ts`).
+4. Prueba con una cuadrícula pequeña (`levelFromGrid` en `src/sim/testing/grids.ts`) y comprueba el registro (`PieceRegistry.test.ts`).
+
+### 9.7 Crear un nivel a mano y validarlo
+
+1. Copia `src/levels/classic.level.json` y edita las tres capas (todas con `rows` filas de `cols` caracteres). Usa `+` donde una escalera toca una plataforma, `H` entre los cruces, y grupos de `segments` casillas iguales para ingredientes y platos.
+2. Escribe una prueba (o un script) que lo cargue: `loadLevel(parseLevelJson(texto))` lanza `LevelError` si es estructuralmente incorrecto o `UnplayableLevelError` (con `issues`) si no se puede jugar; `validateLevel(loadLevel(doc, { requirePlayable: false }))` devuelve todas las incidencias, avisos incluidos.
+3. Para usarlo en el juego, carga el documento en `GameScene` en lugar del clásico (la selección de niveles llegará con el editor).
 
 ---
 
@@ -487,7 +534,7 @@ Phaser va dentro del bundle de Vite, por lo que **no** se incluye `node_modules/
 - **Campos privados** con `#` (estándar ES2022) para el interior de las clases; `protected` solo en puntos de extensión deliberados y `readonly` para lo que no cambia tras construirse.
 - **TypeScript 7** (compilador nativo): `npm run typecheck` usa su `tsc`. El editor puede usar otra versión de TypeScript para el servidor de lenguaje; no afecta a la comprobación de tipos del proyecto.
 - **Diseño**: orientado a objetos por defecto (objetos con estado y comportamiento, inyección de dependencias por constructor, composición sobre herencia), con estilo funcional para cálculo sin estado, eventos y datos inmutables. La lógica de dominio vive en `src/sim/` sin depender de Phaser; el detalle está en `AGENTS.md`.
-- **Sin comentarios** en el código salvo que aporten algo que el código no exprese.
+- **Comentario de clase obligatorio**: toda clase lleva encima un comentario breve `/** ... */` (de una a tres líneas, en inglés) que explica para qué sirve y, si ayuda, su papel en el diseño (Strategy, State…). Lo mismo para las interfaces que definen el papel de un colaborador. Fuera de eso, **sin comentarios** salvo que aporten algo que el código no exprese.
 - El renderer (`tsconfig.json`) solo incluye librerías de navegador (`DOM`); **no** tiene acceso a APIs de Node (`types: []`). Esto evita usar por error `fs`, `path`, etc. en el juego.
 - El proceso Electron (`tsconfig.electron.json`) es lo contrario: solo Node, sin DOM.
 - Código, identificadores y comentarios van en **inglés**; este manual es la única documentación en español.

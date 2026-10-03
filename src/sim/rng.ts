@@ -1,3 +1,6 @@
+/**
+ * Source of randomness injected into the simulation, so tests can replace it.
+ */
 export interface Rng {
   next(): number;
   int(min: number, max: number): number;
@@ -5,6 +8,10 @@ export interface Rng {
   pick<T>(items: readonly T[]): T;
 }
 
+/**
+ * Deterministic random number generator (mulberry32): the same seed always gives the same
+ * sequence, so a run can be reproduced.
+ */
 export class SeededRng implements Rng {
   #state: number;
 

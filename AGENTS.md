@@ -64,7 +64,12 @@ npm run typecheck && npm run test && npm run build` and keep a runnable build. O
   Node APIs such as `fs` or `path` from `src/`. Electron-only code goes in
   `electron/` and uses `tsconfig.electron.json`.
 - Code, identifiers and comments in English.
-- No comments unless they add information the code cannot express.
+- Every class has a short doc comment (`/** ... */`, one to three lines, in English)
+  right above it saying what it is for and, when it helps, which role it plays in
+  the design (for example a Strategy or a State). The same goes for the interfaces
+  that define a collaborator role. The name of a class is not always enough for
+  someone who is just reading files. Apart from that, no comments unless they add
+  information the code cannot express.
 - Formatting is enforced by Prettier and linting by Oxlint (with type-aware
   rules). `src/sim/` has extra lint guards: no Phaser, DOM or Node imports, no
   browser globals, no `Date` and no `Math.random` (inject an `Rng`).

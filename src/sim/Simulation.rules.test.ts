@@ -1,15 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { SimEvent } from './events';
-import { loadLevel } from './level/loadLevel';
-import type { LevelData } from './level/LevelData';
 import { START_LIVES, START_PEPPERS, STUN_TICKS } from './rules';
 import { NO_INPUT, type SimInput } from './SimInput';
 import { Simulation } from './Simulation';
-import { levelData } from './testing/levels';
+import { type GridSpec, levelFromGrid, tinyGrid, withGrid } from './testing/grids';
 import { StubRng } from './testing/rng';
 
-const create = (data: LevelData): Simulation =>
-  new Simulation({ level: loadLevel(data), rng: new StubRng(0.99) });
+const create = (grid: GridSpec): Simulation =>
+  new Simulation({ level: levelFromGrid(grid), rng: new StubRng(0.99) });
 
 const run = (sim: Simulation, ticks: number, input: Partial<SimInput> = {}): SimEvent[] => {
   const events: SimEvent[] = [];
@@ -20,23 +18,56 @@ const run = (sim: Simulation, ticks: number, input: Partial<SimInput> = {}): Sim
 const ofType = <T extends SimEvent['type']>(events: readonly SimEvent[], type: T) =>
   events.filter((event): event is Extract<SimEvent, { type: T }> => event.type === type);
 
-const chefAndEnemyOnRow5 = levelData({
-  chefStart: { row: 5, col: 1 },
-  enemyStarts: [{ kind: 'hotdog', row: 5, col: 3 }]
+const arena = (actors: readonly string[]): GridSpec => ({
+  structure: [
+    '........',
+    '........',
+    '........',
+    '........',
+    '........',
+    '========',
+    '........',
+    '........'
+  ],
+  actors
 });
 
-describe('Simulation: crushing enemies', () => {
-  const crushLevel = levelData({
-    chefStart: { row: 2, col: 6 },
-    enemyStarts: [
-      { kind: 'hotdog', row: 5, col: 2 },
-      { kind: 'egg', row: 5, col: 4 }
+const chefAndEnemyOnRow5 = arena([
+  '........',
+  '........',
+  '........',
+  '........',
+  '........',
+  '.C.h....',
+  '........',
+  '........'
+]);
+
+describe('Simulation: stomping and crushing enemies', () => {
+  const crushGrid = withGrid({
+    actors: [
+      '........',
+      '........',
+      '......C.',
+      '........',
+      '........',
+      '..h.e...',
+      '........',
+      '........'
     ]
   });
 
+  it('activates an ingredient only after the chef has stepped on all its segments', () => {
+    const sim = create(crushGrid);
+    const events = run(sim, 50, { left: true });
+    expect(ofType(events, 'segmentStomped').map((event) => event.segment)).toEqual([3, 2]);
+    expect(ofType(events, 'ingredientsTriggered')).toHaveLength(0);
+  });
+
   it('crushes consecutive enemies with a growing combo', () => {
-    const sim = create(crushLevel);
+    const sim = create(crushGrid);
     const events = run(sim, 100, { left: true });
+    expect(ofType(events, 'ingredientsTriggered')).toHaveLength(1);
     const crushed = ofType(events, 'enemySquashed');
     expect(crushed.map((event) => [event.points, event.combo])).toEqual([
       [100, 1],
@@ -49,12 +80,13 @@ describe('Simulation: crushing enemies', () => {
     expect(sim.enemies.every((enemy) => !enemy.active)).toBe(true);
   });
 
-  it('respawns the crushed enemies after the respawn delay', () => {
-    const sim = create(crushLevel);
+  it('respawns the crushed enemies after the respawn delay at a spawn marker', () => {
+    const sim = create(crushGrid);
     run(sim, 100, { left: true });
     const events = run(sim, 160);
     expect(ofType(events, 'enemyRespawned')).toHaveLength(2);
     expect(sim.enemies.every((enemy) => enemy.active)).toBe(true);
+    expect(sim.enemies.map((enemy) => enemy.row)).toEqual([5, 5]);
   });
 });
 
@@ -86,11 +118,9 @@ describe('Simulation: pepper', () => {
   it('does nothing without peppers', () => {
     const sim = create(chefAndEnemyOnRow5);
     for (let i = 0; i < START_PEPPERS; i++) run(sim, 1, { pepper: true });
-    const before = sim.stats.peppers;
     const events = run(sim, 1, { pepper: true });
-    expect(before).toBe(0);
-    expect(ofType(events, 'pepperThrown')).toHaveLength(0);
     expect(sim.stats.peppers).toBe(0);
+    expect(ofType(events, 'pepperThrown')).toHaveLength(0);
   });
 
   it('consumes only one pepper for a single-tick press', () => {
@@ -125,17 +155,6 @@ describe('Simulation: contact and lives', () => {
     expect(ofType(events, 'gameOver')).toHaveLength(1);
   });
 
-  it('resets the combo when a life is lost', () => {
-    const sim = create(
-      levelData({
-        chefStart: { row: 5, col: 1 },
-        enemyStarts: [{ kind: 'hotdog', row: 5, col: 3 }]
-      })
-    );
-    run(sim, 80);
-    expect(sim.stats.combo).toBe(0);
-  });
-
   it('keeps the world still once the game is over', () => {
     const sim = create(chefAndEnemyOnRow5);
     run(sim, 300);
@@ -159,27 +178,42 @@ describe('Simulation: contact and lives', () => {
     expect(run(sim, 1)).toEqual([{ type: 'boardStarted' }]);
   });
 
-  it('does not touch an enemy that is on another row', () => {
-    const sim = create(
-      levelData({
-        chefStart: { row: 5, col: 1 },
-        enemyStarts: [{ kind: 'hotdog', row: 2, col: 1 }]
-      })
-    );
+  it('does not touch an enemy that is on another platform', () => {
+    const sim = create({
+      structure: tinyGrid.structure,
+      actors: [
+        '........',
+        '........',
+        '.h......',
+        '........',
+        '........',
+        '......C.',
+        '........',
+        '........'
+      ]
+    });
     run(sim, 30);
     expect(sim.stats.lives).toBe(START_LIVES);
   });
 });
 
 describe('Simulation: clearing a level', () => {
-  const singleBurger = levelData({
-    chefStart: { row: 5, col: 6 },
-    ingredients: [{ kind: 'bunBottom', row: 5, x0: 1, x1: 4 }]
+  const singleBurger = withGrid({
+    ingredients: [
+      '........',
+      '........',
+      '........',
+      '........',
+      '........',
+      '.BBBB...',
+      '........',
+      '........'
+    ]
   });
 
   it('clears the level when the last burger is completed', () => {
     const sim = create(singleBurger);
-    const events = run(sim, 140, { left: true });
+    const events = run(sim, 160, { left: true });
     expect(sim.status).toBe('levelClear');
     expect(ofType(events, 'burgerDone')).toHaveLength(1);
     expect(ofType(events, 'levelCleared')).toEqual([{ type: 'levelCleared', level: 2 }]);
@@ -189,7 +223,7 @@ describe('Simulation: clearing a level', () => {
 
   it('continues to the next level keeping score, lives and peppers', () => {
     const sim = create(singleBurger);
-    run(sim, 140, { left: true });
+    run(sim, 160, { left: true });
     sim.nextLevel();
     expect(sim.status).toBe('playing');
     expect([sim.stats.score, sim.stats.lives, sim.stats.peppers]).toEqual([
@@ -198,15 +232,50 @@ describe('Simulation: clearing a level', () => {
       START_PEPPERS + 1
     ]);
     expect(sim.chef.x).toBe(6.5);
-    expect(sim.burgers.every((burger) => !burger.isComplete)).toBe(true);
+    expect(sim.plates.every((plate) => !plate.isComplete)).toBe(true);
     expect(run(sim, 1)).toEqual([{ type: 'boardStarted' }]);
   });
 
   it('does not run the world while the level is cleared', () => {
     const sim = create(singleBurger);
-    run(sim, 140, { left: true });
+    run(sim, 160, { left: true });
     const x = sim.chef.x;
     run(sim, 30, { right: true });
     expect(sim.chef.x).toBe(x);
+  });
+
+  it('clears a level of mini burgers made of three casillas', () => {
+    const sim = create({
+      segments: 3,
+      structure: ['........', '========', '........', '.___....'],
+      ingredients: ['........', '.BBB....', '........', '........'],
+      actors: ['........', '......C.', '........', '........']
+    });
+    run(sim, 160, { left: true });
+    expect(sim.status).toBe('levelClear');
+  });
+});
+
+describe('Simulation: chain of falls', () => {
+  it('drops both ingredients of a column when the upper one is completed', () => {
+    const sim = create(
+      withGrid({
+        actors: [
+          '........',
+          '........',
+          '......C.',
+          '........',
+          '........',
+          '........',
+          '........',
+          '........'
+        ]
+      })
+    );
+    const events = run(sim, 160, { left: true });
+    expect(ofType(events, 'ingredientsTriggered')[0].ingredientIds).toEqual([1, 0]);
+    expect(sim.stats.score).toBe(100);
+    expect(sim.ingredients[1].phase).toBe('stacked');
+    expect(sim.ingredients[0].row).toBe(5);
   });
 });

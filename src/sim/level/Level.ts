@@ -1,40 +1,6 @@
-import { columnCenter } from '../geometry';
-import { LADDER_GRAB_DISTANCE } from '../rules';
-import type { EnemyKind, IngredientKind } from './LevelData';
-
-export interface PlatformRun {
-  readonly row: number;
-  readonly left: number;
-  readonly right: number;
-}
-
-export interface Ladder {
-  readonly col: number;
-  readonly topRow: number;
-  readonly bottomRow: number;
-}
-
-export interface Plate {
-  readonly row: number;
-  readonly left: number;
-  readonly right: number;
-}
-
-export interface IngredientSpec {
-  readonly id: number;
-  readonly kind: IngredientKind;
-  readonly row: number;
-  readonly left: number;
-  readonly right: number;
-}
-
-export interface BurgerColumn {
-  readonly id: number;
-  readonly left: number;
-  readonly right: number;
-  readonly ingredients: readonly IngredientSpec[];
-  readonly plate: Plate;
-}
+import type { NavigationGraph } from '../nav/NavigationGraph';
+import type { EnemyKind, IngredientKind } from './kinds';
+import type { Landing, Terrain } from './Terrain';
 
 export interface Spawn {
   readonly row: number;
@@ -45,75 +11,96 @@ export interface EnemySpawn extends Spawn {
   readonly kind: EnemyKind;
 }
 
-export interface LevelParts {
-  readonly cols: number;
-  readonly rows: number;
-  readonly platformRuns: readonly PlatformRun[];
-  readonly ladders: readonly Ladder[];
-  readonly columns: readonly BurgerColumn[];
-  readonly chefStart: Spawn;
-  readonly enemyStarts: readonly EnemySpawn[];
-  readonly respawnPoints: readonly Spawn[];
+export interface IngredientSpec {
+  readonly id: number;
+  readonly kind: IngredientKind;
+  readonly row: number;
+  readonly col: number;
+  readonly width: number;
 }
 
-export class Level {
+export interface PlateSpec {
+  readonly id: number;
+  readonly row: number;
+  readonly col: number;
+  readonly width: number;
+  readonly expected: number;
+}
+
+export interface LevelLanding {
+  readonly row: number;
+  readonly plate: PlateSpec | undefined;
+}
+
+export interface LevelParts {
+  readonly name: string;
   readonly cols: number;
   readonly rows: number;
-  readonly platformRuns: readonly PlatformRun[];
-  readonly ladders: readonly Ladder[];
-  readonly columns: readonly BurgerColumn[];
+  readonly segments: number;
+  readonly terrain: Terrain;
+  readonly graph: NavigationGraph;
+  readonly ingredients: readonly IngredientSpec[];
+  readonly plates: readonly PlateSpec[];
   readonly chefStart: Spawn;
-  readonly enemyStarts: readonly EnemySpawn[];
-  readonly respawnPoints: readonly Spawn[];
+  readonly enemySpawns: readonly EnemySpawn[];
+}
+
+/**
+ * Immutable result of loading a level: ingredients, plates, spawns, terrain and navigation
+ * graph, with the queries the rules need.
+ */
+export class Level {
+  readonly name: string;
+  readonly cols: number;
+  readonly rows: number;
+  readonly segments: number;
+  readonly terrain: Terrain;
+  readonly graph: NavigationGraph;
+  readonly ingredients: readonly IngredientSpec[];
+  readonly plates: readonly PlateSpec[];
+  readonly chefStart: Spawn;
+  readonly enemySpawns: readonly EnemySpawn[];
 
   constructor(parts: LevelParts) {
+    this.name = parts.name;
     this.cols = parts.cols;
     this.rows = parts.rows;
-    this.platformRuns = parts.platformRuns;
-    this.ladders = parts.ladders;
-    this.columns = parts.columns;
+    this.segments = parts.segments;
+    this.terrain = parts.terrain;
+    this.graph = parts.graph;
+    this.ingredients = parts.ingredients;
+    this.plates = parts.plates;
     this.chefStart = parts.chefStart;
-    this.enemyStarts = parts.enemyStarts;
-    this.respawnPoints = parts.respawnPoints;
+    this.enemySpawns = parts.enemySpawns;
   }
 
-  platformRunAt(row: number, x: number): PlatformRun | undefined {
-    return this.platformRuns.find((run) => run.row === row && x >= run.left && x <= run.right);
+  landingBelow(row: number, left: number, right: number): LevelLanding | undefined {
+    const landing = this.terrain.landingBelow(row, left, right);
+    return landing === undefined ? undefined : this.#toLevelLanding(landing);
   }
 
-  laddersFromRow(row: number, goingUp: boolean): readonly Ladder[] {
-    return this.ladders.filter((ladder) => (goingUp ? ladder.bottomRow : ladder.topRow) === row);
+  destinationOf(ingredient: IngredientSpec): PlateSpec | undefined {
+    const plateId = destinationPlateId(this.terrain, ingredient);
+    return plateId === undefined ? undefined : this.plates[plateId];
   }
 
-  ladderNear(
-    row: number,
-    x: number,
-    goingUp: boolean,
-    maxDistance = LADDER_GRAB_DISTANCE
-  ): Ladder | undefined {
-    return this.laddersFromRow(row, goingUp).find(
-      (ladder) => Math.abs(columnCenter(ladder.col) - x) <= maxDistance
-    );
+  #toLevelLanding(landing: Landing): LevelLanding {
+    return {
+      row: landing.row,
+      plate: landing.plateId === undefined ? undefined : this.plates[landing.plateId]
+    };
   }
+}
 
-  bestLadderTowards(row: number, targetRow: number, x: number): Ladder | undefined {
-    const options = this.laddersFromRow(row, targetRow < row);
-    return options.reduce<Ladder | undefined>(
-      (best, ladder) =>
-        best === undefined ||
-        Math.abs(columnCenter(ladder.col) - x) < Math.abs(columnCenter(best.col) - x)
-          ? ladder
-          : best,
-      undefined
-    );
-  }
-
-  landingRowBelow(row: number, left: number, right: number): number | undefined {
-    return this.platformRuns
-      .filter((run) => run.row > row && run.left <= left && run.right >= right)
-      .reduce<number | undefined>(
-        (nearest, run) => (nearest === undefined || run.row < nearest ? run.row : nearest),
-        undefined
-      );
+export function destinationPlateId(
+  terrain: Terrain,
+  ingredient: Pick<IngredientSpec, 'row' | 'col' | 'width'>
+): number | undefined {
+  let row = ingredient.row;
+  for (;;) {
+    const landing = terrain.landingBelow(row, ingredient.col, ingredient.col + ingredient.width);
+    if (landing === undefined) return undefined;
+    if (landing.plateId !== undefined) return landing.plateId;
+    row = landing.row;
   }
 }
