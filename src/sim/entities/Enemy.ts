@@ -176,5 +176,6 @@ export class Enemy extends MovingEntity implements EnemySnapshot {
     this.#place = place;
     this.#row = row;
     this.#climb = undefined;
+    this.#decisionTicks = 0;
   }
 }

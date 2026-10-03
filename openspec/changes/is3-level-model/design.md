@@ -225,7 +225,9 @@ simple y suficiente).
 - **Enemigo.** Mantiene `#place`, dirección y la intención de escalera
   (`{ ladder, direction }`). Camina; cuando llega al cruce de su escalera (< 3/32)
   entra en ella y la recorre entera a 68/32 en el sentido decidido; al llegar al
-  extremo vuelve a plataforma. El sentido se fija al decidir (antes se calculaba
+  extremo vuelve a plataforma y reevalúa su decisión en ese momento (antes seguía
+  hasta 1,1 s con el sentido de la decisión anterior, que podía alejarle del
+  chef). El sentido de la escalera se fija al decidir (antes se calculaba
   al llegar); es una corrección deliberada del caso en que el chef cambiaba de
   fila mientras el enemigo caminaba hacia la escalera.
 - **`EnemyBrain` (Strategy)** recibe ahora el grafo: `decide(enemy, chef, graph,

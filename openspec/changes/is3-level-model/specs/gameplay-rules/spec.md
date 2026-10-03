@@ -183,8 +183,9 @@ de ese camino y, al llegar, recorrerla entera a 68/32 casillas por segundo en el
 sentido decidido en ese momento. Si el chef está en el mismo tramo, el enemigo
 SHALL dirigirse hacia él, con una probabilidad del 20 % de invertir el sentido
 en cada decisión. Si no existe camino hasta el chef, SHALL dirigirse
-horizontalmente hacia él con las mismas inversiones. Un enemigo aturdido SHALL
-permanecer inmóvil.
+horizontalmente hacia él con las mismas inversiones. Al llegar al extremo de una
+escalera, el enemigo SHALL reevaluar su decisión de inmediato en lugar de seguir
+el sentido anterior. Un enemigo aturdido SHALL permanecer inmóvil.
 
 #### Scenario: Chef en otra fila
 - **WHEN** un enemigo está en la plataforma superior y el chef en la inferior
@@ -199,6 +200,12 @@ permanecer inmóvil.
 - **WHEN** enemigo y chef comparten tramo de plataforma
 - **THEN** el enemigo se acerca horizontalmente al chef, salvo inversiones
   ocasionales de sentido
+
+#### Scenario: Reevaluar al bajar de una escalera
+- **WHEN** un enemigo termina de recorrer una escalera y el chef está en el
+  sentido contrario al que llevaba
+- **THEN** el enemigo se dirige hacia el chef desde el primer tick en la
+  plataforma, sin seguir antes el sentido anterior
 
 #### Scenario: Chef inalcanzable
 - **WHEN** no existe camino del grafo entre el enemigo y el chef

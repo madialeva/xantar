@@ -89,6 +89,17 @@ describe('Enemy chasing', () => {
     expect([enemy.row, enemy.y]).toEqual([5, 5]);
   });
 
+  it('decides again as soon as it leaves a ladder, so it does not walk away from the chef', () => {
+    const { enemy } = spawn(tiny, 2, 3.5);
+    const chef = chefAt(tiny, 5, 0.6);
+    run(enemy, chef, 1);
+    while (enemy.isClimbing) run(enemy, chef, 1);
+    expect([enemy.row, enemy.x]).toEqual([5, 3.5]);
+    run(enemy, chef, 1);
+    expect(enemy.facing).toBe(-1);
+    expect(enemy.x).toBeLessThan(3.5);
+  });
+
   it('walks towards the chef when there is no path', () => {
     const level = levelFromShape({
       cols: 12,
