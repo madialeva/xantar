@@ -26,6 +26,10 @@ interface Climb {
   readonly step: 1 | -1;
 }
 
+/**
+ * A chasing enemy. Walks the navigation graph, climbs ladders, can be stunned or crushed
+ * and respawns; where it goes is decided by its EnemyBrain.
+ */
 export class Enemy extends MovingEntity implements EnemySnapshot {
   readonly id: number;
   readonly kind: EnemyKind;

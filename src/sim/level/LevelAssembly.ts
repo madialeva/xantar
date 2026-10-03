@@ -18,6 +18,10 @@ interface Anchored<T> {
   readonly placement: Placement;
 }
 
+/**
+ * Builder that collects what the pieces of a level document contribute and assembles the
+ * immutable Level, checking the structural rules.
+ */
 export class LevelAssembly implements LevelBuilder {
   readonly #name: string;
   readonly #cols: number;

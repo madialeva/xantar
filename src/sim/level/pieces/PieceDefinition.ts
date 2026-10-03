@@ -7,6 +7,9 @@ export interface Placement {
   readonly width: number;
 }
 
+/**
+ * What a piece can add to a level while it is being assembled.
+ */
 export interface LevelBuilder {
   addPlatform(row: number, col: number): void;
   addLadder(row: number, col: number): void;
@@ -16,6 +19,10 @@ export interface LevelBuilder {
   addEnemySpawn(kind: EnemyKind, placement: Placement): void;
 }
 
+/**
+ * A piece of the level palette: its symbol, layer and width, and what it contributes to
+ * the level. Contains nothing graphical.
+ */
 export interface PieceDefinition {
   readonly id: string;
   readonly symbol: string;

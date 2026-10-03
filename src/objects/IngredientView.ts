@@ -12,6 +12,10 @@ const PLATFORM_CLEARANCE = 6;
 const SEGMENT_GAP = 2;
 const STOMP_DEPTH = 3;
 
+/**
+ * Phaser view of an ingredient: draws its segments (lowered when stomped) and places it
+ * on its platform, in the air while it falls or on the plate once stacked.
+ */
 export default class IngredientView extends Phaser.GameObjects.Container {
   readonly #height: number;
   readonly #segments: Phaser.GameObjects.Container[] = [];

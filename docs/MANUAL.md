@@ -534,7 +534,7 @@ Phaser va dentro del bundle de Vite, por lo que **no** se incluye `node_modules/
 - **Campos privados** con `#` (estándar ES2022) para el interior de las clases; `protected` solo en puntos de extensión deliberados y `readonly` para lo que no cambia tras construirse.
 - **TypeScript 7** (compilador nativo): `npm run typecheck` usa su `tsc`. El editor puede usar otra versión de TypeScript para el servidor de lenguaje; no afecta a la comprobación de tipos del proyecto.
 - **Diseño**: orientado a objetos por defecto (objetos con estado y comportamiento, inyección de dependencias por constructor, composición sobre herencia), con estilo funcional para cálculo sin estado, eventos y datos inmutables. La lógica de dominio vive en `src/sim/` sin depender de Phaser; el detalle está en `AGENTS.md`.
-- **Sin comentarios** en el código salvo que aporten algo que el código no exprese.
+- **Comentario de clase obligatorio**: toda clase lleva encima un comentario breve `/** ... */` (de una a tres líneas, en inglés) que explica para qué sirve y, si ayuda, su papel en el diseño (Strategy, State…). Lo mismo para las interfaces que definen el papel de un colaborador. Fuera de eso, **sin comentarios** salvo que aporten algo que el código no exprese.
 - El renderer (`tsconfig.json`) solo incluye librerías de navegador (`DOM`); **no** tiene acceso a APIs de Node (`types: []`). Esto evita usar por error `fs`, `path`, etc. en el juego.
 - El proceso Electron (`tsconfig.electron.json`) es lo contrario: solo Node, sin DOM.
 - Código, identificadores y comentarios van en **inglés**; este manual es la única documentación en español.

@@ -11,6 +11,10 @@ import {
 } from './Ingredient';
 import { Plate } from './Plate';
 
+/**
+ * Whoever can be crushed by a falling ingredient (the enemies); keeps the field unaware
+ * of the enemy class.
+ */
 export interface CrushTarget {
   crush(left: number, right: number, fromRow: number, toRow: number): void;
 }
@@ -18,6 +22,10 @@ export interface CrushTarget {
 const overlap = (a: IngredientSnapshot, b: IngredientSnapshot): boolean =>
   a.left < b.right && b.left < a.right;
 
+/**
+ * Coordinates all the ingredients and plates of a level: stomping from the chef's position,
+ * chain falls by impact, crush requests, landings and burger completion.
+ */
 export class IngredientField implements IngredientHost {
   readonly ingredients: readonly Ingredient[];
   readonly plates: readonly Plate[];

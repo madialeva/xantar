@@ -3,6 +3,10 @@ import { LAYER_IDS } from '../LevelError';
 import { defaultPieces } from './defaultPieces';
 import type { PieceDefinition } from './PieceDefinition';
 
+/**
+ * Maps each symbol of each layer to the piece that interprets it. New pieces are added
+ * by registering them, without touching the level loader.
+ */
 export class PieceRegistry {
   readonly #byLayer = new Map<LayerId, Map<string, PieceDefinition>>(
     LAYER_IDS.map((layer) => [layer, new Map()])

@@ -9,6 +9,10 @@ export interface StatsSnapshot {
   readonly combo: number;
 }
 
+/**
+ * Score, lives, peppers, level and crush combo of the current game; announces score
+ * changes as events.
+ */
 export class GameStats implements StatsSnapshot {
   readonly #events: EventSink;
   #score = 0;

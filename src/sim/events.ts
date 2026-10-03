@@ -47,10 +47,16 @@ export type SimEvent =
 
 export type SimEventType = SimEvent['type'];
 
+/**
+ * Where entities report what happened (see SimEvent) without knowing who listens.
+ */
 export interface EventSink {
   emit(event: SimEvent): void;
 }
 
+/**
+ * Collects the events emitted during a tick so the simulation can hand them to the view.
+ */
 export class EventQueue implements EventSink {
   #events: SimEvent[] = [];
 

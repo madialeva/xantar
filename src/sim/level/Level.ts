@@ -45,6 +45,10 @@ export interface LevelParts {
   readonly enemySpawns: readonly EnemySpawn[];
 }
 
+/**
+ * Immutable result of loading a level: ingredients, plates, spawns, terrain and navigation
+ * graph, with the queries the rules need.
+ */
 export class Level {
   readonly name: string;
   readonly cols: number;

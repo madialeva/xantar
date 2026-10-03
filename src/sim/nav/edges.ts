@@ -1,5 +1,8 @@
 import { EDGE_MARGIN } from '../rules';
 
+/**
+ * Navigation graph edge: a continuous run of platform tiles on one row.
+ */
 export class PlatformEdge {
   readonly kind = 'platform';
   readonly id: number;
@@ -27,6 +30,9 @@ export class PlatformEdge {
   }
 }
 
+/**
+ * Navigation graph edge: a ladder joining two platform crossings of the same column.
+ */
 export class LadderEdge {
   readonly kind = 'ladder';
   readonly id: number;

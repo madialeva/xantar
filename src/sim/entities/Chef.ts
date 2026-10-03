@@ -27,6 +27,10 @@ export interface ChefSnapshot extends PositionSnapshot, ChefPosition {
 const axis = (positive: boolean, negative: boolean): -1 | 0 | 1 =>
   positive === negative ? 0 : positive ? 1 : -1;
 
+/**
+ * The player's character. Walks along platforms, grabs ladders and climbs them only while
+ * the player presses, and steps off onto a platform when it reaches its height.
+ */
 export class Chef extends MovingEntity implements ChefSnapshot {
   #place: NavPlace;
   #row: number;

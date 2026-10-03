@@ -1,5 +1,9 @@
 import Phaser from 'phaser';
 
+/**
+ * Title scene shown before the game: waits for the first click or tap, enters fullscreen
+ * and starts the music.
+ */
 export default class TapScene extends Phaser.Scene {
   #isMobile = false;
   #tapText: Phaser.GameObjects.Text | null = null;

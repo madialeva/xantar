@@ -12,6 +12,9 @@ export interface LoadLevelOptions {
   readonly requirePlayable?: boolean;
 }
 
+/**
+ * Thrown when a level is structurally valid but has playability errors; carries the issues.
+ */
 export class UnplayableLevelError extends LevelError {
   readonly issues: readonly LevelIssue[];
 

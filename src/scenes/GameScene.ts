@@ -19,6 +19,10 @@ const PEPPER_CLOUD_RADIUS = 13;
 const PEPPER_CLOUD_MS = 400;
 const CAMERA_FLASH_MS = 180;
 
+/**
+ * Phaser scene that runs the simulation at a fixed step, draws it with interpolation and
+ * turns its events into effects. It contains no game rules.
+ */
 export default class GameScene extends Phaser.Scene {
   #sim!: Simulation;
   readonly #stepper = new FixedStepper();

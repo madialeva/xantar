@@ -16,6 +16,9 @@ const describePosition = ({ layer, row, col }: LevelErrorPosition): string => {
   return parts.join(', ');
 };
 
+/**
+ * Error for an invalid level document; says the layer, row and column when it can.
+ */
 export class LevelError extends Error {
   readonly layer: LayerId | undefined;
   readonly row: number | undefined;

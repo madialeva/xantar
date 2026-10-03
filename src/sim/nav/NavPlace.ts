@@ -6,6 +6,10 @@ export interface NavPoint {
   readonly y: number;
 }
 
+/**
+ * Immutable position on the navigation graph: an edge (platform or ladder) plus a distance
+ * along it. Moving returns a new place.
+ */
 export class NavPlace {
   readonly edge: NavEdge;
   readonly along: number;

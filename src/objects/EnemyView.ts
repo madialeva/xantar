@@ -5,6 +5,10 @@ import { interpolatedX, interpolatedY } from './interpolation';
 const WOBBLE_PERIOD_MS = 90;
 const WOBBLE_DEGREES = 12;
 
+/**
+ * Phaser view of an enemy: draws its kind and syncs position, facing, stun wobble and
+ * visibility from the simulation snapshot, interpolated between ticks.
+ */
 export default class EnemyView extends Phaser.GameObjects.Container {
   readonly #kind: EnemyKind;
 

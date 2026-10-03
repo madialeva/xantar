@@ -10,6 +10,10 @@ export interface PlateSnapshot {
   readonly isComplete: boolean;
 }
 
+/**
+ * One plate of the level: knows how many ingredients will end on it, hands out stack slots
+ * and tells when its burger is complete.
+ */
 export class Plate implements PlateSnapshot {
   readonly id: number;
   readonly row: number;

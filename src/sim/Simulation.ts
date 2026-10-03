@@ -20,6 +20,10 @@ export interface SimulationOptions {
   readonly rng: Rng;
 }
 
+/**
+ * Root of the game rules. Owns the level, the chef, the enemies, the ingredient field and
+ * the stats, advances one fixed tick at a time from an input and returns the events it caused.
+ */
 export class Simulation {
   readonly #level: Level;
   readonly #rng: Rng;

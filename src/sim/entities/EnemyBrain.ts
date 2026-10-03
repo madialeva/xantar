@@ -15,6 +15,10 @@ export interface EnemyIntent {
   readonly ladder: LadderIntent | undefined;
 }
 
+/**
+ * Strategy that decides where an enemy goes (direction and ladder to take) each time it
+ * re-evaluates; every enemy kind gets its own brain.
+ */
 export interface EnemyBrain {
   decide(enemy: EnemySnapshot, chef: ChefSnapshot, graph: NavigationGraph, rng: Rng): EnemyIntent;
   nextDecisionDelay(rng: Rng): number;
@@ -22,6 +26,10 @@ export interface EnemyBrain {
 
 const directionOf = (delta: number): 1 | -1 | 0 => (delta > 0 ? 1 : delta < 0 ? -1 : 0);
 
+/**
+ * Enemy strategy that chases the chef along the shortest path of the navigation graph,
+ * with a chance of reversing when both are on the same platform.
+ */
 export class ChaseBrain implements EnemyBrain {
   decide(enemy: EnemySnapshot, chef: ChefSnapshot, graph: NavigationGraph, rng: Rng): EnemyIntent {
     const path = graph.shortestPath(enemy.place, chef.place);

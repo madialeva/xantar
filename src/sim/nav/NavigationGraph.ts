@@ -33,6 +33,10 @@ const compareLabels = (a: Label, b: Label): number => {
   return Math.abs(a.firstLeg - b.firstLeg) > EPSILON ? a.firstLeg - b.firstLeg : 0;
 };
 
+/**
+ * Navigation graph of a level: platform and ladder edges joined at crossings, with lookup,
+ * reachability and shortest path queries used by the chef, the enemies and the validator.
+ */
 export class NavigationGraph {
   readonly platforms: readonly PlatformEdge[];
   readonly ladders: readonly LadderEdge[];

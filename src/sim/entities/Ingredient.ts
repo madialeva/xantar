@@ -29,6 +29,9 @@ export interface IngredientSnapshot {
   readonly stackSlot: number | null;
 }
 
+/**
+ * What an ingredient asks of its surroundings when it starts to fall and when it lands.
+ */
 export interface IngredientHost {
   startFall(ingredient: IngredientSnapshot): FallPlan;
   landed(ingredient: IngredientSnapshot, plan: FallPlan): void;
@@ -51,6 +54,9 @@ interface IngredientState {
 const filled = (width: number, value: boolean): readonly boolean[] =>
   Array.from({ length: width }, () => value);
 
+/**
+ * Ingredient resting on a platform; remembers which segments the chef has stomped.
+ */
 class IdleState implements IngredientState {
   readonly phase = 'idle';
   readonly plan = undefined;
@@ -76,6 +82,9 @@ class IdleState implements IngredientState {
   }
 }
 
+/**
+ * Ingredient already activated that waits its turn in a chain before it starts to fall.
+ */
 class WaitingState implements IngredientState {
   readonly phase = 'waiting';
   readonly plan = undefined;
@@ -99,6 +108,9 @@ class WaitingState implements IngredientState {
   }
 }
 
+/**
+ * Ingredient in the air; progresses for a fixed number of ticks and then lands.
+ */
 class FallingState implements IngredientState {
   readonly phase = 'falling';
   readonly plan: FallPlan;
@@ -123,6 +135,9 @@ class FallingState implements IngredientState {
   }
 }
 
+/**
+ * Ingredient that has landed on a plate; it no longer reacts.
+ */
 class StackedState implements IngredientState {
   readonly phase = 'stacked';
   readonly progress = 1;
@@ -139,6 +154,10 @@ class StackedState implements IngredientState {
   }
 }
 
+/**
+ * An ingredient made of stompable segments. Its life cycle (resting, waiting, falling,
+ * stacked) is delegated to state objects (State pattern).
+ */
 export class Ingredient implements IngredientSnapshot {
   readonly id: number;
   readonly kind: IngredientKind;

@@ -3,6 +3,10 @@ export interface Landing {
   readonly plateId: number | undefined;
 }
 
+/**
+ * Immutable tile map of platforms, ladders and plates, with the landing query that decides
+ * where a falling ingredient stops.
+ */
 export class Terrain {
   readonly cols: number;
   readonly rows: number;

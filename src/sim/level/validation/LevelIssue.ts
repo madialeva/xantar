@@ -10,6 +10,9 @@ export interface LevelIssue {
   readonly col?: number;
 }
 
+/**
+ * A playability check: looks at a loaded level and reports the issues it finds.
+ */
 export interface LevelRule {
   check(level: Level): readonly LevelIssue[];
 }
