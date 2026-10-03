@@ -45,11 +45,11 @@ Durante este grupo el árbol puede no compilar entero hasta el final de 5.5 (los
 
 ## 7. Documentación
 
-- [ ] 7.1 Actualizar `README.md`: cómo se juega con ingredientes de varios segmentos que se pisan (2, 3 o 4 según el nivel), caída en cadena por impacto y escaleras con parada e inversión, y la fila del modelo de nivel en la tabla de hoja de ruta; verificar con `npm run format:check` y relectura
-- [ ] 7.2 Actualizar `docs/MANUAL.md`: estructura de `src/sim/level` y `src/sim/nav`, formato de nivel v1 con un ejemplo, receta "Añadir una pieza al registro" y receta "Crear un nivel a mano y validarlo"; verificar que los comandos y símbolos documentados coinciden con el código y que `npm run format:check` pasa
+- [x] 7.1 Actualizar `README.md`: cómo se juega con ingredientes de varios segmentos que se pisan (2, 3 o 4 según el nivel), caída en cadena por impacto y escaleras con parada e inversión, y la fila del modelo de nivel en la tabla de hoja de ruta; verificar con `npm run format:check` y relectura
+- [x] 7.2 Actualizar `docs/MANUAL.md`: estructura de `src/sim/level` y `src/sim/nav`, formato de nivel v1 con un ejemplo, receta "Añadir una pieza al registro" y receta "Crear un nivel a mano y validarlo"; verificar que los comandos y símbolos documentados coinciden con el código y que `npm run format:check` pasa
 
 ## 8. Verificación final
 
-- [ ] 8.1 Ejecutar `npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build` y verificar que todo termina con código 0
-- [ ] 8.2 Comprobar con `npm run build:desktop:dir` que la aplicación de escritorio arranca y juega igual
+- [x] 8.1 Ejecutar `npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build` y verificar que todo termina con código 0
+- [x] 8.2 Comprobar con `npm run build:desktop:dir` que la aplicación de escritorio arranca y juega igual
 - [ ] 8.3 Partida manual del autor con la lista: pisar segmentos sueltos y ver que persisten, completar un ingrediente, cadena de caídas en el nivel clásico, aplastar enemigos, pimienta, escaleras (parar e invertir a mitad), enemigos que bajan y suben por el camino más corto, completar un nivel y game over con Enter; anotar las diferencias de jugabilidad que no parezcan intencionadas

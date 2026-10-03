@@ -41,7 +41,7 @@ comes next.
 |   ✅   | Title screen and desktop application (Electron)                                                           |   —    |   —   |
 |   ✅   | Deterministic simulation core at a fixed 60 Hz step, independent of the renderer and the frame rate       |   —    |  #2   |
 |   ✅   | Levels described as data, validated on load, and automated tests of the game rules                        |   —    |  #2   |
-|   ⬜   | Level model: tile pieces, ingredient segments, navigation graph and validator; turn around mid-ladder     | v1.0.0 |  #3   |
+|   ✅   | Level model: tile pieces, ingredient segments, navigation graph and validator; turn around mid-ladder     |   —    |  #3   |
 |   ⬜   | Enemies riding ingredients (an extra level per rider)                                                     | v1.0.0 |  #9   |
 |   ⬜   | Modern vector visuals: SVG art, themes and side panels                                                    | v1.0.0 |  #4   |
 |   ⬜   | Game state machine, pause, high score, Spanish and English                                                | v1.0.0 |  #5   |
@@ -71,22 +71,25 @@ must bring them all the way down to the plate.
 | Confirm (level clear / game over) | `Enter`                 |
 | Back to the title                 | `Esc` or the `✕` button |
 
-You can also play with the `W`, `A`, `S`, `D` keys.
+You can also play with the `W`, `A`, `S`, `D` keys. On a ladder you only move
+while you hold up or down, so you can stop and turn around anywhere on it.
 
 ### Ingredients and falls
 
-- When the chef **walks an ingredient from side to side**, it falls one platform
-  down and pushes whatever ingredients are below it: a **chain reaction**.
-- The pieces stack on the plate in the right order (bottom bun first, then
-  patty, lettuce and finally the top bun).
-- By walking over them again, the burger moves down level by level until it is
-  complete.
+- Every ingredient is made of **segments** (four in the classic level). When the
+  chef **steps on a segment** it is pressed down, and it stays pressed. Press all
+  the segments of an ingredient and it falls one platform down.
+- An ingredient that lands on another one **knocks it down too**: a chain
+  reaction that only affects the ingredients it actually hits.
+- The pieces stack on the plate in the order they land. By walking over them
+  again, each burger moves down level by level until it is complete.
 - Every piece that falls is worth **50 points**.
+- You cannot press segments while you are on a ladder.
 
 ### Enemies
 
 - **Mr. Hot Dog**, **Mr. Pickle** and **Mr. Egg** roam the maze and chase you
-  using the ladders.
+  using the ladders, always taking the shortest way to you.
 - If they touch you, you **lose a life**.
 - You can **crush them** by dropping an ingredient on top of them. They respawn
   after a few seconds.
