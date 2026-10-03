@@ -54,4 +54,4 @@ Durante este grupo el árbol puede no compilar entero hasta el final de 5.5 (los
 
 - [x] 8.1 Ejecutar `npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build` y verificar que todo termina con código 0
 - [x] 8.2 Comprobar con `npm run build:desktop:dir` que la aplicación de escritorio arranca y juega igual
-- [ ] 8.3 Partida manual del autor con la lista: pisar segmentos sueltos y ver que persisten, completar un ingrediente, cadena de caídas en el nivel clásico, aplastar enemigos, pimienta, escaleras (parar e invertir a mitad), enemigos que bajan y suben por el camino más corto, completar un nivel y game over con Enter; anotar las diferencias de jugabilidad que no parezcan intencionadas
+- [x] 8.3 Partida manual del autor con la lista: pisar segmentos sueltos y ver que persisten, completar un ingrediente, cadena de caídas en el nivel clásico, aplastar enemigos, pimienta, escaleras (parar e invertir a mitad), enemigos que bajan y suben por el camino más corto, completar un nivel y game over con Enter; anotar las diferencias de jugabilidad que no parezcan intencionadas
