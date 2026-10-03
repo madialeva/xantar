@@ -15,10 +15,6 @@ export const ARRIVAL_THRESHOLD = fromPx(3);
 export const EDGE_MARGIN = fromPx(12);
 export const LADDER_GRAB_DISTANCE = 0.6;
 
-export const INGREDIENT_INSET = fromPx(2);
-export const TRAVERSAL_TOLERANCE = fromPx(2);
-export const TRAVERSAL_REACH = fromPx(6);
-
 export const FALL_TICKS = fromMs(200);
 export const FALL_STAGGER_TICKS = 7;
 

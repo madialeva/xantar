@@ -1,5 +1,5 @@
 import { clamp } from '../geometry';
-import { LadderEdge, type NavEdge, type PlatformEdge } from './edges';
+import { LadderEdge, type NavEdge, PlatformEdge } from './edges';
 
 export interface NavPoint {
   readonly x: number;
@@ -24,7 +24,15 @@ export class NavPlace {
   }
 
   get isOnPlatform(): boolean {
-    return this.edge.kind === 'platform';
+    return this.edge instanceof PlatformEdge;
+  }
+
+  get platform(): PlatformEdge | undefined {
+    return this.edge instanceof PlatformEdge ? this.edge : undefined;
+  }
+
+  get ladder(): LadderEdge | undefined {
+    return this.edge instanceof LadderEdge ? this.edge : undefined;
   }
 
   get point(): NavPoint {

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS, GAME_HEIGHT, GAME_WIDTH, TILE, platformY } from '../config';
-import { classicLevel } from '../levels/classic';
+import classicDocument from '../levels/classic.level.json';
 import ChefView from '../objects/ChefView';
 import EnemyView from '../objects/EnemyView';
 import IngredientView from '../objects/IngredientView';
@@ -11,7 +11,8 @@ import {
   type SimEvent,
   type SimInput,
   Simulation,
-  loadLevel
+  loadLevel,
+  parseLevelDocument
 } from '../sim';
 
 const PEPPER_CLOUD_RADIUS = 13;
@@ -44,7 +45,7 @@ export default class GameScene extends Phaser.Scene {
   create(): void {
     this.cameras.main.setBackgroundColor(COLORS.background);
     this.#sim = new Simulation({
-      level: loadLevel(classicLevel),
+      level: loadLevel(parseLevelDocument(classicDocument)),
       rng: new SeededRng(Date.now())
     });
     this.#stepper.reset();
@@ -91,7 +92,7 @@ export default class GameScene extends Phaser.Scene {
     const level = this.#sim.level;
     const ladders = this.add.graphics().setDepth(1);
     ladders.fillStyle(COLORS.ladder, 1);
-    for (const ladder of level.ladders) {
+    for (const ladder of level.graph.ladders) {
       const x = (ladder.col + 0.5) * TILE;
       const top = platformY(ladder.topRow);
       const bottom = platformY(ladder.bottomRow);
@@ -102,7 +103,7 @@ export default class GameScene extends Phaser.Scene {
       }
     }
 
-    for (const run of level.platformRuns) {
+    for (const run of level.graph.platforms) {
       this.add
         .rectangle(
           ((run.left + run.right) / 2) * TILE,
@@ -114,12 +115,12 @@ export default class GameScene extends Phaser.Scene {
         .setDepth(2);
     }
 
-    for (const { plate } of level.columns) {
+    for (const plate of level.plates) {
       this.add
         .rectangle(
-          ((plate.left + plate.right) / 2) * TILE,
+          (plate.col + plate.width / 2) * TILE,
           platformY(plate.row),
-          (plate.right - plate.left) * TILE * 0.92,
+          plate.width * TILE * 0.92,
           8,
           COLORS.plate
         )
@@ -137,20 +138,16 @@ export default class GameScene extends Phaser.Scene {
   #rebuildIngredients(): void {
     for (const view of this.#ingredientViews.values()) view.destroy();
     this.#ingredientViews.clear();
-    for (const burger of this.#sim.burgers) {
-      for (const ingredient of burger.ingredients) {
-        this.#ingredientViews.set(ingredient.id, new IngredientView(this, ingredient).setDepth(5));
-      }
+    for (const ingredient of this.#sim.ingredients) {
+      this.#ingredientViews.set(ingredient.id, new IngredientView(this, ingredient).setDepth(5));
     }
   }
 
   #syncViews(alpha: number): void {
     this.#chefView.sync(this.#sim.chef, alpha);
     this.#sim.enemies.forEach((enemy, index) => this.#enemyViews[index].sync(enemy, alpha));
-    for (const burger of this.#sim.burgers) {
-      for (const ingredient of burger.ingredients) {
-        this.#ingredientViews.get(ingredient.id)?.sync(ingredient, alpha);
-      }
+    for (const ingredient of this.#sim.ingredients) {
+      this.#ingredientViews.get(ingredient.id)?.sync(ingredient, alpha);
     }
   }
 
@@ -173,6 +170,7 @@ export default class GameScene extends Phaser.Scene {
         case 'gameOver':
           this.#showOverlay('GAME OVER', 'Pulsa ENTER para reiniciar');
           break;
+        case 'segmentStomped':
         case 'ingredientsTriggered':
         case 'ingredientLanded':
         case 'enemySquashed':

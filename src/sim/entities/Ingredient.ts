@@ -1,8 +1,6 @@
-import { isWithin } from '../geometry';
-import type { IngredientKind } from '../legacy-level/LevelData';
-import type { IngredientSpec } from '../legacy-level/Level';
-import { FALL_TICKS, TRAVERSAL_REACH, TRAVERSAL_TOLERANCE } from '../rules';
-import type { ChefSnapshot } from './Chef';
+import type { IngredientKind } from '../level/kinds';
+import type { IngredientSpec } from '../level/Level';
+import { FALL_TICKS } from '../rules';
 
 export type IngredientPhase = 'idle' | 'waiting' | 'falling' | 'stacked';
 
@@ -10,16 +8,20 @@ export interface FallPlan {
   readonly fromRow: number;
   readonly toRow: number;
   readonly toPlate: boolean;
+  readonly plateId: number | null;
   readonly stackSlot: number | null;
 }
 
 export interface IngredientSnapshot {
   readonly id: number;
   readonly kind: IngredientKind;
+  readonly col: number;
+  readonly width: number;
   readonly left: number;
   readonly right: number;
   readonly row: number;
   readonly phase: IngredientPhase;
+  readonly stomped: readonly boolean[];
   readonly fallFromRow: number;
   readonly fallToRow: number;
   readonly fallProgress: number;
@@ -42,29 +44,31 @@ interface IngredientState {
   readonly phase: IngredientPhase;
   readonly plan: FallPlan | undefined;
   readonly progress: number;
-  observe(chef: ChefSnapshot, ingredient: IngredientSnapshot): boolean;
+  readonly stomped: readonly boolean[];
   step(context: StateContext): IngredientState | undefined;
 }
+
+const filled = (width: number, value: boolean): readonly boolean[] =>
+  Array.from({ length: width }, () => value);
 
 class IdleState implements IngredientState {
   readonly phase = 'idle';
   readonly plan = undefined;
   readonly progress = 0;
-  #armedFrom: 'left' | 'right' | null = null;
+  readonly #stomped: boolean[];
 
-  observe(chef: ChefSnapshot, ingredient: IngredientSnapshot): boolean {
-    const { left, right } = ingredient;
-    if (chef.row !== ingredient.row || !isWithin(chef.x, left, right, TRAVERSAL_TOLERANCE)) {
-      this.#armedFrom = null;
-      return false;
-    }
-    this.#armedFrom ??= chef.x < (left + right) / 2 ? 'left' : 'right';
-    const reachedFarEnd =
-      this.#armedFrom === 'left'
-        ? chef.x >= right - TRAVERSAL_REACH
-        : chef.x <= left + TRAVERSAL_REACH;
-    if (reachedFarEnd) this.#armedFrom = null;
-    return reachedFarEnd;
+  constructor(width: number) {
+    this.#stomped = [...filled(width, false)];
+  }
+
+  get stomped(): readonly boolean[] {
+    return this.#stomped;
+  }
+
+  stomp(segment: number): boolean {
+    if (this.#stomped[segment] === undefined || this.#stomped[segment]) return false;
+    this.#stomped[segment] = true;
+    return true;
   }
 
   step(): undefined {
@@ -76,14 +80,12 @@ class WaitingState implements IngredientState {
   readonly phase = 'waiting';
   readonly plan = undefined;
   readonly progress = 0;
+  readonly stomped: readonly boolean[];
   #remaining: number;
 
-  constructor(delayTicks: number) {
+  constructor(width: number, delayTicks: number) {
+    this.stomped = filled(width, true);
     this.#remaining = delayTicks;
-  }
-
-  observe(): boolean {
-    return false;
   }
 
   step(context: StateContext): IngredientState | undefined {
@@ -93,32 +95,31 @@ class WaitingState implements IngredientState {
     }
     const plan = context.host.startFall(context.ingredient);
     if (!plan.toPlate) context.setRow(plan.toRow);
-    return new FallingState(plan);
+    return new FallingState(context.ingredient.width, plan);
   }
 }
 
 class FallingState implements IngredientState {
   readonly phase = 'falling';
   readonly plan: FallPlan;
+  readonly stomped: readonly boolean[];
   #elapsed = 0;
 
-  constructor(plan: FallPlan) {
+  constructor(width: number, plan: FallPlan) {
     this.plan = plan;
+    this.stomped = filled(width, true);
   }
 
   get progress(): number {
     return this.#elapsed / FALL_TICKS;
   }
 
-  observe(): boolean {
-    return false;
-  }
-
   step(context: StateContext): IngredientState | undefined {
     this.#elapsed += 1;
     if (this.#elapsed < FALL_TICKS) return undefined;
     context.host.landed(context.ingredient, this.plan);
-    return this.plan.toPlate ? new StackedState(this.plan) : new IdleState();
+    const { width } = context.ingredient;
+    return this.plan.toPlate ? new StackedState(width, this.plan) : new IdleState(width);
   }
 }
 
@@ -126,13 +127,11 @@ class StackedState implements IngredientState {
   readonly phase = 'stacked';
   readonly progress = 1;
   readonly plan: FallPlan;
+  readonly stomped: readonly boolean[];
 
-  constructor(plan: FallPlan) {
+  constructor(width: number, plan: FallPlan) {
     this.plan = plan;
-  }
-
-  observe(): boolean {
-    return false;
+    this.stomped = filled(width, false);
   }
 
   step(): undefined {
@@ -143,19 +142,28 @@ class StackedState implements IngredientState {
 export class Ingredient implements IngredientSnapshot {
   readonly id: number;
   readonly kind: IngredientKind;
-  readonly left: number;
-  readonly right: number;
+  readonly col: number;
+  readonly width: number;
   readonly #host: IngredientHost;
   #row: number;
-  #state: IngredientState = new IdleState();
+  #state: IngredientState;
 
   constructor(spec: IngredientSpec, host: IngredientHost) {
     this.id = spec.id;
     this.kind = spec.kind;
-    this.left = spec.left;
-    this.right = spec.right;
+    this.col = spec.col;
+    this.width = spec.width;
     this.#row = spec.row;
     this.#host = host;
+    this.#state = new IdleState(spec.width);
+  }
+
+  get left(): number {
+    return this.col;
+  }
+
+  get right(): number {
+    return this.col + this.width;
   }
 
   get row(): number {
@@ -167,7 +175,15 @@ export class Ingredient implements IngredientSnapshot {
   }
 
   get isIdle(): boolean {
-    return this.#state.phase === 'idle';
+    return this.#state instanceof IdleState;
+  }
+
+  get stomped(): readonly boolean[] {
+    return this.#state.stomped;
+  }
+
+  get allStomped(): boolean {
+    return this.#state.stomped.every(Boolean);
   }
 
   get fallFromRow(): number {
@@ -190,12 +206,17 @@ export class Ingredient implements IngredientSnapshot {
     return this.#state.plan?.stackSlot ?? null;
   }
 
-  observeChef(chef: ChefSnapshot): boolean {
-    return this.#state.observe(chef, this);
+  segmentAt(x: number): number | undefined {
+    const segment = Math.floor(x - this.col);
+    return segment >= 0 && segment < this.width ? segment : undefined;
+  }
+
+  stomp(segment: number): boolean {
+    return this.#state instanceof IdleState && this.#state.stomp(segment);
   }
 
   activate(delayTicks: number): void {
-    if (this.isIdle) this.#state = new WaitingState(delayTicks);
+    if (this.isIdle) this.#state = new WaitingState(this.width, delayTicks);
   }
 
   step(): void {

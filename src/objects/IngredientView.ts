@@ -6,23 +6,29 @@ import {
   TILE,
   platformY
 } from '../config';
-import { FALL_TICKS, type IngredientSnapshot } from '../sim';
+import { FALL_TICKS, type IngredientKind, type IngredientSnapshot } from '../sim';
 
 const PLATFORM_CLEARANCE = 6;
+const SEGMENT_GAP = 2;
+const STOMP_DEPTH = 3;
 
 export default class IngredientView extends Phaser.GameObjects.Container {
   readonly #height: number;
+  readonly #segments: Phaser.GameObjects.Container[] = [];
 
   constructor(scene: Phaser.Scene, ingredient: IngredientSnapshot) {
     super(scene, ((ingredient.left + ingredient.right) / 2) * TILE, 0);
     this.#height = INGREDIENT_HEIGHTS[ingredient.kind];
-    this.#buildVisual(ingredient);
+    this.#buildSegments(ingredient);
     scene.add.existing(this);
     this.setY(this.#restY(ingredient.row));
   }
 
   sync(ingredient: IngredientSnapshot, alpha: number): void {
     this.setY(this.#yFor(ingredient, alpha));
+    this.#segments.forEach((segment, index) => {
+      segment.setY(ingredient.stomped[index] ? STOMP_DEPTH : 0);
+    });
   }
 
   #yFor(ingredient: IngredientSnapshot, alpha: number): number {
@@ -52,30 +58,34 @@ export default class IngredientView extends Phaser.GameObjects.Container {
     return platformY(plateRow) - PLATFORM_CLEARANCE - slot * LANE_STACK_HEIGHT;
   }
 
-  #buildVisual(ingredient: IngredientSnapshot): void {
-    const width = (ingredient.right - ingredient.left) * TILE;
-    const body = this.scene.add.rectangle(
-      0,
-      0,
-      width,
-      this.#height,
-      INGREDIENT_COLORS[ingredient.kind]
-    );
-    body.setStrokeStyle(2, 0x000000, 0.25);
-    this.add(body);
-
-    if (ingredient.kind === 'bunTop' || ingredient.kind === 'bunBottom') {
-      for (let i = -1; i <= 1; i++) {
-        this.add(this.scene.add.circle(i * (width * 0.25), -1, 1.6, 0xfff3d0));
-      }
-    } else if (ingredient.kind === 'lettuce') {
-      for (let i = -2; i <= 2; i++) {
-        this.add(this.scene.add.circle(i * (width * 0.18), -3, 2.5, 0x8fe07a));
-      }
-    } else {
-      for (let i = -1; i <= 1; i++) {
-        this.add(this.scene.add.rectangle(i * (width * 0.22), 0, 8, 2, 0x4a2408));
-      }
+  #buildSegments(ingredient: IngredientSnapshot): void {
+    const segmentWidth = TILE - SEGMENT_GAP;
+    for (let index = 0; index < ingredient.width; index++) {
+      const offset = (index + 0.5 - ingredient.width / 2) * TILE;
+      const body = this.scene.add.rectangle(
+        0,
+        0,
+        segmentWidth,
+        this.#height,
+        INGREDIENT_COLORS[ingredient.kind]
+      );
+      body.setStrokeStyle(2, 0x000000, 0.25);
+      const segment = this.scene.add.container(offset, 0, [
+        body,
+        ...this.#decoration(ingredient.kind, segmentWidth)
+      ]);
+      this.#segments.push(segment);
+      this.add(segment);
     }
+  }
+
+  #decoration(kind: IngredientKind, width: number): Phaser.GameObjects.GameObject[] {
+    if (kind === 'bunTop' || kind === 'bunBottom') {
+      return [-0.25, 0.25].map((place) => this.scene.add.circle(place * width, -1, 1.6, 0xfff3d0));
+    }
+    if (kind === 'lettuce') {
+      return [-0.3, 0, 0.3].map((place) => this.scene.add.circle(place * width, -3, 2.5, 0x8fe07a));
+    }
+    return [this.scene.add.rectangle(0, 0, 8, 2, 0x4a2408)];
   }
 }

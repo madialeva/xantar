@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { classicLevel } from '../levels/classic';
+import classicDocument from '../levels/classic.level.json';
 import type { SimEvent } from './events';
-import { loadLevel } from './legacy-level/loadLevel';
+import { parseLevelDocument } from './level/levelJson';
+import { loadLevel } from './level/loadLevel';
 import { SeededRng } from './rng';
 import { NO_INPUT, type SimInput } from './SimInput';
 import { Simulation } from './Simulation';
 
-const level = loadLevel(classicLevel);
+const level = loadLevel(parseLevelDocument(classicDocument));
 const TICKS = 3600;
 
 const scriptedInputs = (ticks: number): SimInput[] => {
@@ -38,9 +39,14 @@ const stateOf = (sim: Simulation): string =>
     stats: { ...sim.stats },
     chef: [sim.chef.x, sim.chef.y, sim.chef.row, sim.chef.facing],
     enemies: sim.enemies.map((e) => [e.x, e.y, e.row, e.active, e.stunTicksLeft]),
-    burgers: sim.burgers.map((b) =>
-      b.ingredients.map((i) => [i.row, i.phase, i.fallProgress, i.stackSlot])
-    )
+    ingredients: sim.ingredients.map((i) => [
+      i.row,
+      i.phase,
+      i.fallProgress,
+      i.stackSlot,
+      i.stomped.map(Number).join('')
+    ]),
+    plates: sim.plates.map((p) => [p.landed, p.isComplete])
   });
 
 const play = (seed: number): { states: string[]; events: SimEvent[] } => {
