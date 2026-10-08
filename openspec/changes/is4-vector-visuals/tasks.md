@@ -51,7 +51,7 @@
 
 - [x] 8.1 Crear el tema `midnight` (paleta propia y al menos `platform.*` sustituido) y registrarlo; verificar con la prueba de arte y de temas en verde, en `npm run dev` con `?theme=midnight` que el nivel clásico se juega igual con el otro aspecto, y con una copia temporal del nivel clásico con `"theme": "midnight"` que el nivel elige su tema sin URL
 - [ ] 8.2 Evaluar los filtros de Phaser 4 (`Glow`, `Shadow`, bloom aproximado) según D9 midiendo fotogramas a 1920×1080 en Chrome, Electron y un móvil Android; anotar en `design.md` la sección "Resultado de la evaluación de post-procesado" con los datos y la decisión del autor, y aplicar o retirar el código de prueba según esa decisión
-- [ ] 8.3 Actualizar `README.md` (aspecto vectorial, paneles, temas, el campo `theme` de los niveles y cómo forzar uno con `?theme=` en la versión web); verificar con `npm run format:check` y relectura
+- [x] 8.3 Actualizar `README.md` (aspecto vectorial, paneles, temas, el campo `theme` de los niveles y cómo forzar uno con `?theme=` en la versión web); verificar con `npm run format:check` y relectura
 
 ## 9. Verificación final
 
