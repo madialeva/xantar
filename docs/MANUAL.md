@@ -99,9 +99,6 @@ xantar/
 │   ├── main.ts                  # Crea la ventana, carga dev server o dist/
 │   └── preload.ts               # Puente seguro renderer ↔ main (contextBridge)
 ├── public/                      # Assets estáticos: se copian TAL CUAL a dist/
-│   ├── assets/
-│   │   ├── red.png
-│   │   └── space.png
 │   └── music/
 │       └── tap-back.mp3
 ├── scripts/
@@ -276,7 +273,7 @@ Detalle relevante de `TapScene`: la música se reproduce con `new Audio(...)` en
 Todo lo que esté en `public/` se copia sin procesar a la raíz de `dist/`. Por eso los assets se referencian con rutas **relativas a la raíz**:
 
 ```
-public/assets/red.png      ->  dist/assets/red.png      ->  'assets/red.png'
+public/assets/foto.png     ->  dist/assets/foto.png     ->  'assets/foto.png'
 public/music/tap-back.mp3  ->  dist/music/tap-back.mp3  ->  'music/tap-back.mp3'
 ```
 

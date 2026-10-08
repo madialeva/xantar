@@ -34,10 +34,10 @@
 
 ## 6. Tablero, ingredientes y HUD
 
-- [ ] 6.1 Implementar `MazeView` (tramos de plataforma con remates, escaleras por fila, cruces, platos y fondo del tablero) y quitar `#drawMaze` de `GameScene`; verificar con `npm run dev` que el nivel clásico ocupa las mismas casillas que antes (captura comparada con la de `develop/v1.0.0`)
-- [ ] 6.2 Reescribir `IngredientView` con los gráficos de segmento, pisado más bajo, caída interpolada como hasta ahora y *squash & stretch* al recibir `ingredientLanded`; verificar con `npm run typecheck` y, en `npm run dev`, con ingredientes de 4 segmentos y un nivel de prueba de 3 y de 2 segmentos
-- [ ] 6.3 Implementar `HudPanels` (puntos y nivel a la izquierda; vidas y pimientas con iconos y botón de salir a la derecha; recolocación en `resize`) y `OverlayView` (fin de nivel y fin de partida sobre el tablero); verificar en `npm run dev` a 16:9, 4:3 y 21:9 (ventana redimensionada) que nada tapa el tablero, que seis cifras caben en un panel de 96 y que salir y Enter funcionan
-- [ ] 6.4 Retirar `COLORS`, `INGREDIENT_COLORS`, `INGREDIENT_HEIGHTS` y `LANE_STACK_HEIGHT` de `src/config.ts` (si su valor pasa al catálogo) y los PNG sin uso de `public/assets/`; verificar con `grep` que no quedan referencias y con `npm run lint && npm run typecheck && npm run build`
+- [x] 6.1 Implementar `MazeView` (tramos de plataforma con remates, escaleras por fila, cruces, platos y fondo del tablero) y quitar `#drawMaze` de `GameScene`; verificar con `npm run dev` que el nivel clásico ocupa las mismas casillas que antes (captura comparada con la de `develop/v1.0.0`)
+- [x] 6.2 Reescribir `IngredientView` con los gráficos de segmento, pisado más bajo, caída interpolada como hasta ahora y *squash & stretch* al recibir `ingredientLanded`; verificar con `npm run typecheck` y, en `npm run dev`, con ingredientes de 4 segmentos y un nivel de prueba de 3 y de 2 segmentos
+- [x] 6.3 Implementar `HudPanels` (puntos y nivel a la izquierda; vidas y pimientas con iconos y botón de salir a la derecha; recolocación en `resize`) y `OverlayView` (fin de nivel y fin de partida sobre el tablero); verificar en `npm run dev` a 16:9, 4:3 y 21:9 (ventana redimensionada) que nada tapa el tablero, que seis cifras caben en un panel de 96 y que salir y Enter funcionan
+- [x] 6.4 Retirar `COLORS`, `INGREDIENT_COLORS`, `INGREDIENT_HEIGHTS` y `LANE_STACK_HEIGHT` de `src/config.ts` (si su valor pasa al catálogo) y los PNG sin uso de `public/assets/`; verificar con `grep` que no quedan referencias y con `npm run lint && npm run typecheck && npm run build`
 
 ## 7. Personajes y efectos
 
