@@ -357,6 +357,7 @@ Un nivel es un documento JSON versionado (`src/sim/level/`). Se lee con `parseLe
   "cols": 20,
   "rows": 15,
   "segments": 4,
+  "theme": "classic",
   "layers": {
     "structure":   ["....", "+==+", "H..H", "+==+", ".__."],
     "ingredients": ["....", ".TT.", "....", ".BB.", "...."],
@@ -366,6 +367,8 @@ Un nivel es un documento JSON versionado (`src/sim/level/`). Se lee con `parseLe
 ```
 
 (Ejemplo abreviado: cada capa tiene `rows` cadenas de `cols` caracteres.) `segments` es opcional (2, 3 o 4; 4 por defecto): fija el número de segmentos de cada ingrediente y el ancho en casillas de ingredientes y platos, para pantallas de minihamburguesas.
+
+`theme` también es opcional: es el id del tema visual con que se dibuja el nivel (minúsculas, cifras y guiones, empezando por letra; por ejemplo `classic` o `midnight`). La simulación no lo usa y la carga no comprueba que el tema exista: si la vista no lo conoce, avisa por consola y usa el tema por defecto. `serializeLevel` lo escribe tras `segments` solo si está presente.
 
 | Capa | Símbolo | Pieza |
 |------|---------|-------|

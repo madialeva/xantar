@@ -8,9 +8,9 @@
 
 ## 2. Tema en el documento de nivel
 
-- [ ] 2.1 Añadir `theme?: string` a `LevelDocument`, validarlo en `parseLevelDocument` (formato `^[a-z][a-z0-9-]*$`, error con el campo y el formato esperado) y escribirlo en `serializeLevel` tras `"segments"` solo si existe; verificar con pruebas de nivel con tema, sin tema (texto exportado idéntico al actual), tema mal formado (`Mid Night`, número) e ida y vuelta
-- [ ] 2.2 Declarar `"theme": "classic"` en `src/levels/classic.level.json` y ampliar la prueba de determinismo con el nivel clásico con y sin `theme`; verificar con `npm run test` en verde y con `grep` que nada en `src/sim/` fuera de `levelJson.ts` y `LevelDocument.ts` lee `theme`
-- [ ] 2.3 Documentar el campo `theme` en el formato de nivel de `docs/MANUAL.md` (sección 8.6); verificar con `npm run format:check` y que el ejemplo coincide con el nivel clásico
+- [x] 2.1 Añadir `theme?: string` a `LevelDocument`, validarlo en `parseLevelDocument` (formato `^[a-z][a-z0-9-]*$`, error con el campo y el formato esperado) y escribirlo en `serializeLevel` tras `"segments"` solo si existe; verificar con pruebas de nivel con tema, sin tema (texto exportado idéntico al actual), tema mal formado (`Mid Night`, número) e ida y vuelta
+- [x] 2.2 Declarar `"theme": "classic"` en `src/levels/classic.level.json` y ampliar la prueba de determinismo con el nivel clásico con y sin `theme`; verificar con `npm run test` en verde y con `grep` que nada en `src/sim/` fuera de `levelJson.ts` y `LevelDocument.ts` lee `theme`
+- [x] 2.3 Documentar el campo `theme` en el formato de nivel de `docs/MANUAL.md` (sección 8.6); verificar con `npm run format:check` y que el ejemplo coincide con el nivel clásico
 
 ## 3. Temas y catálogo de gráficos (puro)
 
