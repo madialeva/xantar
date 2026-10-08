@@ -20,13 +20,18 @@ roadmap lives in the GitHub issues and in the README.
   Oxlint (+ tsgolint) for linting, Prettier for formatting, Electron `^44`,
   electron-builder `^26`. Node `>=22.12` (development on Node 24, see
   `.nvmrc`).
-- Fixed logical resolution **640×480** with `Phaser.Scale.FIT`, built on a
-  **32 px grid** (20×15). Keep coordinates tied to `src/config.ts`; do not
-  hardcode screen positions.
+- The board has a fixed logical size of **640×480**, built on a **32 px grid**
+  (20×15), centred in a play area 480 high and 832–1152 wide whose sides hold
+  the HUD panels (`computeLayout`). The canvas is that area times the render
+  tier (`RENDER_TIER`) and cameras zoom by it, so code works in logical units.
+  Keep coordinates tied to `src/config.ts`; do not hardcode screen positions.
 - Movement is **custom** (platform/ladder grid), not Arcade Physics. There is
   no `arcade`/`matter` physics plugin in use.
 - Assets live in `public/` and are copied as-is to `dist/`; reference them with
-  root-relative paths (`assets/foo.png`). Keep
+  root-relative paths (`assets/foo.png`). Exception: the SVG art of the themes
+  lives in `src/view/art/<theme>/` and is bundled as text (`?raw` imports), so
+  it works under `file://` and can take the palette of each theme; follow
+  `docs/STYLE_GUIDE.md` when editing it. Keep
   `loader.imageLoadType: 'HTMLImageElement'` in `src/main.ts`: Phaser defaults
   to XHR, which is blocked under `file://` inside Electron.
 - Do not add new runtime dependencies without an approved OpenSpec change.
@@ -135,9 +140,11 @@ tool. This is a deliberate choice of the author: keep it when adding code.
 - `README.md` is the public, player-facing manual (English): what the game is,
   how to play and where to run it. Update it when gameplay or distribution
   changes.
-- `docs/MANUAL.md` is the developer manual, kept in **Spanish** as the single
+- `docs/MANUAL.md` is the developer manual, kept in **Spanish** as a
   documented exception to the English rule: architecture, tooling and
   workflows. Keep it in sync with structural changes.
+- `docs/STYLE_GUIDE.md` (visual style guide) is also in **Spanish** for now, as
+  a temporary exception; it will be translated to English later.
 - This `AGENTS.md` is durable context versioned in the repository, so it
   survives clones/moves. `openspec/` (specs, changes and their archive) is
   versioned too: it is the project's design record, written in Spanish.

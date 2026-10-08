@@ -1,41 +1,42 @@
 import Phaser from 'phaser';
+import { GAME_HEIGHT, GAME_WIDTH, type RenderTier } from '../config';
+import { followBoardCamera } from '../view/layout/boardCamera';
 
 /**
  * Title scene shown before the game: waits for the first click or tap, enters fullscreen
  * and starts the music.
  */
 export default class TapScene extends Phaser.Scene {
+  readonly #tier: RenderTier;
   #isMobile = false;
   #tapText: Phaser.GameObjects.Text | null = null;
   #music: HTMLAudioElement | null = null;
 
-  constructor() {
+  constructor(tier: RenderTier) {
     super({ key: 'TapScene' });
+    this.#tier = tier;
   }
 
   create(): void {
     this.cameras.main.setBackgroundColor('#000000');
+    followBoardCamera(this, this.#tier);
     this.#startMusic();
     this.#isMobile = this.sys.game.device.os.android || this.sys.game.device.os.iOS;
-    this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
-      if (this.#tapText) this.#centerTapText(gameSize.width, gameSize.height);
-    });
     this.#showTapToStart();
   }
 
   #showTapToStart(): void {
-    const { width, height } = this.scale;
     const label = this.#isMobile ? 'TOCA PARA JUGAR' : 'CLICK PARA JUGAR';
     this.#tapText = this.add
-      .text(0, 0, label, {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2, label, {
         fontSize: '26px',
         color: '#ffffff',
         fontFamily: 'courier, sans-serif',
-        align: 'center'
+        align: 'center',
+        resolution: this.#tier
       })
       .setOrigin(0.5)
       .setDepth(5);
-    this.#centerTapText(width, height);
     this.tweens.add({
       targets: this.#tapText,
       alpha: 0,
@@ -51,10 +52,6 @@ export default class TapScene extends Phaser.Scene {
     };
     document.addEventListener('touchend', trigger);
     document.addEventListener('click', trigger);
-  }
-
-  #centerTapText(w: number, h: number): void {
-    this.#tapText?.setPosition(w / 2, h / 2);
   }
 
   #startMusic(): void {

@@ -79,3 +79,5 @@ export function segmentParts(width: number): readonly SegmentPart[] {
     index === 0 ? 'left' : index === width - 1 ? 'right' : 'mid'
   );
 }
+
+export const textureKey = (themeId: string, graphic: GraphicId): string => `${themeId}/${graphic}`;

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { COLORS, GAME_HEIGHT, GAME_WIDTH, TILE, platformY } from '../config';
+import { COLORS, GAME_HEIGHT, GAME_WIDTH, type RenderTier, TILE, platformY } from '../config';
 import classicDocument from '../levels/classic.level.json';
 import ChefView from '../objects/ChefView';
 import EnemyView from '../objects/EnemyView';
@@ -14,16 +14,30 @@ import {
   loadLevel,
   parseLevelDocument
 } from '../sim';
+import { followBoardCamera } from '../view/layout/boardCamera';
+import { chooseTheme } from '../view/theme/chooseTheme';
+import type { ResolvedTheme } from '../view/theme/Theme';
+import type { ThemeRegistry } from '../view/theme/ThemeRegistry';
 
 const PEPPER_CLOUD_RADIUS = 13;
 const PEPPER_CLOUD_MS = 400;
 const CAMERA_FLASH_MS = 180;
+
+export interface GameSceneDependencies {
+  readonly themes: ThemeRegistry;
+  readonly urlTheme: string | null;
+  readonly tier: RenderTier;
+}
 
 /**
  * Phaser scene that runs the simulation at a fixed step, draws it with interpolation and
  * turns its events into effects. It contains no game rules.
  */
 export default class GameScene extends Phaser.Scene {
+  readonly #themes: ThemeRegistry;
+  readonly #urlTheme: string | null;
+  readonly #tier: RenderTier;
+  #theme!: ResolvedTheme;
   #sim!: Simulation;
   readonly #stepper = new FixedStepper();
   #pepperPending = false;
@@ -42,14 +56,20 @@ export default class GameScene extends Phaser.Scene {
   #livesText!: Phaser.GameObjects.Text;
   #overlay: Phaser.GameObjects.Container | null = null;
 
-  constructor() {
+  constructor({ themes, urlTheme, tier }: GameSceneDependencies) {
     super({ key: 'GameScene' });
+    this.#themes = themes;
+    this.#urlTheme = urlTheme;
+    this.#tier = tier;
   }
 
   create(): void {
-    this.cameras.main.setBackgroundColor(COLORS.background);
+    const levelDocument = parseLevelDocument(classicDocument);
+    this.#theme = this.#chooseTheme(levelDocument.theme);
+    followBoardCamera(this, this.#tier);
+    this.cameras.main.setBackgroundColor(this.#theme.palette.background);
     this.#sim = new Simulation({
-      level: loadLevel(parseLevelDocument(classicDocument)),
+      level: loadLevel(levelDocument),
       rng: new SeededRng(Date.now())
     });
     this.#stepper.reset();
@@ -79,6 +99,12 @@ export default class GameScene extends Phaser.Scene {
 
     this.#syncViews(this.#stepper.alpha);
     if (events.length > 0) this.#handleEvents(events);
+  }
+
+  #chooseTheme(levelTheme: string | undefined): ResolvedTheme {
+    const choice = chooseTheme({ urlTheme: this.#urlTheme, levelTheme }, this.#themes);
+    for (const warning of choice.warnings) console.warn(warning);
+    return this.#themes.resolve(choice.id);
   }
 
   #readInput(): SimInput {

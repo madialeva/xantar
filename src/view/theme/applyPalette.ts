@@ -19,3 +19,12 @@ export function applyPalette(svg: string, palette: Palette): string {
   const end = match.index + match[0].length;
   return `${svg.slice(0, end)}${paletteStyle(palette)}${svg.slice(end)}`;
 }
+
+/** Returns the SVG source with its root width and height set, keeping the view box. */
+export function withSize(svg: string, width: number, height: number): string {
+  return svg.replace(OPENING_SVG_TAG, (tag) =>
+    tag
+      .replace(/\swidth="[^"]*"/, ` width="${width}"`)
+      .replace(/\sheight="[^"]*"/, ` height="${height}"`)
+  );
+}

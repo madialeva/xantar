@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyPalette, paletteStyle } from './applyPalette';
+import { applyPalette, paletteStyle, withSize } from './applyPalette';
 import { PALETTE_TOKENS, type Palette } from './palette';
 
 const palette = (color = '#e0a96d'): Palette =>
@@ -38,5 +38,15 @@ describe('applyPalette', () => {
 
   it('rejects a source without an svg element', () => {
     expect(() => applyPalette('<g/>', palette())).toThrow(/no <svg>/);
+  });
+});
+
+describe('withSize', () => {
+  it('scales the root size and keeps the view box and inner sizes', () => {
+    const svg =
+      '<svg xmlns="x" viewBox="0 0 32 12" width="32" height="12"><rect width="32" height="12"/></svg>';
+    expect(withSize(svg, 64, 24)).toBe(
+      '<svg xmlns="x" viewBox="0 0 32 12" width="64" height="24"><rect width="32" height="12"/></svg>'
+    );
   });
 });
