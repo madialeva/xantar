@@ -14,10 +14,10 @@
 
 ## 3. Temas y catálogo de gráficos (puro)
 
-- [ ] 3.1 Implementar `Palette` y los tokens de la guía (`src/view/theme/palette.ts`) y `applyPalette(svg, palette)`; verificar con pruebas de inserción del `<style>` tras la etiqueta `<svg>`, SVG con prólogo XML, tokens de relleno y de trazo y escape de valores
-- [ ] 3.2 Implementar el catálogo `GraphicId` con tamaños lógicos (`graphics.ts`) y las funciones de composición de segmentos (`left`/`mid`/`right` para 2, 3 y 4 segmentos, también para platos y tramos de plataforma); verificar con pruebas de las tres anchuras y de remates en tramos de una casilla
-- [ ] 3.3 Implementar `Theme`, `ThemeRegistry` y `resolve` con herencia de `classic`, y `chooseTheme({ urlTheme, levelTheme }, registry)` con la prioridad URL → nivel → `classic` y avisos con id y origen; verificar con pruebas de tema solo-paleta, sustitución de un gráfico, token ausente, registro con id repetido rechazado y las combinaciones de la prioridad con ids conocidos y desconocidos
-- [ ] 3.4 Escribir `docs/STYLE_GUIDE.md` (en español por ahora): tokens y su uso, trazo, radios, sombras horneadas, tipografía del HUD, rejilla y convención de autoría y exportación desde Inkscape (D3, D11); verificar con `npm run format:check` y relectura del autor
+- [x] 3.1 Implementar `Palette` y los tokens de la guía (`src/view/theme/palette.ts`) y `applyPalette(svg, palette)`; verificar con pruebas de inserción del `<style>` tras la etiqueta `<svg>`, SVG con prólogo XML, tokens de relleno y de trazo y rechazo de valores que no son colores hexadecimales (en lugar de escaparlos)
+- [x] 3.2 Implementar el catálogo `GraphicId` con tamaños lógicos (`graphics.ts`) y las funciones de composición de segmentos (`left`/`mid`/`right` para 2, 3 y 4 segmentos, también para platos y tramos de plataforma); verificar con pruebas de las tres anchuras y de remates en tramos de una casilla
+- [x] 3.3 Implementar `Theme`, `ThemeRegistry` y `resolve` con herencia de `classic`, y `chooseTheme({ urlTheme, levelTheme }, registry)` con la prioridad URL → nivel → `classic` y avisos con id y origen; verificar con pruebas de tema solo-paleta, sustitución de un gráfico, token ausente, registro con id repetido rechazado y las combinaciones de la prioridad con ids conocidos y desconocidos
+- [x] 3.4 Escribir `docs/STYLE_GUIDE.md` (en español por ahora): tokens y su uso, trazo, radios, sombras horneadas, tipografía del HUD, rejilla y convención de autoría y exportación desde Inkscape (D3, D11); verificar con `npm run format:check` y relectura del autor
 
 ## 4. Arte SVG del tema por defecto
 
