@@ -315,6 +315,37 @@ exportar desde Inkscape como "SVG plano" y sustituir colores por clases.
   (acoplaría el dominio a la vista y rompería la carga de niveles creados con
   temas que no estén instalados).
 
+### Resultado de la evaluación de post-procesado
+
+Modo de prueba opcional, sin efecto si no se pide: `?filters=` con `glow`
+(brillo en los ingredientes con el token `sparkle`), `shadow` (sombra en chef
+y enemigos), `bloom` (brillo de cámara), combinaciones separadas por comas,
+`all` o `none` (solo contador). Muestra los fotogramas por segundo en el panel
+izquierdo. Código en `src/view/fx/FilterTrial.ts`; se retira o se adopta según
+la decisión.
+
+Medido en el entorno de pruebas (Electron, WebGL por software SwiftShader, sin
+GPU, 1920×1080, tema `midnight`):
+
+| Filtros | fps |
+|---|---|
+| ninguno | 59 |
+| `glow` | 27 |
+| `shadow` | 26 |
+| `bloom` | 26 |
+| todos | 27 |
+
+Lectura: por software cualquier filtro cuesta una pasada de framebuffer que
+divide los fps a la mitad; no representa una GPU real, pero indica que el
+coste no es despreciable en equipos modestos. A la vista, el brillo sobre
+`midnight` aporta, y la sombra direccional sobre personajes pequeños se lee
+peor que la sombra horneada.
+
+**Pendiente del autor:** medir `none`, `glow` y `all` en Chrome y Electron en
+su equipo y en un móvil Android medio, y decidir. Recomendación provisional:
+mantener sombras y brillos horneados y, como mucho, adoptar `glow` solo en
+temas que lo pidan (como `midnight`) si las mediciones reales sostienen 60 fps.
+
 ## Risks / Trade-offs
 
 - [Calidad del arte hecho a mano en SVG] → formas simples y geométricas acordes

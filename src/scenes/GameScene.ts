@@ -16,6 +16,7 @@ import {
 } from '../sim';
 import { MazeView } from '../view/board/MazeView';
 import { EventEffects } from '../view/fx/EventEffects';
+import type { FilterTrial } from '../view/fx/FilterTrial';
 import { HudPanels } from '../view/hud/HudPanels';
 import { OverlayView } from '../view/hud/OverlayView';
 import { followBoardCamera } from '../view/layout/boardCamera';
@@ -32,6 +33,7 @@ export interface GameSceneDependencies {
   readonly themes: ThemeRegistry;
   readonly urlTheme: string | null;
   readonly tier: RenderTier;
+  readonly filterTrial: FilterTrial;
 }
 
 /**
@@ -42,6 +44,8 @@ export default class GameScene extends Phaser.Scene {
   readonly #themes: ThemeRegistry;
   readonly #urlTheme: string | null;
   readonly #tier: RenderTier;
+  readonly #filterTrial: FilterTrial;
+  #filtersOn = false;
   #theme!: ResolvedTheme;
   #art!: ArtFactory;
   #sim!: Simulation;
@@ -61,11 +65,12 @@ export default class GameScene extends Phaser.Scene {
   #hud!: HudPanels;
   #overlay!: OverlayView;
 
-  constructor({ themes, urlTheme, tier }: GameSceneDependencies) {
+  constructor({ themes, urlTheme, tier, filterTrial }: GameSceneDependencies) {
     super({ key: 'GameScene' });
     this.#themes = themes;
     this.#urlTheme = urlTheme;
     this.#tier = tier;
+    this.#filterTrial = filterTrial;
   }
 
   create(): void {
@@ -80,6 +85,7 @@ export default class GameScene extends Phaser.Scene {
     this.#stepper.reset();
     this.#pepperPending = false;
     new MazeView(this, this.#art, this.#sim.level).setDepth(DEPTH.maze);
+    this.#filtersOn = this.#filterTrial.start(this, { x: -88, y: 440 });
     this.#createViews();
     this.#hud = new HudPanels(this, this.#art, this.#theme.palette, this.#tier, () =>
       this.#exitGame()
@@ -134,16 +140,21 @@ export default class GameScene extends Phaser.Scene {
     this.#enemyViews = this.#sim.enemies.map((enemy) =>
       new EnemyView(this, this.#art, enemy.kind).setDepth(DEPTH.enemies)
     );
+    if (this.#filtersOn) {
+      for (const view of [this.#chefView, ...this.#enemyViews]) {
+        this.#filterTrial.decorateCharacter(view);
+      }
+    }
   }
 
   #rebuildIngredients(): void {
     for (const view of this.#ingredientViews.values()) view.destroy();
     this.#ingredientViews.clear();
+    const glow = Phaser.Display.Color.HexStringToColor(this.#theme.palette.sparkle).color;
     for (const ingredient of this.#sim.ingredients) {
-      this.#ingredientViews.set(
-        ingredient.id,
-        new IngredientView(this, this.#art, ingredient).setDepth(DEPTH.ingredients)
-      );
+      const view = new IngredientView(this, this.#art, ingredient).setDepth(DEPTH.ingredients);
+      if (this.#filtersOn) this.#filterTrial.decorateIngredient(view, glow);
+      this.#ingredientViews.set(ingredient.id, view);
     }
   }
 
