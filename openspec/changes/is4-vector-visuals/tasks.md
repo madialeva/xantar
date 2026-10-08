@@ -55,6 +55,6 @@
 
 ## 9. Verificación final
 
-- [ ] 9.1 Ejecutar `npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build` y verificar que todo termina con código 0
-- [ ] 9.2 Prueba de humo en Electron sobre `dist/` con `npm run build:desktop:dir`: capturas con ambos temas a 16:9, 4:3 y 19,5:9 y consola sin errores; dejar las capturas para el autor
+- [x] 9.1 Ejecutar `npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build` y verificar que todo termina con código 0
+- [x] 9.2 Prueba de humo en Electron sobre `dist/` con `npm run build:desktop:dir`: capturas con ambos temas a 16:9, 4:3 y 19,5:9 y consola sin errores; dejar las capturas para el autor
 - [ ] 9.3 Revisión visual del autor en navegador, Electron y un móvil en horizontal: nitidez, límites de anchura (paneles sin bandas en 16:9 y 19,5:9, bandas en 4:3 y 32:9), animaciones de chef y enemigos, efectos, cambio de tamaño de ventana durante la partida y misma jugabilidad que en `develop/v1.0.0`

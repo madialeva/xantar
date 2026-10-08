@@ -11,6 +11,7 @@ const PADDING = 10;
 const RADIUS = 6;
 const ICON_GAP = 6;
 const LABEL_ALPHA = 0.7;
+const COLUMN_WIDTH = { left: 62, right: 58 };
 
 /** A label over a value, as shown in the side panels. */
 interface Readout {
@@ -78,12 +79,14 @@ export class HudPanels {
       this.#backgrounds.fillRoundedRect(inner.x, inner.y, inner.width, inner.height, RADIUS);
     }
     const left = this.#inner(leftPanel);
-    this.#placeReadout(this.#score, left.x + PADDING, left.y + PADDING);
-    this.#placeReadout(this.#level, left.x + PADDING, left.y + PADDING + 48);
+    const leftX = this.#columnX(left, COLUMN_WIDTH.left);
+    this.#placeReadout(this.#score, leftX, left.y + PADDING);
+    this.#placeReadout(this.#level, leftX, left.y + PADDING + 48);
     const right = this.#inner(rightPanel);
+    const rightX = this.#columnX(right, COLUMN_WIDTH.right);
     this.#exit.setPosition(right.x + right.width / 2, right.y + PADDING + 16);
-    this.#placeCounter(this.#lives, right.x + PADDING, right.y + PADDING + 64);
-    this.#placeCounter(this.#peppers, right.x + PADDING, right.y + PADDING + 96);
+    this.#placeCounter(this.#lives, rightX, right.y + PADDING + 64);
+    this.#placeCounter(this.#peppers, rightX, right.y + PADDING + 96);
   }
 
   update({ score, level, lives, peppers }: StatsSnapshot): void {
@@ -100,6 +103,10 @@ export class HudPanels {
       width: panel.width - 2 * MARGIN,
       height: panel.height - 2 * MARGIN
     };
+  }
+
+  #columnX(inner: Rect, column: number): number {
+    return inner.x + Math.max(PADDING, (inner.width - column) / 2);
   }
 
   #placeReadout({ label, value }: Readout, x: number, y: number): void {
