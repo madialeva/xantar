@@ -192,6 +192,13 @@ Phaser para dependencias.
   con el zoom 2 se pinta 1:1 en el lienzo. Es el único punto que conoce el
   nivel; cambiar a 4 es cambiar la constante.
 - Los textos se crean con `resolution: tier`.
+- **Prototipo (tarea 1.3):** con el juego a 1706×960, `setZoom(2)` y
+  `centerOn(320, 240)`, el tablero queda centrado, un texto en `x < 0` se ve
+  en el panel izquierdo y una textura SVG de 64 px con `setScale(0.5)` ocupa
+  justo una casilla, en Electron bajo `file://`. La API de Phaser 4 se
+  comporta como se esperaba; solo se ha probado con el renderizador Canvas
+  (el entorno de pruebas sin GPU bloquea WebGL), así que WebGL queda para la
+  revisión del autor.
 - **Alternativa descartada:** mantener el lienzo a 640×480 y subir
   `game.config.zoom` (escala el lienzo ya rasterizado; no gana nitidez).
 

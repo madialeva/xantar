@@ -3,8 +3,8 @@
 ## 1. Rama y preparación
 
 - [x] 1.1 Crear la rama `change/is4-vector-visuals` desde la issue #4 (panel Development) a partir de `develop/v1.0.0` actualizada, hacer checkout local y verificar con `git branch --show-current` y `git log --oneline -1` que parte del último commit de `develop/v1.0.0` (los push los hace el autor)
-- [ ] 1.2 Añadir `src/vite-env.d.ts` (`/// <reference types="vite/client" />`) y comprobar con un SVG temporal importado mediante `import.meta.glob(..., { query: '?raw', eager: true })` que `npm run typecheck`, `npm run test` y `npm run build` lo aceptan y que el texto aparece en el bundle de `dist/`; borrar el SVG temporal después
-- [ ] 1.3 Prototipo desechable de D6 en `GameScene`: lienzo a 2× con `setGameSize`, cámara con `setZoom(2)` centrada en el tablero y un SVG rasterizado a 64 px dibujado con `setScale(0.5)` y un texto con `resolution: 2`; verificar en `npm run dev` y en `npm run build:desktop:dir` (bajo `file://`) que se ven nítidos a 1920×1080 y que la imagen ocupa una casilla; revertir el prototipo y anotar en `design.md` cualquier desviación de la API de Phaser 4
+- [x] 1.2 Añadir `src/vite-env.d.ts` (`/// <reference types="vite/client" />`) y comprobar con un SVG temporal importado mediante `import.meta.glob(..., { query: '?raw', eager: true })` que `npm run typecheck`, `npm run test` y `npm run build` lo aceptan y que el texto aparece en el bundle de `dist/`; borrar el SVG temporal después
+- [x] 1.3 Prototipo desechable de D6 en `GameScene`: lienzo a 2× con `setGameSize`, cámara con `setZoom(2)` centrada en el tablero y un SVG rasterizado a 64 px dibujado con `setScale(0.5)` y un texto con `resolution: 2`; verificar en `npm run dev` y en `npm run build:desktop:dir` (bajo `file://`) que se ven nítidos a 1920×1080 y que la imagen ocupa una casilla; revertir el prototipo y anotar en `design.md` cualquier desviación de la API de Phaser 4
 
 ## 2. Tema en el documento de nivel
 
