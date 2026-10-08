@@ -235,9 +235,12 @@ cámara y recolocar los paneles.
   `chefAnimation(snapshot, hitActive)` y `enemyAnimation(snapshot)`, probadas
   en Node. `ChefView`/`EnemyView` solo llaman a `animator.show(key)` en cada
   `sync`; si la clave no cambia, no hacen nada.
-- `Hit` empieza con el evento `chefHit` y termina con `boardStarted` (la vista
-  lo marca; la simulación no cambia). El tambaleo de aturdido pasa a un tween;
-  la duración la sigue marcando `stunned` del snapshot.
+- `Hit` empieza con el evento `chefHit` y dura un tiempo fijo de vista
+  (`HIT_MS`), o hasta `boardStarted` si llega antes. La simulación recoloca al
+  chef en el mismo tick del golpe sin pausa, así que atarlo a `boardStarted`
+  lo dejaría golpeado durante toda la vida siguiente (corregido durante la
+  implementación). La simulación no cambia. El tambaleo de aturdido pasa a un
+  tween; la duración la sigue marcando `stunned` del snapshot.
 - Desplazamiento visual acotado: los tweens mueven partes como mucho ±4
   unidades y escalan entre 0,8 y 1,2; la posición del contenedor la decide
   solo la interpolación de siempre.

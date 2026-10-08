@@ -44,6 +44,11 @@ export default class IngredientView extends Phaser.GameObjects.Container {
     });
   }
 
+  segmentTop(index: number): { readonly x: number; readonly y: number } {
+    const segment = this.#segments[index];
+    return { x: this.x + (segment?.x ?? 0), y: this.y - this.#height };
+  }
+
   land(): void {
     this.scene.tweens.killTweensOf(this.#body);
     this.#body.setScale(LANDING_SQUASH.scaleX, LANDING_SQUASH.scaleY);

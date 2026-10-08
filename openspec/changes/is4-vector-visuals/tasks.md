@@ -41,11 +41,11 @@
 
 ## 7. Personajes y efectos
 
-- [ ] 7.1 Implementar `chefAnimation` y `enemyAnimation` (puras); verificar con pruebas de quieto, andando, escalera parado, trepando, golpeado, aturdido e inactivo
-- [ ] 7.2 Implementar `RigDefinition`, `CharacterRig`, `RigAnimator` y los estados de animación (D8), con `chefRig` y los rigs de enemigos; verificar con `npm run typecheck` y una prueba de que cada rig solo referencia gráficos del catálogo
-- [ ] 7.3 Reescribir `ChefView` y `EnemyView` sobre `CharacterRig` y `RigAnimator` (volteo en el contenedor, `Hit` entre `chefHit` y `boardStarted`, tambaleo de aturdido con tween); verificar en `npm run dev` cada estado de la lista de 7.1 y que reiniciar durante `Hit` deja al chef en postura base
-- [ ] 7.4 Implementar `EventEffects` (nube de pimienta, pisado de segmento, aplastamiento de enemigo, hamburguesa completa) con limpieza en `boardStarted`; dejar `GameScene` como raíz de composición fina; verificar en `npm run dev` cada efecto y con la prueba de determinismo existente (`npm run test`) en verde sin cambios en `src/sim/`
-- [ ] 7.5 Documentar en `docs/MANUAL.md` las recetas "Añadir un gráfico SVG", "Crear un tema" y "Añadir o animar una parte de un personaje"; verificar siguiendo cada receta sobre la rama (y deshaciendo después) y con `npm run format:check`
+- [x] 7.1 Implementar `chefAnimation` y `enemyAnimation` (puras); verificar con pruebas de quieto, andando, escalera parado, trepando, golpeado, aturdido e inactivo
+- [x] 7.2 Implementar `RigDefinition`, `CharacterRig`, `RigAnimator` y los estados de animación (D8), con `chefRig` y los rigs de enemigos; verificar con `npm run typecheck` y una prueba de que cada rig solo referencia gráficos del catálogo
+- [x] 7.3 Reescribir `ChefView` y `EnemyView` sobre `CharacterRig` y `RigAnimator` (volteo en el contenedor, `Hit` de duración fija tras `chefHit`, cortado por `boardStarted`, tambaleo de aturdido con tween); verificar en `npm run dev` cada estado de la lista de 7.1 y que reiniciar durante `Hit` deja al chef en postura base
+- [x] 7.4 Implementar `EventEffects` (nube de pimienta, pisado de segmento, aplastamiento de enemigo, hamburguesa completa) con limpieza en `boardStarted`; dejar `GameScene` como raíz de composición fina; verificar en `npm run dev` cada efecto y con la prueba de determinismo existente (`npm run test`) en verde sin cambios en `src/sim/`
+- [x] 7.5 Documentar en `docs/MANUAL.md` las recetas "Añadir un gráfico SVG", "Crear un tema" y "Añadir o animar una parte de un personaje"; verificar siguiendo cada receta sobre la rama (y deshaciendo después) y con `npm run format:check`
 
 ## 8. Tema alternativo y post-procesado
 

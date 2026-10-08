@@ -15,6 +15,7 @@ import {
   parseLevelDocument
 } from '../sim';
 import { MazeView } from '../view/board/MazeView';
+import { EventEffects } from '../view/fx/EventEffects';
 import { HudPanels } from '../view/hud/HudPanels';
 import { OverlayView } from '../view/hud/OverlayView';
 import { followBoardCamera } from '../view/layout/boardCamera';
@@ -24,7 +25,6 @@ import { chooseTheme } from '../view/theme/chooseTheme';
 import type { ResolvedTheme } from '../view/theme/Theme';
 import type { ThemeRegistry } from '../view/theme/ThemeRegistry';
 
-const PEPPER_CLOUD_MS = 400;
 const CAMERA_FLASH_MS = 180;
 const DEPTH = { maze: 0, ingredients: 5, enemies: 6, chef: 7, effects: 8, hud: 10, overlay: 20 };
 
@@ -57,6 +57,7 @@ export default class GameScene extends Phaser.Scene {
   #pepperKey!: Phaser.Input.Keyboard.Key;
   #enterKey!: Phaser.Input.Keyboard.Key;
 
+  #effects!: EventEffects;
   #hud!: HudPanels;
   #overlay!: OverlayView;
 
@@ -85,6 +86,7 @@ export default class GameScene extends Phaser.Scene {
     ).setDepth(DEPTH.hud);
     this.#hud.update(this.#sim.stats);
     this.#overlay = new OverlayView(this, this.#theme.palette, this.#tier);
+    this.#effects = new EventEffects(this, this.#art, DEPTH.effects);
     followBoardCamera(this, this.#tier, (width) => this.#hud.layout(layoutForWidth(width)));
     this.#createInput();
     this.#rebuildIngredients();
@@ -128,9 +130,9 @@ export default class GameScene extends Phaser.Scene {
   }
 
   #createViews(): void {
-    this.#chefView = new ChefView(this).setDepth(DEPTH.chef);
+    this.#chefView = new ChefView(this, this.#art).setDepth(DEPTH.chef);
     this.#enemyViews = this.#sim.enemies.map((enemy) =>
-      new EnemyView(this, enemy.kind).setDepth(DEPTH.enemies)
+      new EnemyView(this, this.#art, enemy.kind).setDepth(DEPTH.enemies)
     );
   }
 
@@ -158,13 +160,16 @@ export default class GameScene extends Phaser.Scene {
       switch (event.type) {
         case 'boardStarted':
           this.#overlay.hide();
+          this.#chefView.recover();
+          this.#effects.clear();
           this.#rebuildIngredients();
           break;
         case 'pepperThrown':
-          this.#showPepperCloud(event.x * TILE, event.y * TILE);
+          this.#effects.pepper(event.x * TILE, event.y * TILE, event.direction);
           break;
         case 'chefHit':
           this.cameras.main.flash(CAMERA_FLASH_MS, 255, 60, 60);
+          this.#chefView.hit();
           break;
         case 'levelCleared':
           this.#overlay.show(
@@ -179,28 +184,27 @@ export default class GameScene extends Phaser.Scene {
         case 'ingredientLanded':
           this.#ingredientViews.get(event.ingredientId)?.land();
           break;
-        case 'segmentStomped':
-        case 'ingredientsTriggered':
+        case 'segmentStomped': {
+          const top = this.#ingredientViews.get(event.ingredientId)?.segmentTop(event.segment);
+          if (top) this.#effects.dust(top.x, top.y);
+          break;
+        }
         case 'enemySquashed':
+          this.#effects.squash(event.x * TILE, event.y * TILE);
+          break;
+        case 'burgerDone': {
+          const plate = this.#sim.level.plates.find((candidate) => candidate.id === event.plateId);
+          if (plate) this.#effects.burgerDone(plate);
+          break;
+        }
+        case 'ingredientsTriggered':
         case 'enemyRespawned':
         case 'enemyStunned':
-        case 'burgerDone':
         case 'scoreChanged':
           break;
       }
     }
     this.#hud.update(this.#sim.stats);
-  }
-
-  #showPepperCloud(x: number, y: number): void {
-    const cloud = this.#art.image('fx.pepper', x, y).setDepth(DEPTH.effects);
-    this.tweens.add({
-      targets: cloud,
-      alpha: 0,
-      scale: cloud.scale * 2,
-      duration: PEPPER_CLOUD_MS,
-      onComplete: () => cloud.destroy()
-    });
   }
 
   #createInput(): void {

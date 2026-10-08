@@ -123,7 +123,11 @@ xantar/
 │   │   ├── theme/               # Paleta, catálogo de gráficos, temas y su selección (puro)
 │   │   ├── themes/              # Paletas de los temas y registro (createThemeRegistry)
 │   │   ├── raster/              # SvgRasterizer (SVG -> textura) y ArtFactory (imágenes a escala)
-│   │   └── layout/              # computeLayout (tablero + paneles) y cámara del tablero
+│   │   ├── layout/              # computeLayout (tablero + paneles) y cámara del tablero
+│   │   ├── board/               # MazeView: fondo, escaleras, plataformas, cruces y platos
+│   │   ├── hud/                 # HudPanels (paneles laterales) y OverlayView (fin de nivel/partida)
+│   │   ├── fx/                  # EventEffects: adornos breves para eventos de la simulación
+│   │   └── rigs/                # Personajes por partes: rigs, animador y estados de animación
 │   └── scenes/
 │       ├── BootScene.ts         # Rasteriza el arte de todos los temas y pasa a TapScene
 │       ├── TapScene.ts          # Pantalla "CLICK/TOCA PARA JUGAR" + música
@@ -396,6 +400,10 @@ Todo lo que se ve sale de **fuentes SVG** que siguen la guía de estilo (`docs/S
 
 Para pasar a 4× basta con cambiar `RENDER_TIER` en `src/config.ts`: texturas, cámara y textos se adaptan solos.
 
+**Personajes por partes** (`src/view/rigs/`): el chef y cada enemigo son un `CharacterRig` (un `Container` con una imagen por parte) descrito como datos en `rigs.ts` (`RigDefinition`: nombre, gráfico, posición respecto al centro de su casilla y punto de giro). `chefAnimation` y `enemyAnimation` deciden, como funciones puras del snapshot, en qué estado está cada personaje; `RigAnimator` cambia de estado (patrón State: `AnimationState` en `states.ts`) parando los tweens, volviendo a la postura base y arrancando los del nuevo. Los tweens solo tocan partes y nunca la posición del personaje, que sigue saliendo de la interpolación de la simulación.
+
+**Efectos** (`EventEffects`): adornos de vida corta (nube de pimienta, destello al pisar un segmento, aplastamiento de enemigo, chispas al completar una hamburguesa) que se destruyen solos y que `GameScene` limpia en `boardStarted`.
+
 ---
 
 ## 9. Recetas para tareas comunes
@@ -444,6 +452,8 @@ Para pasar a 4× basta con cambiar `RENDER_TIER` en `src/config.ts`: texturas, c
    ```
 
 3. Recuerda que la ruta es relativa a la raíz y que `loader.imageLoadType: 'HTMLImageElement'` es lo que permite que funcione en Electron.
+
+Para gráficos del juego (piezas, ingredientes, personajes, efectos, iconos del HUD) no se usan imágenes de `public/` sino SVG de tema: ver 9.8.
 
 ### 9.3 Comunicar renderer ↔ main (IPC)
 
@@ -504,6 +514,26 @@ Opción recomendada (CI): un workflow de GitHub Actions que ejecute `npm ci && n
 3. Para usarlo en el juego, carga el documento en `GameScene` en lugar del clásico (la selección de niveles llegará con el editor).
 
 ---
+
+### 9.8 Añadir un gráfico SVG
+
+1. Añade su id y su tamaño lógico al catálogo `GRAPHICS` de `src/view/theme/graphics.ts` (las piezas llevan como prefijo el id del registro de piezas: `platform.left`, `plate.mid`…).
+2. Dibuja `src/view/art/classic/<id>.svg` siguiendo `docs/STYLE_GUIDE.md`: `viewBox`, `width` y `height` iguales al tamaño del catálogo y colores solo con clases `f-`/`s-`/`c-` de la paleta.
+3. Ejecuta `npx vitest run src/view/art`: la prueba de arte dice qué fichero y qué atributo no cumplen la convención, y la de temas avisa si `classic` se ha quedado incompleto.
+4. Úsalo desde la vista con `art.image('<id>', x, y)` (`ArtFactory`): `BootScene` ya lo rasteriza para todos los temas.
+
+### 9.9 Crear un tema
+
+1. Crea `src/view/themes/<id>.ts` con su paleta parcial (`Partial<Palette>`): solo los tokens que cambian.
+2. Si sustituye gráficos, pon sus SVG en `src/view/art/<id>/` con el mismo nombre que en `classic`; lo que no sustituya se toma de `classic`.
+3. Regístralo en `createThemeRegistry` (`src/view/themes/index.ts`) con `registry.register({ id, name, palette, art: art.get(id) ?? {} })`.
+4. Pruébalo con `?theme=<id>` en la URL o con `"theme": "<id>"` en un nivel. `npm run test` comprueba que solo usa tokens y gráficos existentes y colores válidos.
+
+### 9.10 Añadir o animar una parte de un personaje
+
+1. Para una parte nueva: añade su gráfico (9.8) y una entrada en el rig correspondiente de `src/view/rigs/rigs.ts` con su posición respecto al centro de la casilla y su punto de giro (`originX`/`originY`; por ejemplo, el hombro para un brazo). El orden de la lista es el orden de dibujo.
+2. Para animarla, edita el estado en `src/view/rigs/states.ts`: `motion.swing(parte, desde, hasta, ms)` la mueve de ida y vuelta, `motion.once(...)` una sola vez y `motion.hold(...)` la deja en una postura. Los desplazamientos son relativos a la postura base (`dx`, `dy`, `angle`, `scaleX`, `scaleY`).
+3. Un estado nuevo se añade al tipo (`ChefAnimation` o `EnemyAnimation`), a la función que lo elige (`chooseAnimation.ts`, con su prueba) y a la tabla de estados.
 
 ## 10. Build y empaquetado
 
