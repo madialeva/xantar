@@ -146,11 +146,12 @@ La selección es una función pura `chooseTheme({ urlTheme, levelTheme },
 registry)` que devuelve el id elegido y los avisos (id desconocido y su
 origen) con la prioridad URL → nivel → `classic`; se prueba en Node.
 `src/main.ts` lee `?theme=` con `URLSearchParams` una vez y lo inyecta en
-`GameScene`, que llama a `chooseTheme` al empezar cada tablero con el `theme`
-del documento de nivel y escribe los avisos con `console.warn`. Cambiar de
-tema entre tableros solo cambia el prefijo de las texturas que piden las
-vistas (D5), que se reconstruyen en `boardStarted` como ya ocurre con los
-ingredientes.
+`GameScene`, que llama a `chooseTheme` al crearse con el `theme` del
+documento de nivel y escribe los avisos con `console.warn`. Hoy la escena
+juega un único documento de nivel (también en `nextLevel`), así que elegir al
+crearla equivale a elegir al empezar el nivel; cuando exista una secuencia de
+niveles (#5), basta con volver a elegir al cambiar de documento: las texturas
+de todos los temas ya están rasterizadas (D5).
 
 ### D5. Rasterizado en una escena de arranque
 
