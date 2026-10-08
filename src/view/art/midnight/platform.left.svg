@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 12" width="32" height="12">
+  <path class="f-platformEdge" d="M4 2 H32 V12 H4 Q2 12 2 10 V4 Q2 2 4 2 Z"/>
+  <rect class="f-platform" x="2.5" y="3" width="29.5" height="2.5" opacity="0.35"/>
+  <path class="f-platform" d="M2 0.5 H32 V3 H2 Q0.75 3 0.75 1.75 Q0.75 0.5 2 0.5 Z"/>
+  <rect class="f-highlight" x="2" y="1.25" width="30" height="0.75" opacity="0.8"/>
+  <rect class="f-platform" x="4" y="9.5" width="28" height="1" opacity="0.5"/>
+  <circle class="f-platform" cx="16" cy="7" r="1" opacity="0.7"/>
+</svg>
