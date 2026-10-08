@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 26" width="16" height="26">
+  <rect class="f-pickle s-outline" x="1.5" y="1" width="13" height="24" rx="6.5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path class="f-pickleShade" d="M10.5 3 Q13.75 6 13.75 12 V18.5 Q13.75 24 8 24.25 Q12 21 12 13 Q12 6 10.5 3 Z"/>
+  <rect class="f-highlight" x="3.5" y="5" width="2" height="12" rx="1" opacity="0.3"/>
+  <circle class="f-pickleShade" cx="6" cy="4.5" r="0.9"/>
+  <circle class="f-pickleShade" cx="10" cy="9" r="0.9"/>
+  <circle class="f-pickleShade" cx="5" cy="14" r="0.9"/>
+  <circle class="f-pickleShade" cx="9.5" cy="19" r="0.9"/>
+  <circle class="f-pickleShade" cx="6.5" cy="21.5" r="0.9"/>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 14" width="32" height="14">
+  <g transform="matrix(-1 0 0 1 32 0)">
+    <path class="f-shadow" d="M6 13.5 H32 V12 H6 Z" opacity="0.25"/>
+    <path class="f-bun" d="M32 1.5 H3.5 Q1.5 1.5 1.5 3.5 V7 Q1.5 12 6.5 12 H32 Z"/>
+    <path class="f-bunShade" d="M1.5 8 Q1.7 12 6.5 12 H32 V8 Z"/>
+    <rect class="f-seed" x="3" y="2.5" width="29" height="1.6" opacity="0.6"/>
+    <path class="s-outline" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" fill="none" d="M32 1.5 H3.5 Q1.5 1.5 1.5 3.5 V7 Q1.5 12 6.5 12 H32"/>
+  </g>
+</svg>

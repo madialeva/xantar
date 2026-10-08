@@ -21,9 +21,9 @@
 
 ## 4. Arte SVG del tema por defecto
 
-- [ ] 4.1 Prueba de arte (`src/view/art/art.test.ts`) sobre todos los SVG de todos los temas: `viewBox` coherente con el catálogo, sin colores literales, clases `f-`/`s-` con tokens existentes, `classic` completo y temas que solo sustituyen ids del catálogo; verificar que falla con un SVG de prueba con un color literal y con un id desconocido, y que pasa al quitarlo
-- [ ] 4.2 Dibujar en `src/view/art/classic/` las piezas (`platform.*`, `ladder`, `crossing`, `plate.*`, `board.backdrop`) y los segmentos de los cuatro ingredientes (`left`/`mid`/`right`); verificar con la prueba de arte en verde y una lámina de revisión (página o captura con todos los gráficos) para el autor
-- [ ] 4.3 Dibujar las partes del chef y de los tres enemigos, `fx.*` y `hud.*`; verificar con la prueba de arte en verde y la lámina de revisión actualizada
+- [x] 4.1 Prueba de arte (`src/view/art/art.test.ts`) sobre todos los SVG de todos los temas: `viewBox` coherente con el catálogo, sin colores literales, clases `f-`/`s-` con tokens existentes, `classic` completo y temas que solo sustituyen ids del catálogo; verificar que falla con un SVG de prueba con un color literal y con un id desconocido, y que pasa al quitarlo
+- [x] 4.2 Dibujar en `src/view/art/classic/` las piezas (`platform.*`, `ladder`, `crossing`, `plate.*`, `board.backdrop`) y los segmentos de los cuatro ingredientes (`left`/`mid`/`right`); verificar con la prueba de arte en verde y una lámina de revisión (página o captura con todos los gráficos) para el autor
+- [x] 4.3 Dibujar las partes del chef y de los tres enemigos, `fx.*` y `hud.*`; verificar con la prueba de arte en verde y la lámina de revisión actualizada
 
 ## 5. Pipeline de rasterizado y disposición
 

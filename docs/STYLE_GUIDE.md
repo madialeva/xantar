@@ -48,6 +48,7 @@ mediante una clase, y el tema activo decide el color. Paleta del tema `classic`:
 | `patty` / `pattyShade` | `#7b3f1d` / `#5a2b12` | carne |
 | `lettuce` / `lettuceShade` | `#6cc24a` / `#3f8f2c` | lechuga |
 | `chef` / `chefShade` / `skin` / `cheek` | `#ffffff` / `#d7dde5` / `#f3c58f` / `#f29c8f` | chef |
+| `scarf` / `trousers` | `#e2504c` / `#3a4252` | pañuelo y pantalón del chef |
 | `hotdog` / `sausage` | `#e3a052` / `#c8442f` | perrito |
 | `pickle` / `pickleShade` | `#5f9e3a` / `#3e6e24` | pepinillo |
 | `egg` / `yolk` | `#fbfbf6` / `#f6c03b` | huevo |
@@ -118,7 +119,8 @@ Reglas (las comprueba `src/view/art/art.test.ts`):
 1. Raíz `<svg>` con `xmlns`, `viewBox="0 0 W H"`, `width` y `height` iguales al
    tamaño del catálogo.
 2. Ningún color literal: ni `#rgb`, ni `rgb()`, ni nombres de color en
-   `fill`, `stroke` o `stop-color`. Esos atributos solo admiten `none`.
+   `fill`, `stroke` o `stop-color`. Esos atributos solo admiten `none` o una
+   referencia local a un patrón o degradado del propio fichero (`url(#id)`).
 3. El color se da con clases: `f-<token>` (relleno), `s-<token>` (trazo) y
    `c-<token>` (color de parada de degradado). Ninguna otra clase.
 4. Sin atributos `style` ni elementos `<style>`, `<script>`, `<image>` o

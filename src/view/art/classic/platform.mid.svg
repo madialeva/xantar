@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 12" width="32" height="12">
+  <rect class="f-platform" x="0" y="0" width="32" height="12"/>
+  <rect class="f-platformEdge" x="0" y="8" width="32" height="4"/>
+  <rect class="f-highlight" x="0" y="1" width="32" height="1.5" opacity="0.3"/>
+  <rect class="f-platformEdge" x="15.5" y="3.5" width="1" height="3" opacity="0.6"/>
+</svg>

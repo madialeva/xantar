@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 12" width="32" height="12">
+  <rect class="f-platformEdge" x="9" y="2.5" width="14" height="5" rx="1.5"/>
+  <rect class="f-shadow" x="9" y="2.5" width="14" height="2" rx="1" opacity="0.3"/>
+  <rect class="f-ladder" x="8" y="0" width="2.5" height="12"/>
+  <rect class="f-ladder" x="21.5" y="0" width="2.5" height="12"/>
+  <rect class="f-ladderShade" x="9.5" y="0" width="1" height="12"/>
+  <rect class="f-ladderShade" x="23" y="0" width="1" height="12"/>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="20" height="20">
+  <rect class="f-pepper s-outline" x="5" y="7" width="10" height="11.5" rx="3" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path class="f-sausage s-outline" d="M5.5 7.5 Q5.5 2 10 2 Q14.5 2 14.5 7.5 Z" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle class="f-outline" cx="8.5" cy="5" r="0.7"/>
+  <circle class="f-outline" cx="11.5" cy="5" r="0.7"/>
+  <circle class="f-outline" cx="10" cy="3.6" r="0.7"/>
+  <rect class="f-highlight" x="6.5" y="9" width="1.5" height="7" rx="0.75" opacity="0.5"/>
+</svg>

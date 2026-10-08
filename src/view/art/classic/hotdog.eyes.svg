@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" width="12" height="6">
+  <circle class="f-eye s-outline" cx="3.5" cy="3.2" r="2.3" stroke-width="1"/>
+  <circle class="f-pupil" cx="4.3" cy="3.4" r="1.15"/>
+  <circle class="f-eye s-outline" cx="8.5" cy="3.2" r="2.3" stroke-width="1"/>
+  <circle class="f-pupil" cx="9.3" cy="3.4" r="1.15"/>
+  <path class="s-outline" stroke-width="1.2" stroke-linecap="round" fill="none" d="M1.6 0.9 L5 1.8 M7 1.8 L10.4 0.9"/>
+</svg>
