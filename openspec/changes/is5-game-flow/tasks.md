@@ -37,5 +37,5 @@
 
 ## 8. Verificación final
 
-- [ ] 8.1 Ejecutar `npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build` y `npm run smoke`, y verificar que todo termina con código 0
+- [x] 8.1 Ejecutar `npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build` y `npm run smoke`, y verificar que todo termina con código 0
 - [ ] 8.2 Revisión manual del autor: recorrido completo de pantallas en navegador y Electron, cambio de idioma y tema, pausa (tecla, botón y cambio de pestaña), preparado, muerte, fin de nivel automático y adelantado, fin de partida con récord y que las duraciones de las fases se sienten bien
