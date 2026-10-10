@@ -12,7 +12,7 @@
 
 ## 3. Textos por idioma
 
-- [ ] 3.1 Implementar `src/i18n/` con el catálogo español de referencia, el catálogo inglés tipado como `Catalog`, `format` (plurales con `Intl.PluralRules`, números con `Intl.NumberFormat`), `Translator`, `Localization` y `detectLanguage`; verificar con pruebas de parámetros, plurales en ambos idiomas, separador de miles, detección (`es-MX` → español, catalán → inglés, lista vacía → inglés) y aviso a los suscriptores al cambiar de idioma, y comprobar a mano que quitar una clave del catálogo inglés hace fallar `npm run typecheck`
+- [x] 3.1 Implementar `src/i18n/` con el catálogo español de referencia, el catálogo inglés tipado como `Catalog`, `format` (plurales con `Intl.PluralRules`, números con `Intl.NumberFormat`), `Translator`, `Localization` y `detectLanguage`; verificar con pruebas de parámetros, plurales en ambos idiomas, separador de miles, detección (`es-MX` → español, catalán → inglés, lista vacía → inglés) y aviso a los suscriptores al cambiar de idioma, y comprobar a mano que quitar una clave del catálogo inglés hace fallar `npm run typecheck`
 - [ ] 3.2 Llevar al catálogo todos los textos de la interfaz (carga, título, menús, opciones, HUD, preparado, nivel completado, fin de partida con récord, pausa); verificar con `grep` que no quedan textos visibles escritos en escenas ni componentes
 
 ## 4. Ajustes del jugador y récord
