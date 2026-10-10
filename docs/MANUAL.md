@@ -35,6 +35,8 @@ El código del juego no cambia entre ambos destinos; solo cambia el envoltorio. 
 
 Estado actual del juego: un juego de una sola pantalla con un nivel clásico, inspirado en **BurgerTime** (1982). `TapScene` es la pantalla de título ("CLICK PARA JUGAR") y `GameScene` es la vista del juego: ejecuta el núcleo de simulación (`src/sim/`: chef, ingredientes de segmentos que se pisan y caen, enemigos, pimienta, puntuación y vidas) y lo dibuja. La hoja de ruta está en el README y en las issues de GitHub.
 
+Si los conceptos de desarrollo de juegos (bucle de juego, paso fijo, HUD, rig, filtros, tipos de assets…) son nuevos para ti, empieza por [`GAMEDEV_FUNDAMENTALS.md`](GAMEDEV_FUNDAMENTALS.md): los explica para principiantes y los relaciona con este proyecto.
+
 ---
 
 ## 2. Stack tecnológico y versiones
@@ -138,6 +140,7 @@ xantar/
 │       ├── TapScene.ts          # Pantalla "CLICK/TOCA PARA JUGAR" + música
 │       └── GameScene.ts         # Adaptador: ejecuta la simulación a paso fijo y la dibuja
 ├── docs/
+│   ├── GAMEDEV_FUNDAMENTALS.md  # Fundamentos del desarrollo de juegos (para principiantes)
 │   ├── MANUAL.md                # Este manual de desarrollador
 │   └── STYLE_GUIDE.md           # Guía de estilo visual (paleta, trazo, convención de los SVG)
 ├── .vscode/

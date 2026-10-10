@@ -148,6 +148,10 @@ tool. This is a deliberate choice of the author: keep it when adding code.
   workflows. Keep it in sync with structural changes.
 - `docs/STYLE_GUIDE.md` (visual style guide) is also in **Spanish** for now, as
   a temporary exception; it will be translated to English later.
+- `docs/GAMEDEV_FUNDAMENTALS.md` ("Fundamentos del desarrollo de juegos") is a
+  beginner's guide to game development concepts and to the practices of this
+  project, written in **Spanish** for the author. Keep it in sync when a change
+  introduces a new concept or practice (for example, a new pattern or tool).
 - This `AGENTS.md` is durable context versioned in the repository, so it
   survives clones/moves. `openspec/` (specs, changes and their archive) is
   versioned too: it is the project's design record, written in Spanish.
