@@ -4,14 +4,17 @@ import { parseSize, parseSteps } from './steps';
 
 describe('parseSteps', () => {
   it('reads every kind of step', () => {
-    expect(parseSteps('wait:2500, click,key:Space,key:Left:300,down:Up,up:Up,shot:game')).toEqual([
+    expect(
+      parseSteps('wait:2500, click,key:Space,key:Left:300,down:Up,up:Up,shot:game,expectQuit')
+    ).toEqual([
       { kind: 'wait', ms: 2500 },
       { kind: 'click' },
       { kind: 'key', key: 'Space', ms: 100 },
       { kind: 'key', key: 'Left', ms: 300 },
       { kind: 'down', key: 'Up' },
       { kind: 'up', key: 'Up' },
-      { kind: 'shot', name: 'game' }
+      { kind: 'shot', name: 'game' },
+      { kind: 'expectQuit' }
     ]);
   });
 

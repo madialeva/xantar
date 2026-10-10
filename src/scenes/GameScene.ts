@@ -17,62 +17,61 @@ import {
 import { MazeView } from '../view/board/MazeView';
 import { EventEffects } from '../view/fx/EventEffects';
 import { applyBloom } from '../view/fx/bloom';
-import { HudPanels } from '../view/hud/HudPanels';
-import { OverlayView } from '../view/hud/OverlayView';
+import type { Settings } from '../settings/Settings';
 import { followBoardCamera } from '../view/layout/boardCamera';
-import { layoutForWidth } from '../view/layout/computeLayout';
 import { ArtFactory } from '../view/raster/ArtFactory';
+import type { GameSession, SessionRequest } from '../view/session/GameSession';
 import { chooseTheme } from '../view/theme/chooseTheme';
 import type { ResolvedTheme } from '../view/theme/Theme';
 import type { ThemeRegistry } from '../view/theme/ThemeRegistry';
 
 const CAMERA_FLASH_MS = 180;
-const DEPTH = { maze: 0, ingredients: 5, enemies: 6, chef: 7, effects: 8, hud: 10, overlay: 20 };
+const DEPTH = { maze: 0, ingredients: 5, enemies: 6, chef: 7, effects: 8 };
 
 export interface GameSceneDependencies {
   readonly themes: ThemeRegistry;
   readonly urlTheme: string | null;
   readonly tier: RenderTier;
+  readonly session: GameSession;
+  readonly settings: Settings;
 }
 
 /**
- * Phaser scene that runs the simulation at a fixed step, draws it with interpolation and
- * turns its events into effects. It contains no game rules.
+ * Phaser scene of the board: runs the simulation at a fixed step, draws it with
+ * interpolation, turns its events into effects and publishes the game state to the session
+ * for the HUD scene. It contains no game rules.
  */
 export default class GameScene extends Phaser.Scene {
-  readonly #themes: ThemeRegistry;
-  readonly #urlTheme: string | null;
-  readonly #tier: RenderTier;
+  readonly #deps: GameSceneDependencies;
   #theme!: ResolvedTheme;
   #art!: ArtFactory;
   #sim!: Simulation;
   readonly #stepper = new FixedStepper();
   #pepperPending = false;
+  #confirmPending = false;
+  #paused = false;
+  #leaving = false;
 
   #chefView!: ChefView;
   #enemyViews: EnemyView[] = [];
   #ingredientViews = new Map<number, IngredientView>();
+  #effects!: EventEffects;
 
   #cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   #wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
   #pepperKey!: Phaser.Input.Keyboard.Key;
   #enterKey!: Phaser.Input.Keyboard.Key;
 
-  #effects!: EventEffects;
-  #hud!: HudPanels;
-  #overlay!: OverlayView;
-
-  constructor({ themes, urlTheme, tier }: GameSceneDependencies) {
+  constructor(deps: GameSceneDependencies) {
     super({ key: 'GameScene' });
-    this.#themes = themes;
-    this.#urlTheme = urlTheme;
-    this.#tier = tier;
+    this.#deps = deps;
   }
 
   create(): void {
+    const { session, settings, tier } = this.#deps;
     const levelDocument = parseLevelDocument(classicDocument);
     this.#theme = this.#chooseTheme(levelDocument.theme);
-    this.#art = new ArtFactory(this, this.#theme.id, this.#tier);
+    this.#art = new ArtFactory(this, this.#theme.id, tier);
     this.cameras.main.setBackgroundColor(this.#theme.palette.background);
     if (this.#theme.bloom) applyBloom(this);
     this.#sim = new Simulation({
@@ -81,43 +80,105 @@ export default class GameScene extends Phaser.Scene {
     });
     this.#stepper.reset();
     this.#pepperPending = false;
+    this.#confirmPending = false;
+    this.#paused = false;
+    this.#leaving = false;
     new MazeView(this, this.#art, this.#sim.level).setDepth(DEPTH.maze);
     this.#createViews();
-    this.#hud = new HudPanels(this, this.#art, this.#theme.palette, this.#tier, () =>
-      this.#exitGame()
-    ).setDepth(DEPTH.hud);
-    this.#hud.update(this.#sim.stats);
-    this.#overlay = new OverlayView(this, this.#theme.palette, this.#tier);
     this.#effects = new EventEffects(this, this.#art, DEPTH.effects);
-    followBoardCamera(this, this.#tier, (width) => this.#hud.layout(layoutForWidth(width)));
+    followBoardCamera(this, tier);
     this.#createInput();
     this.#rebuildIngredients();
     this.#syncViews(0);
+    session.start(settings.bestScore);
+    session.update(this.#sim.stats, this.#sim.phase);
+    this.#listen();
+    this.scene.launch('HudScene', { themeId: this.#theme.id });
   }
 
   override update(_time: number, delta: number): void {
-    if (Phaser.Input.Keyboard.JustDown(this.#pepperKey)) this.#pepperPending = true;
-
-    if (this.#sim.status !== 'playing') {
-      this.#pepperPending = false;
-      if (Phaser.Input.Keyboard.JustDown(this.#enterKey)) this.#confirm();
+    if (Phaser.Input.Keyboard.JustDown(this.#pepperKey)) {
+      this.#pepperPending = true;
+      this.#confirmPending = true;
     }
+    if (Phaser.Input.Keyboard.JustDown(this.#enterKey)) this.#confirmPending = true;
 
     const events: SimEvent[] = [];
     const steps = this.#stepper.advance(delta);
     for (let i = 0; i < steps; i++) {
       events.push(...this.#sim.step(this.#readInput()));
       this.#pepperPending = false;
+      this.#confirmPending = false;
     }
 
     this.#syncViews(this.#stepper.alpha);
     if (events.length > 0) this.#handleEvents(events);
+    this.#deps.session.update(this.#sim.stats, this.#sim.phase);
+  }
+
+  #listen(): void {
+    const onRequest = (request: SessionRequest): void => {
+      switch (request) {
+        case 'pause':
+          this.#pause();
+          break;
+        case 'resume':
+          this.#resume();
+          break;
+        case 'quit':
+          this.#quit();
+          break;
+      }
+    };
+    const onLeave = (): void => this.#pause();
+    const onVisibility = (): void => {
+      if (document.hidden) this.#pause();
+    };
+    const onFullscreenChange = (): void => {
+      if (!document.fullscreenElement) this.#pause();
+    };
+    const unsubscribe = this.#deps.session.onRequest(onRequest);
+    this.game.events.on(Phaser.Core.Events.BLUR, onLeave);
+    this.game.events.on(Phaser.Core.Events.HIDDEN, onLeave);
+    document.addEventListener('visibilitychange', onVisibility);
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      unsubscribe();
+      this.game.events.off(Phaser.Core.Events.BLUR, onLeave);
+      this.game.events.off(Phaser.Core.Events.HIDDEN, onLeave);
+      document.removeEventListener('visibilitychange', onVisibility);
+      document.removeEventListener('fullscreenchange', onFullscreenChange);
+    });
+  }
+
+  #pause(): void {
+    if (this.#paused || this.#leaving || this.#sim.phase === 'gameOver') return;
+    this.#paused = true;
+    this.#deps.session.setPaused(true);
+    this.scene.pause();
+  }
+
+  #resume(): void {
+    if (!this.#paused) return;
+    this.#paused = false;
+    this.#stepper.reset();
+    this.scene.resume();
+    this.#deps.session.setPaused(false);
+  }
+
+  #quit(): void {
+    if (this.#leaving) return;
+    this.#leaving = true;
+    this.#deps.settings.submitScore(this.#sim.stats.score);
+    this.scene.stop('HudScene');
+    this.scene.start('MenuScene');
   }
 
   #chooseTheme(levelTheme: string | undefined): ResolvedTheme {
-    const choice = chooseTheme({ urlTheme: this.#urlTheme, levelTheme }, this.#themes);
+    const { themes, urlTheme, settings } = this.#deps;
+    const choice = chooseTheme({ urlTheme, optionTheme: settings.theme, levelTheme }, themes);
     for (const warning of choice.warnings) console.warn(warning);
-    return this.#themes.resolve(choice.id);
+    return themes.resolve(choice.id);
   }
 
   #readInput(): SimInput {
@@ -127,7 +188,8 @@ export default class GameScene extends Phaser.Scene {
       right: this.#cursors.right.isDown || this.#wasd.D.isDown,
       up: this.#cursors.up.isDown || this.#wasd.W.isDown,
       down: this.#cursors.down.isDown || this.#wasd.S.isDown,
-      pepper: this.#pepperPending
+      pepper: this.#pepperPending,
+      confirm: this.#confirmPending
     };
   }
 
@@ -148,7 +210,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   #syncViews(alpha: number): void {
-    this.#chefView.sync(this.#sim.chef, alpha);
+    this.#chefView.sync(this.#sim.chef, alpha, this.#sim.phase === 'dying');
     this.#sim.enemies.forEach((enemy, index) => this.#enemyViews[index].sync(enemy, alpha));
     for (const ingredient of this.#sim.ingredients) {
       this.#ingredientViews.get(ingredient.id)?.sync(ingredient, alpha);
@@ -159,8 +221,6 @@ export default class GameScene extends Phaser.Scene {
     for (const event of events) {
       switch (event.type) {
         case 'boardStarted':
-          this.#overlay.hide();
-          this.#chefView.recover();
           this.#effects.clear();
           this.#rebuildIngredients();
           break;
@@ -169,17 +229,11 @@ export default class GameScene extends Phaser.Scene {
           break;
         case 'chefHit':
           this.cameras.main.flash(CAMERA_FLASH_MS, 255, 60, 60);
-          this.#chefView.hit();
-          break;
-        case 'levelCleared':
-          this.#overlay.show(
-            'NIVEL COMPLETADO',
-            'Pulsa ENTER para el siguiente nivel',
-            DEPTH.overlay
-          );
           break;
         case 'gameOver':
-          this.#overlay.show('GAME OVER', 'Pulsa ENTER para reiniciar', DEPTH.overlay);
+          if (this.#deps.settings.submitScore(this.#sim.stats.score)) {
+            this.#deps.session.markNewRecord();
+          }
           break;
         case 'ingredientLanded':
           this.#ingredientViews.get(event.ingredientId)?.land();
@@ -197,6 +251,8 @@ export default class GameScene extends Phaser.Scene {
           if (plate) this.#effects.burgerDone(plate);
           break;
         }
+        case 'levelCleared':
+        case 'phaseChanged':
         case 'ingredientsTriggered':
         case 'enemyRespawned':
         case 'enemyStunned':
@@ -204,7 +260,6 @@ export default class GameScene extends Phaser.Scene {
           break;
       }
     }
-    this.#hud.update(this.#sim.stats);
   }
 
   #createInput(): void {
@@ -216,25 +271,5 @@ export default class GameScene extends Phaser.Scene {
     >;
     this.#pepperKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.#enterKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', () => this.#exitGame());
-  }
-
-  #confirm(): void {
-    this.#overlay.hide();
-    if (this.#sim.status === 'gameOver') this.#sim.newGame();
-    else this.#sim.nextLevel();
-    this.#stepper.reset();
-  }
-
-  #exitGame(): void {
-    const doc = document as Document & { webkitExitFullscreen?: () => Promise<void> };
-    const exit: Promise<void> = doc.exitFullscreen
-      ? doc.exitFullscreen()
-      : doc.webkitExitFullscreen
-        ? Promise.resolve(doc.webkitExitFullscreen())
-        : Promise.resolve();
-    void exit.finally(() => {
-      window.location.href = 'index.html';
-    });
   }
 }

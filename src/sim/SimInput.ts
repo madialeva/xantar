@@ -4,6 +4,7 @@ export interface SimInput {
   readonly up: boolean;
   readonly down: boolean;
   readonly pepper: boolean;
+  readonly confirm: boolean;
 }
 
 export const NO_INPUT: SimInput = {
@@ -11,5 +12,6 @@ export const NO_INPUT: SimInput = {
   right: false,
   up: false,
   down: false,
-  pepper: false
+  pepper: false,
+  confirm: false
 };

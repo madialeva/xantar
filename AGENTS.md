@@ -72,6 +72,9 @@ For visual changes, also run `npm run smoke` and check the art sheet at
   Node APIs such as `fs` or `path` from `src/`. Electron-only code goes in
   `electron/` and uses `tsconfig.electron.json`.
 - Code, identifiers and comments in English.
+- Every text shown to the player comes from the typed catalogs in
+  `src/i18n/catalogs/` (Spanish is the reference, English must match it); never
+  write UI strings directly in scenes or components.
 - Every class has a short doc comment (`/** ... */`, one to three lines, in English)
   right above it saying what it is for and, when it helps, which role it plays in
   the design (for example a Strategy or a State). The same goes for the interfaces

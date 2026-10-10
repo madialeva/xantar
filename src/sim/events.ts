@@ -1,3 +1,5 @@
+import type { GamePhaseName } from './phases/GamePhase';
+
 export type SimEvent =
   | { readonly type: 'boardStarted' }
   | {
@@ -43,7 +45,12 @@ export type SimEvent =
   | { readonly type: 'chefHit'; readonly livesLeft: number }
   | { readonly type: 'scoreChanged'; readonly score: number; readonly delta: number }
   | { readonly type: 'levelCleared'; readonly level: number }
-  | { readonly type: 'gameOver' };
+  | { readonly type: 'gameOver' }
+  | {
+      readonly type: 'phaseChanged';
+      readonly from: GamePhaseName;
+      readonly to: GamePhaseName;
+    };
 
 export type SimEventType = SimEvent['type'];
 

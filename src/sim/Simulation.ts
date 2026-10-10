@@ -9,11 +9,11 @@ import { EventQueue, type SimEvent } from './events';
 import { GameStats, type StatsSnapshot } from './GameStats';
 import type { Level } from './level/Level';
 import type { NavPlace } from './nav/NavPlace';
+import type { GamePhase, GamePhaseName, PhaseHost, PlayOutcome } from './phases/GamePhase';
+import { ReadyPhase } from './phases/phases';
 import type { Rng } from './rng';
 import { CONTACT_X, CONTACT_Y, SCORE } from './rules';
 import type { SimInput } from './SimInput';
-
-export type GameStatus = 'playing' | 'levelClear' | 'gameOver';
 
 export interface SimulationOptions {
   readonly level: Level;
@@ -23,6 +23,7 @@ export interface SimulationOptions {
 /**
  * Root of the game rules. Owns the level, the chef, the enemies, the ingredient field and
  * the stats, advances one fixed tick at a time from an input and returns the events it caused.
+ * What a tick does depends on the current game phase (State pattern).
  */
 export class Simulation {
   readonly #level: Level;
@@ -36,8 +37,9 @@ export class Simulation {
   readonly #crushTarget: CrushTarget = {
     crush: (left, right, fromRow, toRow) => this.#crushEnemies(left, right, fromRow, toRow)
   };
+  readonly #phaseHost: PhaseHost = this.#createPhaseHost();
   #field: IngredientField;
-  #status: GameStatus = 'playing';
+  #phase: GamePhase = new ReadyPhase();
 
   constructor(options: SimulationOptions) {
     const { level, rng } = options;
@@ -58,8 +60,8 @@ export class Simulation {
     return this.#level;
   }
 
-  get status(): GameStatus {
-    return this.#status;
+  get phase(): GamePhaseName {
+    return this.#phase.name;
   }
 
   get chef(): ChefSnapshot {
@@ -83,36 +85,50 @@ export class Simulation {
   }
 
   step(input: SimInput): readonly SimEvent[] {
-    if (this.#status !== 'playing') return this.#events.drain();
-
     this.#chef.beginTick();
     for (const enemy of this.#enemies) enemy.beginTick();
-
-    this.#chef.step(input, this.#level.graph);
-    this.#field.step(this.#chef);
-    if (this.#checkLevelClear()) return this.#events.drain();
-
-    for (const enemy of this.#enemies) enemy.step(this.#chef, this.#rng);
-    if (input.pepper) this.#throwPepper();
-    this.#checkContact();
+    this.#enterPhase(this.#phase.step(input, this.#phaseHost));
     return this.#events.drain();
   }
 
   startBoard(): void {
     this.#field = this.#newField();
     this.#resetPositions();
-    this.#status = 'playing';
     this.#events.emit({ type: 'boardStarted' });
-  }
-
-  nextLevel(): void {
-    if (this.#status !== 'levelClear') return;
-    this.startBoard();
+    this.#enterPhase(new ReadyPhase());
   }
 
   newGame(): void {
     this.#stats.newGame();
     this.startBoard();
+  }
+
+  #enterPhase(next: GamePhase): void {
+    const from = this.#phase.name;
+    this.#phase = next;
+    if (next.name !== from) this.#events.emit({ type: 'phaseChanged', from, to: next.name });
+  }
+
+  #createPhaseHost(): PhaseHost {
+    const stats = this.#stats;
+    return {
+      get livesLeft(): number {
+        return stats.lives;
+      },
+      playTick: (input) => this.#playTick(input),
+      respawn: () => this.#resetPositions(),
+      rebuildBoard: () => this.startBoard(),
+      endGame: () => this.#events.emit({ type: 'gameOver' })
+    };
+  }
+
+  #playTick(input: SimInput): PlayOutcome {
+    this.#chef.step(input, this.#level.graph);
+    this.#field.step(this.#chef);
+    if (this.#checkLevelClear()) return 'levelCleared';
+    for (const enemy of this.#enemies) enemy.step(this.#chef, this.#rng);
+    if (input.pepper) this.#throwPepper();
+    return this.#checkContact() ? 'chefHit' : 'continue';
   }
 
   #newField(): IngredientField {
@@ -156,7 +172,7 @@ export class Simulation {
       .forEach((enemy) => enemy.stun());
   }
 
-  #checkContact(): void {
+  #checkContact(): boolean {
     const touching = this.#enemies.some(
       (enemy) =>
         enemy.active &&
@@ -164,24 +180,15 @@ export class Simulation {
         Math.abs(enemy.x - this.#chef.x) < CONTACT_X &&
         Math.abs(enemy.y - this.#chef.y) < CONTACT_Y
     );
-    if (touching) this.#loseLife();
-  }
-
-  #loseLife(): void {
+    if (!touching) return false;
     this.#stats.loseLife();
     this.#events.emit({ type: 'chefHit', livesLeft: Math.max(0, this.#stats.lives) });
-    if (this.#stats.lives <= 0) {
-      this.#status = 'gameOver';
-      this.#events.emit({ type: 'gameOver' });
-      return;
-    }
-    this.#resetPositions();
+    return true;
   }
 
   #checkLevelClear(): boolean {
     if (!this.#field.isComplete) return false;
     this.#stats.advanceLevel();
-    this.#status = 'levelClear';
     this.#events.emit({ type: 'levelCleared', level: this.#stats.level });
     return true;
   }

@@ -240,9 +240,9 @@ juegos. Los que usamos:
 
 | Patrón | Idea | Dónde está en Xantar |
 |---|---|---|
-| **State** (estado) | Un objeto cambia de comportamiento según su estado, y cada estado es un objeto propio en lugar de un `switch` gigante | Fases del ingrediente (reposo, esperando, cayendo, apilado) en [`Ingredient.ts`](../src/sim/entities/Ingredient.ts); estados de animación de los personajes en [`states.ts`](../src/view/rigs/states.ts) |
+| **State** (estado) | Un objeto cambia de comportamiento según su estado, y cada estado es un objeto propio en lugar de un `switch` gigante | Fases de partida (preparado, jugando, muriendo, nivel completado, fin) en [`src/sim/phases/`](../src/sim/phases/); fases del ingrediente (reposo, esperando, cayendo, apilado) en [`Ingredient.ts`](../src/sim/entities/Ingredient.ts); estados de animación de los personajes en [`states.ts`](../src/view/rigs/states.ts) |
 | **Strategy** (estrategia) | Comportamientos intercambiables detrás de una interfaz | La "mente" de los enemigos, [`EnemyBrain`](../src/sim/entities/EnemyBrain.ts) (`ChaseBrain` persigue al chef por el camino más corto) |
-| **Observer** (observador) | Quien produce algo no sabe quién lo escucha | Los eventos de la simulación (`EventSink`) que la vista escucha |
+| **Observer** (observador) | Quien produce algo no sabe quién lo escucha | Los eventos de la simulación (`EventSink`) que la vista escucha; `GameSession` (estado de la partida para el HUD) y `Localization` (cambio de idioma) |
 | **Factory** (fábrica) | Un punto que sabe crear objetos | `createEnemy`, `ArtFactory` (crea imágenes del tema a la escala correcta) |
 | **Command** (orden) | Una acción representada como dato | `SimInput`: la entrada del tick como un objeto inmutable; base de las repeticiones |
 | **Registry** (registro) | Catálogo extensible de tipos por identificador | [`PieceRegistry`](../src/sim/level/pieces/PieceRegistry.ts) (piezas de nivel), `ThemeRegistry` (temas) |
@@ -545,17 +545,30 @@ en el asset, en vez de calcularlo en cada fotograma.
 - **HUD** (*heads-up display*): la información que se muestra encima o
   alrededor del juego mientras se juega: puntuación, vidas, munición, mapa. El
   nombre viene de los visores de los cazas, que proyectan datos sin que el
-  piloto aparte la vista. En Xantar, los paneles laterales (puntos, nivel,
-  vidas, pimientas y botón de salir).
+  piloto aparte la vista. En Xantar, los paneles laterales (puntos, récord,
+  nivel, vidas, pimientas y botón de pausa).
+- **HUD en una escena paralela**: muchos juegos dibujan el HUD en una escena
+  o capa propia que se ejecuta a la vez que la del mundo. Así el HUD sigue
+  activo cuando el mundo está en pausa y no se mezcla con su cámara ni con su
+  lógica. En Xantar, `HudScene` corre junto a `GameScene` y solo conoce la
+  partida a través de un mediador (`GameSession`, ver apartado 17).
 - **Diegético y no diegético**: un HUD *diegético* forma parte del mundo del
   juego (un reloj en la muñeca del personaje); uno *no diegético* está
   superpuesto (nuestros paneles).
-- **Superposición** (*overlay*): una capa temporal encima del juego (las
-  pantallas de nivel completado y de fin de partida).
+- **Superposición** (*overlay*): una capa temporal encima del juego (los
+  mensajes de preparado y de nivel completado, el fin de partida y la pausa).
 - **Menús y pantallas**: título, opciones, pausa, créditos. Su orden es el
-  **flujo de pantallas** (#5).
-- **Internacionalización** (*i18n*): preparar los textos para varios idiomas
-  (#5, español e inglés).
+  **flujo de pantallas** (apartado 17). Un buen menú se maneja igual con
+  teclado, ratón o dedo; en Xantar lo hace el componente `MenuList`.
+- **Internacionalización** (*i18n*, por las 18 letras entre la *i* y la *n*
+  de *internationalization*): preparar el juego para varios idiomas. La clave
+  es que **ningún texto visible esté escrito en el código**: todos salen de
+  un **catálogo** por idioma, identificados por claves. Dos detalles que
+  suelen olvidarse: los **parámetros** (no es lo mismo «3 vidas» que «1 vida»:
+  las reglas de **plural** cambian de un idioma a otro) y el **formato de
+  números** (12.500 en español, 12,500 en inglés). Xantar lo hace sin
+  librerías, con catálogos tipados (`src/i18n/`): si a un idioma le falta un
+  texto, el compilador lo detecta.
 
 Buenas prácticas: que el HUD no tape la acción (por eso el tablero queda libre
 y el HUD va a los lados), que se lea de un vistazo (iconos más números) y que
@@ -660,7 +673,11 @@ por tipo de enemigo están previstos en #17.
 - **Búfer de entrada**: recordar una pulsación unos instantes para que no se
   pierda (lo que hacemos con la pimienta entre ticks).
 - **Táctil**: en móvil hacen falta controles en pantalla (cruceta y botones
-  virtuales) o gestos. Pendiente en #6.
+  virtuales) o gestos. Pendiente en #6; los menús de Xantar ya aceptan toques.
+- **Teclas que se queda el navegador**: en pantalla completa, Esc sirve para
+  salir de ella y normalmente no llega a la página. La API *Keyboard Lock*
+  (`navigator.keyboard.lock`) permite recibirla; Xantar la usa y, donde no
+  existe, pausa la partida al salir de la pantalla completa.
 
 ---
 
@@ -672,27 +689,51 @@ por tipo de enemigo están previstos en #17.
   sirve para disparar sonidos (`segmentStomped` → "plof").
 - **Política de reproducción automática** (*autoplay*): los navegadores no
   dejan sonar audio hasta que el usuario interactúa con la página. Por eso la
-  música de título no suena en la web del móvil; está anotado en #6.
+  pantalla de título de Xantar espera un clic, un toque o una tecla: ese gesto
+  desbloquea la música (y la pantalla completa, que tiene la misma regla).
 - **Pausa al perder el foco**: si el jugador cambia de pestaña, el juego y el
-  sonido deberían pausarse.
+  sonido deberían pausarse. Xantar ya pausa la partida; el sonido llega con
+  #6.
 
 ---
 
 ## 17. Flujo del juego y estados
 
-Un juego completo es una **máquina de estados** a gran escala: título →
-partida → pausa → nivel completado → fin de partida → título. Cada estado
-decide qué se dibuja, qué entrada se acepta y a dónde se puede ir.
+Un juego completo es una **máquina de estados** a gran escala: título → menú →
+partida → pausa → fin de partida → menú. Cada estado decide qué se dibuja, qué
+entrada se acepta y a dónde se puede ir.
+
+**Dos máquinas, no una.** Conviene separar:
+
+- Las **fases de partida**, que forman parte de las reglas: preparado, jugando,
+  muriendo, nivel completado y fin de partida. Deciden cuándo se mueve cada
+  cosa y cuánto dura cada pausa de juego, así que van en la simulación,
+  cuentan ticks y son deterministas (una repetición las reproduce igual). En
+  Xantar son objetos State en `src/sim/phases/`.
+- El **flujo de la aplicación**: qué pantalla está abierta y si la partida
+  está en pausa. No cambia ninguna regla (en pausa la simulación simplemente no
+  avanza), así que es cosa de la vista: escenas de Phaser y una bandera de
+  pausa.
+
+Mezclarlas es un error clásico: si la pausa fuera una fase, una repetición
+grabaría cuándo pausó el jugador; si el «¡PREPARADO!» fuera un temporizador de
+la vista, la simulación y la pantalla podrían desincronizarse.
 
 Conceptos relacionados:
 
-- **Escenas** del motor como soporte de esos estados.
-- **Persistencia**: guardar récords y opciones entre sesiones (en el navegador,
-  `localStorage`).
-- **Opciones**: idioma, volumen, controles, tema.
-
-En Xantar la simulación ya distingue `playing`, `levelClear` y `gameOver`; el
-flujo completo de pantallas, la pausa y el récord llegan con #5.
+- **Escenas** del motor como soporte del flujo, y **escenas paralelas** (el
+  HUD sobre el tablero).
+- **Mediador**: un objeto por el que dos partes se comunican sin conocerse. En
+  Xantar, `GameSession` recibe el estado de la partida que publica el tablero
+  y las órdenes (pausar, reanudar, salir) que pide el HUD.
+- **Pausar de verdad**: detener la simulación, las animaciones y los efectos,
+  y al reanudar **no recuperar de golpe** el tiempo pasado en pausa (el
+  acumulador de ticks se vacía).
+- **Persistencia**: guardar récords y opciones entre sesiones. En el navegador
+  se usa `localStorage`; hay que **versionar** el registro y **tolerar datos
+  rotos** (un ajuste corrupto no debe impedir jugar). En Xantar,
+  `src/settings/`.
+- **Opciones**: idioma, tema y, más adelante, volumen y controles.
 
 ---
 
@@ -799,7 +840,9 @@ sensación.
 | Draw call | Petición de dibujo de la CPU a la GPU |
 | Easing | Curva que da forma a la velocidad de una animación |
 | ECS | Entity Component System, arquitectura basada en datos |
+| Escena paralela | Escena que se ejecuta a la vez que otra (el HUD sobre el tablero) |
 | Evento | Aviso de que algo ha pasado en la simulación |
+| Fase de partida | Estado de las reglas: preparado, jugando, muriendo, nivel completado, fin |
 | FPS | Fotogramas por segundo |
 | Frame (fotograma) | Cada imagen que se dibuja en pantalla |
 | Framebuffer | Imagen intermedia en la GPU donde se dibuja antes de mostrar |
@@ -809,14 +852,18 @@ sensación.
 | GPU | Procesador gráfico |
 | Grafo de navegación | Representación de por dónde se puede caminar |
 | HUD | Información superpuesta durante la partida (vidas, puntos…) |
+| i18n | Internacionalización: preparar el juego para varios idiomas |
 | Interpolación | Dibujar un punto intermedio entre dos estados de la simulación |
 | Letterbox (bandas) | Franjas vacías cuando la proporción no coincide |
+| Mediador | Objeto por el que dos partes se comunican sin conocerse |
 | Nivel de escala (render tier) | Multiplicador entre tamaño lógico y píxeles reales |
 | Overlay | Capa temporal sobre el juego (pantalla de fin) |
 | Paleta | Conjunto cerrado de colores del juego |
 | Pasada (pass) | Dibujar a una imagen intermedia para aplicarle un efecto |
 | Pathfinding | Búsqueda del camino más corto |
+| Persistencia | Guardar datos entre sesiones (ajustes, récords) |
 | Pivot | Punto de giro de una parte de un personaje |
+| Plural (reglas de) | Cómo cambia una palabra según la cantidad en cada idioma |
 | Pixel art | Arte dibujado píxel a píxel a baja resolución |
 | Post-procesado | Efectos aplicados a la imagen completa ya dibujada |
 | Rasterizar | Convertir un dibujo vectorial en píxeles |

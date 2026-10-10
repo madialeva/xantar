@@ -19,6 +19,10 @@ export const STEP_OFF_DISTANCE = 0.4;
 export const FALL_TICKS = fromMs(200);
 export const FALL_STAGGER_TICKS = 7;
 
+export const READY_TICKS = fromMs(1500);
+export const DYING_TICKS = fromMs(2000);
+export const LEVEL_CLEAR_TICKS = fromMs(3000);
+
 export const STUN_TICKS = fromMs(5000);
 export const RESPAWN_TICKS = fromMs(2500);
 export const DECISION_MIN_TICKS = fromMs(500);

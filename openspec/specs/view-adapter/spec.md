@@ -50,21 +50,28 @@ tile de la configuración.
 La vista SHALL reaccionar a los eventos de simulación para producir los efectos
 visuales y de interfaz del juego: destello de cámara al perder una vida, nube de
 pimienta, actualización de la puntuación, pimientas, vidas y nivel en los
-paneles laterales, y pantallas de fin de nivel y fin de partida con
-confirmación mediante Enter. Además SHALL producir un adorno breve al pisar un
-segmento, al aterrizar un ingrediente, al aplastar un enemigo y al completar
-una hamburguesa. Todos los efectos SHALL dibujarse con los gráficos del tema
-activo.
+paneles laterales, mensaje de preparado durante `ready`, mensaje de nivel
+completado durante `levelClear` y pantalla de fin de partida. Además SHALL
+producir un adorno breve al pisar un segmento, al aterrizar un ingrediente, al
+aplastar un enemigo y al completar una hamburguesa. Todos los efectos SHALL
+dibujarse con los gráficos del tema activo y todos los textos SHALL mostrarse en
+el idioma activo.
 
 #### Scenario: Perder una vida
 - **WHEN** la simulación emite el evento de chef golpeado
-- **THEN** la vista muestra el destello de cámara, el chef pasa a la animación
-  de golpeado y el contador de vidas del panel se actualiza
+- **THEN** la vista muestra el destello de cámara, el chef mantiene la
+  animación de golpeado mientras dura `dying` y el contador de vidas del panel
+  se actualiza
+
+#### Scenario: Preparado
+- **WHEN** la fase pasa a `ready`
+- **THEN** la vista muestra el mensaje de preparado sobre el tablero hasta que
+  la fase pasa a `playing`
 
 #### Scenario: Fin de partida
-- **WHEN** el estado pasa a `gameOver`
-- **THEN** la vista muestra la pantalla de fin de partida sobre el tablero y,
-  al pulsar Enter, solicita una partida nueva
+- **WHEN** la fase pasa a `gameOver`
+- **THEN** la vista muestra la pantalla de fin de partida con la puntuación
+  final y, al confirmar, vuelve al menú principal
 
 #### Scenario: Aplastar un enemigo
 - **WHEN** la simulación emite el evento de enemigo aplastado
@@ -82,15 +89,17 @@ simulación.
 - **THEN** no queda ningún efecto pendiente que altere el tablero nuevo
 
 ### Requirement: Paridad jugable con el POC
-Tras la refactorización, el juego SHALL mantener la jugabilidad del POC: mismas
-velocidades, puntuaciones, vidas, pimientas, comportamiento de enemigos y flujo
-de fin de nivel y fin de partida, con las diferencias de redondeo a ticks
-documentadas en el diseño.
+El juego SHALL mantener la jugabilidad del POC (mismas velocidades,
+puntuaciones, vidas, pimientas y comportamiento de enemigos), con las
+diferencias de redondeo a ticks documentadas y los cambios deliberados de flujo:
+fases de preparado y de muerte, continuación automática del fin de nivel y
+vuelta al menú desde el fin de partida.
 
 #### Scenario: Partida completa
 - **WHEN** un jugador completa un nivel y luego pierde todas las vidas
-- **THEN** se suceden las pantallas de nivel completado y de fin de partida y el
-  reinicio con Enter deja el juego en estado inicial
+- **THEN** se suceden el mensaje de nivel completado, el preparado del nivel
+  siguiente y la pantalla de fin de partida, y confirmar lleva al menú
+  principal, desde donde una partida nueva empieza en estado inicial
 
 ### Requirement: Segmentos de ingrediente
 La vista SHALL dibujar cada ingrediente con sus segmentos (2, 3 o 4 según el

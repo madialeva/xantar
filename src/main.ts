@@ -1,14 +1,44 @@
 import Phaser from 'phaser';
 import { RENDER_TIER } from './config';
+import { detectLanguage } from './i18n/language';
+import { Localization } from './i18n/Localization';
 import BootScene from './scenes/BootScene';
 import GameScene from './scenes/GameScene';
-import TapScene from './scenes/TapScene';
+import HudScene from './scenes/HudScene';
+import MenuScene from './scenes/MenuScene';
+import TitleScene from './scenes/TitleScene';
+import { AUTO_THEME } from './settings/PlayerSettings';
+import { Settings } from './settings/Settings';
+import { LocalStorageSettingsStore } from './settings/SettingsStore';
+import { TitleMusic } from './view/audio/TitleMusic';
 import { computeLayout } from './view/layout/computeLayout';
+import { desktopQuit } from './view/platform/desktop';
+import { GameSession } from './view/session/GameSession';
 import { createThemeRegistry } from './view/themes';
+
+const browserStorage = (): Storage | undefined => {
+  try {
+    return window.localStorage;
+  } catch {
+    return undefined;
+  }
+};
 
 const tier = RENDER_TIER;
 const themes = createThemeRegistry();
 const urlTheme = new URLSearchParams(window.location.search).get('theme');
+const settings = new Settings(new LocalStorageSettingsStore(browserStorage()), {
+  language: detectLanguage(navigator.languages),
+  theme: AUTO_THEME,
+  bestScore: 0
+});
+const localization = new Localization(settings.language);
+document.documentElement.lang = localization.language;
+localization.subscribe((language) => {
+  document.documentElement.lang = language;
+});
+const session = new GameSession();
+const music = new TitleMusic('music/tap-back.mp3');
 const initial = computeLayout(window.innerWidth, window.innerHeight);
 
 const config: Phaser.Types.Core.GameConfig = {
@@ -24,9 +54,11 @@ const config: Phaser.Types.Core.GameConfig = {
     imageLoadType: 'HTMLImageElement'
   },
   scene: [
-    new BootScene({ themes, tier }),
-    new TapScene(tier),
-    new GameScene({ themes, urlTheme, tier })
+    new BootScene({ themes, tier, localization }),
+    new TitleScene({ tier, localization, music, themes }),
+    new MenuScene({ tier, localization, settings, themes, music, quitApp: desktopQuit(window) }),
+    new GameScene({ themes, urlTheme, tier, session, settings }),
+    new HudScene({ tier, localization, session, themes })
   ]
 };
 

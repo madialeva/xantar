@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { RenderTier } from '../../config';
-import type { StatsSnapshot } from '../../sim';
+import type { SessionStats } from '../session/GameSession';
 import { type Layout, type Rect } from '../layout/computeLayout';
 import type { ArtFactory } from '../raster/ArtFactory';
 import type { Palette } from '../theme/palette';
@@ -19,6 +19,13 @@ interface Readout {
   readonly value: Phaser.GameObjects.Text;
 }
 
+/** The translated labels of the side panels. */
+export interface HudLabels {
+  readonly score: string;
+  readonly best: string;
+  readonly level: string;
+}
+
 /** An icon followed by a number, as shown in the side panels. */
 interface Counter {
   readonly icon: Phaser.GameObjects.Image;
@@ -26,24 +33,26 @@ interface Counter {
 }
 
 /**
- * The HUD in the side panels around the board: score and level on the left; lives,
- * peppers and the exit button on the right. Repositions itself when the layout changes.
+ * The HUD in the side panels around the board: score, best score and level on the left; lives,
+ * peppers and the pause button on the right. Repositions itself when the layout changes.
  */
 export class HudPanels {
   readonly #palette: Palette;
   readonly #backgrounds: Phaser.GameObjects.Graphics;
   readonly #score: Readout;
+  readonly #best: Readout;
   readonly #level: Readout;
   readonly #lives: Counter;
   readonly #peppers: Counter;
-  readonly #exit: Phaser.GameObjects.Image;
+  readonly #pause: Phaser.GameObjects.Image;
 
   constructor(
     scene: Phaser.Scene,
     art: ArtFactory,
     palette: Palette,
     tier: RenderTier,
-    onExit: () => void
+    labels: HudLabels,
+    onPause: () => void
   ) {
     this.#palette = palette;
     this.#backgrounds = scene.add.graphics();
@@ -55,14 +64,15 @@ export class HudPanels {
       icon: art.image(graphic).setOrigin(0, 0.5),
       value: scene.add.text(0, 0, '', hudText(16, color, tier)).setOrigin(0, 0.5)
     });
-    this.#score = readout('PUNTOS');
-    this.#level = readout('NIVEL');
+    this.#score = readout(labels.score);
+    this.#best = readout(labels.best);
+    this.#level = readout(labels.level);
     this.#lives = counter('hud.life', palette.hudText);
     this.#peppers = counter('hud.pepper', palette.hudAccent);
-    this.#exit = art.image('hud.exit').setInteractive({ useHandCursor: true });
-    this.#exit.on('pointerover', () => this.#exit.setAlpha(0.8));
-    this.#exit.on('pointerout', () => this.#exit.setAlpha(1));
-    this.#exit.on('pointerup', onExit);
+    this.#pause = art.image('hud.pause').setInteractive({ useHandCursor: true });
+    this.#pause.on('pointerover', () => this.#pause.setAlpha(0.8));
+    this.#pause.on('pointerout', () => this.#pause.setAlpha(1));
+    this.#pause.on('pointerup', onPause);
   }
 
   setDepth(depth: number): this {
@@ -81,16 +91,18 @@ export class HudPanels {
     const left = this.#inner(leftPanel);
     const leftX = this.#columnX(left, COLUMN_WIDTH.left);
     this.#placeReadout(this.#score, leftX, left.y + PADDING);
-    this.#placeReadout(this.#level, leftX, left.y + PADDING + 48);
+    this.#placeReadout(this.#best, leftX, left.y + PADDING + 48);
+    this.#placeReadout(this.#level, leftX, left.y + PADDING + 96);
     const right = this.#inner(rightPanel);
     const rightX = this.#columnX(right, COLUMN_WIDTH.right);
-    this.#exit.setPosition(right.x + right.width / 2, right.y + PADDING + 16);
+    this.#pause.setPosition(right.x + right.width / 2, right.y + PADDING + 16);
     this.#placeCounter(this.#lives, rightX, right.y + PADDING + 64);
     this.#placeCounter(this.#peppers, rightX, right.y + PADDING + 96);
   }
 
-  update({ score, level, lives, peppers }: StatsSnapshot): void {
+  update({ score, level, lives, peppers }: SessionStats, bestScore: number): void {
     this.#score.value.setText(score.toString().padStart(6, '0'));
+    this.#best.value.setText(bestScore.toString().padStart(6, '0'));
     this.#level.value.setText(String(level));
     this.#lives.value.setText(`× ${Math.max(0, lives)}`);
     this.#peppers.value.setText(`× ${peppers}`);
@@ -124,13 +136,15 @@ export class HudPanels {
       this.#backgrounds,
       this.#score.label,
       this.#score.value,
+      this.#best.label,
+      this.#best.value,
       this.#level.label,
       this.#level.value,
       this.#lives.icon,
       this.#lives.value,
       this.#peppers.icon,
       this.#peppers.value,
-      this.#exit
+      this.#pause
     ];
   }
 }

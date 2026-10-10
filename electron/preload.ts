@@ -1,6 +1,7 @@
-import { contextBridge } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('xantar', {
   isDesktop: true,
-  platform: process.platform
+  platform: process.platform,
+  quit: (): void => ipcRenderer.send('app:quit')
 });

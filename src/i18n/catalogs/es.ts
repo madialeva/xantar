@@ -1,0 +1,36 @@
+import type { Format } from '../format';
+
+export const es = {
+  'game.title': 'XANTAR',
+  loading: 'CARGANDO…',
+  'title.startPointer': 'HAZ CLIC O PULSA UNA TECLA',
+  'title.startTouch': 'TOCA PARA EMPEZAR',
+  'menu.play': 'JUGAR',
+  'menu.options': 'OPCIONES',
+  'menu.quit': 'SALIR',
+  'menu.best': (p: { score: number }, f: Format) => `RÉCORD  ${f.number(p.score)}`,
+  'menu.hint': '↑ ↓ ELEGIR · ENTER ACEPTAR',
+  'options.title': 'OPCIONES',
+  'options.language': 'IDIOMA',
+  'options.theme': 'TEMA',
+  'options.back': 'VOLVER',
+  'options.hint': '← → CAMBIAR · ESC VOLVER',
+  'language.es': 'ESPAÑOL',
+  'language.en': 'ENGLISH',
+  'theme.auto': 'AUTOMÁTICO',
+  'hud.score': 'PUNTOS',
+  'hud.best': 'RÉCORD',
+  'hud.level': 'NIVEL',
+  'phase.ready': '¡PREPARADO!',
+  'phase.lives': (p: { lives: number }, f: Format) =>
+    `${f.number(p.lives)} ${f.plural(p.lives, { one: 'VIDA', other: 'VIDAS' })}`,
+  'phase.levelClear': '¡NIVEL COMPLETADO!',
+  'phase.nextLevel': (p: { level: number }, f: Format) => `SIGUIENTE: NIVEL ${f.number(p.level)}`,
+  'gameOver.title': 'GAME OVER',
+  'gameOver.score': (p: { score: number }, f: Format) => `PUNTOS  ${f.number(p.score)}`,
+  'gameOver.newRecord': '¡NUEVO RÉCORD!',
+  'gameOver.continue': 'ENTER O TOCA PARA VOLVER AL MENÚ',
+  'pause.title': 'PAUSA',
+  'pause.resume': 'CONTINUAR',
+  'pause.quit': 'SALIR AL MENÚ'
+};
