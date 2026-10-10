@@ -24,6 +24,7 @@ export * from './level/validation/validateLevel';
 export * from './nav/edges';
 export * from './nav/NavigationGraph';
 export * from './nav/NavPlace';
+export * from './phases/GamePhase';
 export * from './rng';
 export * from './rules';
 export * from './SimInput';

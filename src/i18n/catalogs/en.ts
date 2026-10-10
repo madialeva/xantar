@@ -2,6 +2,7 @@ import type { Format } from '../format';
 import type { Catalog } from '../Translator';
 
 export const en: Catalog = {
+  'game.title': 'XANTAR',
   loading: 'LOADING…',
   'title.startPointer': 'CLICK OR PRESS ANY KEY',
   'title.startTouch': 'TAP TO START',

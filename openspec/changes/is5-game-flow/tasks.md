@@ -13,7 +13,7 @@
 ## 3. Textos por idioma
 
 - [x] 3.1 Implementar `src/i18n/` con el catálogo español de referencia, el catálogo inglés tipado como `Catalog`, `format` (plurales con `Intl.PluralRules`, números con `Intl.NumberFormat`), `Translator`, `Localization` y `detectLanguage`; verificar con pruebas de parámetros, plurales en ambos idiomas, separador de miles, detección (`es-MX` → español, catalán → inglés, lista vacía → inglés) y aviso a los suscriptores al cambiar de idioma, y comprobar a mano que quitar una clave del catálogo inglés hace fallar `npm run typecheck`
-- [ ] 3.2 Llevar al catálogo todos los textos de la interfaz (carga, título, menús, opciones, HUD, preparado, nivel completado, fin de partida con récord, pausa); verificar con `grep` que no quedan textos visibles escritos en escenas ni componentes
+- [x] 3.2 Llevar al catálogo todos los textos de la interfaz (carga, título, menús, opciones, HUD, preparado, nivel completado, fin de partida con récord, pausa); verificar con `grep` que no quedan textos visibles escritos en escenas ni componentes
 
 ## 4. Ajustes del jugador y récord
 
@@ -25,10 +25,10 @@
 
 ## 6. Escenas, HUD paralelo, menús y pausa
 
-- [ ] 6.1 Implementar `GameSession` (estado de la partida para el HUD, avisos tipados y órdenes de pausa, reanudación y salida) y `MenuList` (teclado y clic o toque); verificar con pruebas de `GameSession` (suscripción, récord en directo, órdenes) y `npm run typecheck`
-- [ ] 6.2 Crear `TitleScene` (sustituye a `TapScene`: primer clic, toque o tecla → pantalla completa si se puede, música y menú) y `MenuScene` (principal con Jugar, Opciones y récord; opciones con Idioma, Tema y Volver, aplicados y guardados al momento); cablear `Settings`, `Localization` y `GameSession` en `src/main.ts` y el atributo `lang` del documento; verificar en `npm run dev` el recorrido título → menú → opciones → menú en los dos idiomas, con teclado y con ratón, y que el idioma y el tema se recuerdan al recargar
-- [ ] 6.3 Crear `HudScene` (paneles con récord y botón de pausa, mensajes de preparado y nivel completado, fin de partida con aviso de récord, menú de pausa) y reducir `GameScene` al tablero: lanzar y detener el HUD, entrada con `confirm` y Esc/P, pausa con `scene.pause()` y `stepper.reset()` al reanudar, pausa al perder el foco, salida al menú con `scene.start` y envío de la puntuación a `Settings`; quitar el temporizador de golpe de `ChefView` en favor de la fase `dying`; verificar en `npm run dev` preparado, muerte, continuación automática y adelantada, fin de partida con y sin récord, pausa por tecla, botón y cambio de pestaña, y que jugar de nuevo desde el menú empieza en estado inicial
-- [ ] 6.4 Adaptar los escenarios de `tools/smoke/scenarios.ts` al título y al menú y añadir `menu` (menú y opciones en español e inglés) y `pause`; verificar con `npm run smoke` y `npm run smoke -- menu` y `pause` en verde, y revisar las capturas
+- [x] 6.1 Implementar `GameSession` (estado de la partida para el HUD, avisos tipados y órdenes de pausa, reanudación y salida) y `MenuList` (teclado y clic o toque); verificar con pruebas de `GameSession` (suscripción, récord en directo, órdenes) y `npm run typecheck`
+- [x] 6.2 Crear `TitleScene` (sustituye a `TapScene`: primer clic, toque o tecla → pantalla completa si se puede, música y menú) y `MenuScene` (principal con Jugar, Opciones y récord; opciones con Idioma, Tema y Volver, aplicados y guardados al momento); cablear `Settings`, `Localization` y `GameSession` en `src/main.ts` y el atributo `lang` del documento; verificar en `npm run dev` el recorrido título → menú → opciones → menú en los dos idiomas, con teclado y con ratón, y que el idioma y el tema se recuerdan al recargar
+- [x] 6.3 Crear `HudScene` (paneles con récord y botón de pausa, mensajes de preparado y nivel completado, fin de partida con aviso de récord, menú de pausa) y reducir `GameScene` al tablero: lanzar y detener el HUD, entrada con `confirm` y Esc/P, pausa con `scene.pause()` y `stepper.reset()` al reanudar, pausa al perder el foco, salida al menú con `scene.start` y envío de la puntuación a `Settings`; quitar el temporizador de golpe de `ChefView` en favor de la fase `dying`; verificar en `npm run dev` preparado, muerte, continuación automática y adelantada, fin de partida con y sin récord, pausa por tecla, botón y cambio de pestaña, y que jugar de nuevo desde el menú empieza en estado inicial
+- [x] 6.4 Adaptar los escenarios de `tools/smoke/scenarios.ts` al título y al menú y añadir `menu` (menú y opciones en español e inglés) y `pause`; verificar con `npm run smoke` y `npm run smoke -- menu` y `pause` en verde, y revisar las capturas
 
 ## 7. Documentación
 

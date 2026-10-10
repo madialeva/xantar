@@ -100,7 +100,7 @@ Para añadir un token nuevo hay que añadirlo a `PALETTE_TOKENS`
   Arial, sans-serif`, en negrita. Tamaños: 11 (etiquetas), 16 (valores), 22
   (títulos de las pantallas de fin). Etiquetas en `hudText` con opacidad 0,7;
   valores en `hudText`; avisos en `hudAccent` o `danger`.
-- Iconos del HUD (`hud.life`, `hud.pepper`, `hud.exit`) con el mismo
+- Iconos del HUD (`hud.life`, `hud.pepper`, `hud.pause`) con el mismo
   contorno que los personajes.
 
 ## 6. Convención de autoría de los SVG

@@ -95,7 +95,8 @@ async function play(run: SmokeRun, outDir: string): Promise<RunResult> {
     height,
     useContentSize: true,
     show: true,
-    backgroundColor: '#000000'
+    backgroundColor: '#000000',
+    webPreferences: { partition: `smoke-${run.name}-${Date.now()}` }
   });
   window.webContents.on('console-message', (event) => {
     log.push(`[${event.level}] ${event.message}`);

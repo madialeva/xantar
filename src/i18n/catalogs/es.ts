@@ -1,6 +1,7 @@
 import type { Format } from '../format';
 
 export const es = {
+  'game.title': 'XANTAR',
   loading: 'CARGANDO…',
   'title.startPointer': 'HAZ CLIC O PULSA UNA TECLA',
   'title.startTouch': 'TOCA PARA EMPEZAR',
