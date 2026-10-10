@@ -792,9 +792,22 @@ sensación.
 - **Web**: un juego HTML5 es una página estática; se puede publicar en
   cualquier alojamiento de ficheros (#14).
 - **Escritorio**: **Electron** empaqueta el juego con un navegador Chromium
-  dentro, como aplicación instalable (`npm run build:desktop`). Peculiaridad:
-  abre los ficheros con `file://`, que tiene restricciones distintas a un
-  servidor web.
+  dentro, como aplicación instalable (`npm run build:desktop`). Por defecto
+  abriría los ficheros con `file://`, que tiene restricciones distintas a un
+  servidor web; Xantar los sirve con un protocolo propio (`app://`) para que el
+  juego se cargue igual que en la web.
+- **Seguridad en el escritorio**: una aplicación Electron mezcla una página web
+  con un proceso que puede tocar el sistema, así que se separan: la página va
+  en un *sandbox* sin acceso a Node, solo ve un puente mínimo (cerrar, pantalla
+  completa) y no puede navegar a otros sitios ni abrir ventanas. Una **CSP**
+  (*Content Security Policy*) le dice al navegador de dónde puede cargar
+  código y datos la página; así, aunque algo intentara inyectar un script, no
+  se ejecutaría. Los **fusibles** de Electron desactivan, en el ejecutable
+  final, funciones de depuración que un atacante podría aprovechar.
+- **Firma de código**: Windows y macOS confían en los programas firmados con un
+  certificado de un desarrollador identificado; sin firma avisan al abrirlos.
+  Firmar cuesta dinero y trámites, así que muchos juegos pequeños empiezan sin
+  firmar y lo explican al jugador.
 - **Móvil**: se puede jugar en el navegador del móvil o empaquetar como
   aplicación (con herramientas como Capacitor). Implica controles táctiles,
   orientación, tamaños de pantalla muy variados y hardware más limitado.

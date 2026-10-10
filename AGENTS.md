@@ -31,9 +31,14 @@ roadmap lives in the GitHub issues and in the README.
   root-relative paths (`assets/foo.png`). Exception: the SVG art of the themes
   lives in `src/view/art/<theme>/` and is bundled as text (`?raw` imports), so
   it works under `file://` and can take the palette of each theme; follow
-  `docs/STYLE_GUIDE.md` when editing it. Keep
-  `loader.imageLoadType: 'HTMLImageElement'` in `src/main.ts`: Phaser defaults
-  to XHR, which is blocked under `file://` inside Electron.
+  `docs/STYLE_GUIDE.md` when editing it. The desktop app serves `dist/`
+  through its own `app://xantar/` protocol (not `file://`), so the Phaser loader
+  (XHR) works there as on the web; `loader.imageLoadType: 'HTMLImageElement'` in
+  `src/main.ts` is a leftover of the `file://` days and harmless.
+- The built page carries a Content Security Policy (`vite.config.ts`): no
+  inline scripts or styles, no `eval`, no third-party origins. The Electron
+  window is sandboxed and confined (`electron/window.ts`); any new IPC channel
+  validates its sender and arguments.
 - Do not add new runtime dependencies without an approved OpenSpec change.
 
 ## Commands

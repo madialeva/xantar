@@ -187,7 +187,25 @@ npm run build:desktop
 ```
 
 Installers are written to `release/`. Only the format of the host system can be
-built; publishing for several platforms requires building on each of them.
+built locally; the CI builds the three of them (see
+[`docs/MANUAL.md`](docs/MANUAL.md)).
+
+In the desktop app, the first click on the title screen switches to fullscreen
+and `F11` toggles it at any time. Only one copy of the game runs at a time:
+opening it again brings the existing window to the front.
+
+#### Installing an unsigned build
+
+The installers of version 1.0.0 are **not code-signed**, so the operating system
+warns before running them:
+
+- **Windows**: SmartScreen shows "Windows protected your PC". Click **More
+  info** and then **Run anyway**.
+- **macOS**: Gatekeeper says the app cannot be checked. Right-click the app,
+  choose **Open** and confirm, or run
+  `xattr -dr com.apple.quarantine /Applications/Xantar.app`.
+- **Linux**: give the AppImage permission to run
+  (`chmod +x Xantar-*.AppImage`) and open it.
 
 ---
 

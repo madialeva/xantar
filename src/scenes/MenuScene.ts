@@ -5,6 +5,7 @@ import type { Localization } from '../i18n/Localization';
 import { AUTO_THEME } from '../settings/PlayerSettings';
 import type { Settings } from '../settings/Settings';
 import type { TitleMusic } from '../view/audio/TitleMusic';
+import type { Platform } from '../view/platform/Platform';
 import { hudText } from '../view/hud/textStyle';
 import { followBoardCamera } from '../view/layout/boardCamera';
 import type { ResolvedTheme } from '../view/theme/Theme';
@@ -17,7 +18,7 @@ export interface MenuSceneDependencies {
   readonly settings: Settings;
   readonly themes: ThemeRegistry;
   readonly music: TitleMusic;
-  readonly quitApp: (() => void) | null;
+  readonly platform: Platform;
 }
 
 type Page = 'main' | 'options';
@@ -92,7 +93,7 @@ export default class MenuScene extends Phaser.Scene {
         items,
         style,
         tier,
-        this.#deps.quitApp ? selectQuit : undefined
+        this.#deps.platform.quit ? selectQuit : undefined
       );
     } else {
       text(110, localization.t('options.title'), 40, palette.hudAccent);
@@ -104,7 +105,8 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   #mainItems(): MenuItem[] {
-    const { localization, music, quitApp } = this.#deps;
+    const { localization, music, platform } = this.#deps;
+    const quitApp = platform.quit;
     return [
       {
         label: () => localization.t('menu.play'),

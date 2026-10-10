@@ -5,7 +5,8 @@ export type Step =
   | { readonly kind: 'down'; readonly key: string }
   | { readonly kind: 'up'; readonly key: string }
   | { readonly kind: 'shot'; readonly name: string }
-  | { readonly kind: 'expectQuit' };
+  | { readonly kind: 'expectQuit' }
+  | { readonly kind: 'security' };
 
 const DEFAULT_KEY_MS = 100;
 
@@ -23,7 +24,8 @@ const required = (text: string | undefined, step: string): string => {
 /**
  * Reads a comma-separated list of steps such as
  * `wait:2500,click,down:Right,wait:900,up:Right,shot:game`. `expectQuit` checks that the
- * game asked the desktop app to close.
+ * game asked the desktop app to close; `security` checks that the page cannot reach Node,
+ * open windows or navigate away.
  */
 export function parseSteps(text: string): readonly Step[] {
   return text
@@ -49,6 +51,7 @@ export function parseSteps(text: string): readonly Step[] {
         case 'shot':
           return { kind, name: required(first, step) };
         case 'expectQuit':
+        case 'security':
           return { kind };
         default:
           throw new Error(`Unknown step "${step}"`);

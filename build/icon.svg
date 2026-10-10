@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="1024" height="1024">
+  <!-- Application icon: the chef's head, hat and eyes from src/view/art/classic, placed as in
+       the chef rig, with the classic palette. Rendered to icon.png by `npm run icon`. -->
+  <style>
+    .f-outline { fill: #1d222b; }
+    .s-outline { stroke: #1d222b; }
+    .f-chef { fill: #ffffff; }
+    .s-chef { stroke: #ffffff; }
+    .f-chefShade { fill: #d7dde5; }
+    .s-chefShade { stroke: #d7dde5; }
+    .f-highlight { fill: #ffffff; }
+    .s-highlight { stroke: #ffffff; }
+    .f-hair { fill: #7a4421; }
+    .s-hair { stroke: #7a4421; }
+    .f-skin { fill: #f3c58f; }
+    .s-skin { stroke: #f3c58f; }
+    .f-cheek { fill: #f29c8f; }
+    .s-cheek { stroke: #f29c8f; }
+    .f-eye { fill: #ffffff; }
+    .s-eye { stroke: #ffffff; }
+    .f-pupil { fill: #1d1f24; }
+    .s-pupil { stroke: #1d1f24; }
+    .f-shadow { fill: #000000; }
+    .s-shadow { stroke: #000000; }
+  </style>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#1b2130"/>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="none" stroke="#3d7ea6" stroke-width="2"/>
+  <circle cx="32" cy="35.5" r="22.5" fill="#000000" opacity="0.25"/>
+  <circle cx="32" cy="34" r="22.5" fill="#ffc857"/>
+  <ellipse cx="32" cy="20" rx="14" ry="5" fill="#ffffff" opacity="0.3"/>
+  <g transform="translate(32 34) scale(1.85) translate(0 17.8)">
+    <svg x="-7.5" y="-20.5" width="16" height="14" viewBox="0 0 16 14" overflow="visible">
+      <path class="f-hair s-outline" d="M1.8 3.8 Q4.2 1 10 1.3 L9.6 3.4 Q6.4 4 6.4 7 Q6.4 10 5.4 12 Q2.6 11.8 1.4 9.4 Q0.8 7.6 1 5.6 Q1.2 4.5 1.8 3.8 Z" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse class="f-skin s-outline" cx="8.6" cy="7.3" rx="5.4" ry="5.4" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path class="f-hair" d="M3.4 3.2 Q5.8 1.6 10.6 1.9 Q10.2 3.3 8.2 3.7 Q6.6 4.2 6.5 6.8 Q6.4 9.6 5.6 11.2 Q4 10.8 3.4 9.2 L3.2 5 Q3.2 3.8 3.4 3.2 Z"/>
+      <path class="f-hair" d="M8 2.2 Q11 1.6 13.2 3 Q11 3.2 9.2 3.8 Z"/>
+      <path class="s-outline" stroke-width="0.8" stroke-linecap="round" fill="none" d="M6.6 7 Q6.5 9.6 5.7 11.1"/>
+      <path class="f-highlight" d="M3.8 3.4 Q6 2.4 8.6 2.4 Q6.4 3 4.6 4.2 Z" opacity="0.25"/>
+      <circle class="f-skin s-outline" cx="5.2" cy="8.1" r="1.4" stroke-width="0.8"/>
+      <circle class="f-cheek" cx="5.2" cy="8.1" r="0.55"/>
+      <circle class="f-cheek" cx="9.6" cy="9.7" r="1.1" opacity="0.55"/>
+      <ellipse class="f-outline" cx="11.6" cy="12.4" rx="1.5" ry="1"/>
+      <ellipse class="f-cheek" cx="11.8" cy="12.8" rx="0.8" ry="0.4"/>
+      <path class="f-hair s-outline" d="M7 10.6 Q8.4 8.6 11.2 9.5 Q13.9 8.3 15.6 9.9 Q15.7 11.5 13.7 11.4 Q12.5 12.6 11.1 11.7 Q9.6 12.7 8.2 12 Q6.9 11.8 7 10.6 Z" stroke-width="0.8" stroke-linejoin="round"/>
+      <ellipse class="f-skin s-outline" cx="13.5" cy="8" rx="2.2" ry="1.9" stroke-width="1.2"/>
+      <circle class="f-highlight" cx="13" cy="7.3" r="0.6" opacity="0.7"/>
+    </svg>
+    <svg x="-2.8" y="-17.5" width="8" height="5" viewBox="0 0 8 5" overflow="visible">
+      <ellipse class="f-eye s-outline" cx="2.1" cy="2.5" rx="1.4" ry="2" stroke-width="0.6"/>
+      <ellipse class="f-eye s-outline" cx="5.7" cy="2.5" rx="1.4" ry="2" stroke-width="0.6"/>
+      <ellipse class="f-pupil" cx="2.6" cy="2.8" rx="0.75" ry="1.1"/>
+      <ellipse class="f-pupil" cx="6.2" cy="2.8" rx="0.75" ry="1.1"/>
+      <circle class="f-highlight" cx="2.8" cy="2.3" r="0.3"/>
+      <circle class="f-highlight" cx="6.4" cy="2.3" r="0.3"/>
+    </svg>
+    <svg x="-10" y="-29.4" width="20" height="13" viewBox="0 0 20 13" overflow="visible">
+      <circle class="s-outline" cx="4.5" cy="6.2" r="3.3" fill="none" stroke-width="3"/>
+      <circle class="s-outline" cx="8.6" cy="4.3" r="3.6" fill="none" stroke-width="3"/>
+      <circle class="s-outline" cx="12.8" cy="4.2" r="3.4" fill="none" stroke-width="3"/>
+      <circle class="s-outline" cx="16" cy="6.6" r="2.6" fill="none" stroke-width="3"/>
+      <circle class="f-chef" cx="4.5" cy="6.2" r="3.3"/>
+      <circle class="f-chef" cx="8.6" cy="4.3" r="3.6"/>
+      <circle class="f-chef" cx="12.8" cy="4.2" r="3.4"/>
+      <circle class="f-chef" cx="16" cy="6.6" r="2.6"/>
+      <path class="s-chefShade" stroke-width="1" stroke-linecap="round" fill="none" d="M6.4 7.6 Q7 6 6.2 4.6 M11 7.4 Q11.4 6 10.8 5 M14.6 8 Q15.2 7 14.8 6"/>
+      <circle class="f-highlight" cx="7.6" cy="2.6" r="1.1" opacity="0.9"/>
+      <circle class="f-highlight" cx="12" cy="2.5" r="0.8" opacity="0.7"/>
+      <rect class="f-chef s-outline" x="3.2" y="7.6" width="13.6" height="4.4" rx="1.5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <rect class="f-chefShade" x="4" y="9.9" width="12" height="1.4" rx="0.7"/>
+    </svg>
+  </g>
+</svg>

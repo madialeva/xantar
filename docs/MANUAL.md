@@ -101,13 +101,19 @@ xantar/
 │   ├── ci.yml                   # Comprobaciones de cada PR y push, versión y prueba de humo
 │   └── desktop.yml              # Instaladores de Linux, Windows y macOS
 ├── electron/                    # Proceso principal de Electron (no va al renderer)
-│   ├── main.ts                  # Crea la ventana, carga dev server o dist/
-│   └── preload.ts               # Puente seguro renderer ↔ main (contextBridge)
+│   ├── main.ts                  # Ciclo de vida: instancia única, IPC, ventana (dev server o app://)
+│   ├── window.ts                # Ventana endurecida (sandbox, navegación, permisos, F11)
+│   ├── appProtocol.ts           # Protocolo app:// que sirve dist/
+│   ├── appPath.ts               # Rutas y sitios de app:// (puro, con pruebas)
+│   ├── channels.ts              # Nombres de los canales IPC
+│   └── preload.ts               # Puente mínimo renderer ↔ main (contextBridge)
+├── build/                       # Recursos de empaquetado: icon.svg (fuente) e icon.png (generado)
 ├── public/                      # Assets estáticos: se copian TAL CUAL a dist/
 │   └── music/
 │       └── tap-back.mp3
 ├── scripts/
 │   ├── build-electron.mjs       # Compila electron/*.ts -> dist-electron/ (CJS)
+│   ├── build-icon.mjs           # Rasteriza build/icon.svg a build/icon.png (npm run icon)
 │   └── smoke.mjs                # Lanzador de la prueba de humo (compila tools/smoke y abre Electron)
 ├── tools/                       # Herramientas de desarrollo (no van en la build publicada)
 │   ├── smoke/                   # Prueba de humo en Electron: pasos, escenarios y proceso principal
@@ -201,6 +207,7 @@ xantar/
 | `npm run format` | Formatea todo el código con Prettier |
 | `npm run format:check` | Comprueba el formato sin modificar ficheros (ideal para CI) |
 | `npm run smoke` | Compila la web y Electron y ejecuta la prueba de humo (capturas y consola en `.smoke/`) |
+| `npm run icon` | Regenera `build/icon.png` a partir de `build/icon.svg` |
 | `npm run check:version` | Comprueba que la versión de `package.json` coincide con la rama o etiqueta de la CI (`GITHUB_REF_NAME`, `GITHUB_BASE_REF`) |
 
 ---
@@ -309,31 +316,48 @@ Ventajas de `public/`:
 - No hace falta importarlos en el código.
 - Mantienen la misma ruta en desarrollo, en web de producción y en Electron.
 
-Configuración **imprescindible** para Electron: `loader.imageLoadType: 'HTMLImageElement'` (ya aplicada en `src/main.ts`). Sin ella, Phaser carga las imágenes por `XHR`, que está bloqueado bajo `file://`.
+La aplicación de escritorio sirve `dist/` por el protocolo propio `app://xantar/` (ver 8.4), así que el cargador de Phaser funciona igual que en la web, también por `XHR` (audio, JSON). `src/main.ts` mantiene `loader.imageLoadType: 'HTMLImageElement'`: es inofensivo y fue imprescindible mientras Electron cargaba el juego desde `file://`, donde `XHR` está bloqueado.
 
-**Excepción: el arte SVG no vive en `public/`.** Las fuentes SVG de los temas están en `src/view/art/<tema>/` y se importan como texto (`import.meta.glob` con `?raw`), de modo que viajan dentro del bundle. Así funcionan bajo `file://` (el cargador SVG de Phaser usa XHR) y el juego puede inyectarles la paleta del tema antes de rasterizarlas (ver 8.7).
+**Excepción: el arte SVG no vive en `public/`.** Las fuentes SVG de los temas están en `src/view/art/<tema>/` y se importan como texto (`import.meta.glob` con `?raw`), de modo que viajan dentro del bundle y el juego puede inyectarles la paleta del tema antes de rasterizarlas (ver 8.7).
 
 ### 8.4 Capa Electron
 
-**`electron/main.ts`** (proceso principal):
-- Añade `--autoplay-policy=no-user-gesture-required`, de modo que el audio puede sonar sin interacción previa (a diferencia del navegador).
-- Crea una `BrowserWindow` con `contextIsolation: true` y `nodeIntegration: false` (configuración segura).
-- En desarrollo carga `VITE_DEV_SERVER_URL`; en producción carga `dist/index.html`.
-- Atiende el mensaje IPC `app:quit` cerrando la aplicación (`app.quit()`).
+El proceso principal está repartido en módulos pequeños:
 
-**`electron/preload.ts`**: expone una API mínima al renderer mediante `contextBridge`:
+| Fichero | Qué hace |
+|---------|----------|
+| `electron/main.ts` | Ciclo de vida: instancia única, IPC, crea la ventana y la carga |
+| `electron/appPath.ts` | Puro (con pruebas): `APP_URL`, `resolveAppPath` (URL `app://` → fichero de `dist/`, o `null` si sale de él) y `siteOf` |
+| `electron/appProtocol.ts` | Registra `app://` como esquema estándar y seguro y lo sirve desde `dist/` con `net.fetch` (404 fuera de `dist/`) |
+| `electron/window.ts` | `createGameWindow`: la ventana endurecida, y `senderWindow` para validar el emisor de un IPC |
+| `electron/channels.ts` | Nombres de los canales IPC (`app:quit`, `window:set-fullscreen`) |
+| `electron/preload.ts` | Puente mínimo `window.xantar` hacia la página |
+
+**Protocolo `app://`.** En producción el juego se carga en `app://xantar/index.html`, no con `file://`. Así tiene un origen estable y estándar: el cargador de Phaser (XHR) funciona, la CSP puede usar `'self'` y `localStorage` tiene un origen propio. En desarrollo (`VITE_DEV_SERVER_URL`) se carga el servidor de Vite.
+
+**Ventana endurecida** (`createGameWindow`, que usan la aplicación y la prueba de humo):
+
+- `sandbox: true`, `contextIsolation: true`, `nodeIntegration: false`, `webSecurity: true`: la página no tiene `require` ni `process`.
+- `will-navigate` y `will-redirect` cancelan cualquier navegación fuera del sitio del juego (`app://xantar` o el servidor de Vite); `setWindowOpenHandler` deniega ventanas nuevas y `will-attach-webview` se cancela.
+- Todas las solicitudes y consultas de permisos de la página se deniegan.
+- F11 (en `before-input-event`) alterna la pantalla completa **nativa** de la ventana. Esc queda libre para el juego.
+
+**Proceso principal:** pide el bloqueo de instancia única (`requestSingleInstanceLock`; una segunda apertura enfoca la ventana existente y termina) y atiende dos mensajes IPC, solo si vienen de una página del sitio del juego: `app:quit` (`app.quit()`) y `window:set-fullscreen` (con un booleano). No hay excepción de autoplay: el audio arranca con el primer gesto, igual que en la web.
+
+**`electron/preload.ts`** expone una API mínima mediante `contextBridge` (en un preload con sandbox solo están `contextBridge`, `ipcRenderer` y un `process` reducido):
 
 ```ts
-import { contextBridge, ipcRenderer } from 'electron';
-
 contextBridge.exposeInMainWorld('xantar', {
   isDesktop: true,
   platform: process.platform,
-  quit: (): void => ipcRenderer.send('app:quit')
+  quit: (): void => ipcRenderer.send(CHANNELS.quit),
+  setFullScreen: (on: boolean): void => ipcRenderer.send(CHANNELS.setFullScreen, on === true)
 });
 ```
 
-En el juego no se lee `window.xantar` directamente: `desktopQuit(window)` (`src/view/platform/desktop.ts`) comprueba el puente de forma tipada y devuelve una función que cierra la aplicación, o `null` en el navegador. `main.ts` la inyecta en `MenuScene`, que solo muestra **Salir** cuando existe. Cualquier otra comunicación con el sistema operativo (guardar partida, abrir diálogos, etc.) debe pasar también por aquí vía IPC.
+**La plataforma en el juego.** El juego no lee `window.xantar` directamente: `createPlatform(window)` (`src/view/platform/Platform.ts`, patrón Strategy) devuelve una `Platform` con `quit` (o `null` en el navegador) y `enterFullscreen`. `WebPlatform` usa la API de pantalla completa del navegador (con bloqueo de Esc); `DesktopPlatform`, la pantalla completa nativa por el puente. `main.ts` la inyecta en `TitleScene` y `MenuScene`, que solo muestra **Salir** cuando `quit` existe. Cualquier otra comunicación con el sistema operativo (guardar partida, abrir diálogos, etc.) debe pasar también por un canal IPC validado.
+
+**Política de seguridad de contenidos (CSP).** El build web (y por tanto el de escritorio) lleva una etiqueta `<meta http-equiv="Content-Security-Policy">` que inserta un plugin de `vite.config.ts` solo al compilar: scripts, estilos y datos del propio origen, `data:` y `blob:` donde el juego los genera (rasterizado de SVG, audio) y nada de objetos incrustados ni `eval`. Por eso `index.html` no tiene estilos en línea (`src/styles.css`). En `npm run dev` no se aplica, porque Vite necesita scripts en línea; Electron muestra entonces el aviso *Insecure Content-Security-Policy*, que no aparece en el empaquetado. La prueba de humo falla ante cualquier violación (la detecta por el protocolo de DevTools).
 
 **Compilación**: `scripts/build-electron.mjs` usa esbuild para convertir `electron/*.ts` a CommonJS en `dist-electron/` y genera un `dist-electron/package.json` con `{"type":"commonjs"}`. Esto es necesario porque el `package.json` raíz es ESM (`"type": "module"`) y Electron carga `main.js` como CommonJS.
 
@@ -514,28 +538,24 @@ Para gráficos del juego (piezas, ingredientes, personajes, efectos, iconos del 
 
 Si en el futuro necesitas guardar datos en disco, mostrar diálogos nativos, etc.:
 
-**`electron/main.ts`**
+1. Añade el nombre del canal a `CHANNELS` (`electron/channels.ts`).
+2. En `electron/main.ts`, atiéndelo **validando el emisor y los argumentos**: la página se trata como no fiable.
 
-```ts
-import { app, BrowserWindow, ipcMain } from 'electron';
+   ```ts
+   ipcMain.handle(CHANNELS.saveGame, async (event, data: unknown) => {
+     if (!senderWindow(event.sender, site) || typeof data !== 'string') return { ok: false };
+     // aquí escribirías en disco
+     return { ok: true };
+   });
+   ```
 
-ipcMain.handle('guardar-partida', async (_event, datos: string) => {
-  // aquí escribirías en disco
-  return { ok: true };
-});
-```
+3. En `electron/preload.ts`, expón solo una función con argumentos concretos (nunca `ipcRenderer` entero):
 
-**`electron/preload.ts`**
+   ```ts
+   saveGame: (data: string) => ipcRenderer.invoke(CHANNELS.saveGame, data)
+   ```
 
-```ts
-import { contextBridge, ipcRenderer } from 'electron';
-
-contextBridge.exposeInMainWorld('xantar', {
-  isDesktop: true,
-  platform: process.platform,
-  guardarPartida: (datos: string) => ipcRenderer.invoke('guardar-partida', datos)
-});
-```
+4. En el juego, amplía la interfaz `Platform` (`src/view/platform/Platform.ts`) con la operación y dale una implementación en `DesktopPlatform` y otra (o `null`) en `WebPlatform`, con su prueba en `Platform.test.ts`.
 
 ### 9.4 Publicar en web (GitHub Pages)
 
@@ -647,7 +667,13 @@ Objetivos configurados en `package.json` (campo `build`):
 | Windows | NSIS (`.exe`) |
 | macOS | DMG |
 
-**Limitación importante:** electron-builder solo puede generar el instalador de la plataforma en la que ejecutas el build. Los tres instaladores los genera la CI con una matriz Linux/Windows/macOS (ver 10.4). Para distribuir de verdad se necesitan además **iconos** propios y **firma de código** (obligatoria en macOS y recomendable en Windows).
+**Limitación importante:** electron-builder solo puede generar el instalador de la plataforma en la que ejecutas el build. Los tres instaladores los genera la CI con una matriz Linux/Windows/macOS (ver 10.4).
+
+**Iconos.** La fuente es `build/icon.svg`: la cabeza, los ojos y el gorro del chef copiados de `src/view/art/classic/` y colocados como en su rig, con la paleta clásica (al ser un recurso de empaquetado, lleva los colores escritos en un `<style>`). `npm run icon` la rasteriza a `build/icon.png` (1024×1024) con una ventana oculta de Electron (`scripts/build-icon.mjs`); el PNG se versiona y electron-builder deriva de él el `.ico` y el `.icns`. Si cambias el SVG, vuelve a ejecutar `npm run icon` (en Linux sin pantalla: `xvfb-run -a npm run icon`).
+
+**Fusibles de Electron** (`build.electronFuses`): el ejecutable empaquetado no se puede usar como Node (`ELECTRON_RUN_AS_NODE`), ignora `NODE_OPTIONS` y `--inspect`, solo carga la aplicación desde `app.asar` (con validación de integridad donde Electron la admite), cifra las cookies y no da privilegios extra a `file://`. No afectan a `npm run dev:desktop` ni a la prueba de humo, que usan el Electron de `node_modules`.
+
+**Firma.** Los instaladores de la v1.0.0 se generan **sin firma de código ni notarización** (`mac.identity: null`; en CI, `CSC_IDENTITY_AUTO_DISCOVERY=false`). Windows (SmartScreen) y macOS (Gatekeeper) avisan al abrirlos; el README explica cómo continuar. Firmar exige certificados de pago (Apple Developer, certificado de Windows) y queda para cuando se distribuya públicamente.
 
 ### 10.3 Qué se incluye en el paquete
 
@@ -655,7 +681,7 @@ Gracias a la configuración de `build.files`, el `app.asar` solo contiene:
 
 ```
 /dist/**            (juego compilado)
-/dist-electron/**   (main.js + preload.js)
+/dist-electron/**   (main.js + preload.js; el proceso principal incluye sus módulos)
 /package.json
 ```
 
@@ -703,16 +729,16 @@ GITHUB_REF_NAME=develop/v1.0.0 npm run check:version
 ## 12. Solución de problemas
 
 ### La música no suena la primera vez en el navegador
-Es la **política de autoplay** del navegador: `audio.play()` se rechaza si no ha habido interacción del usuario. Por eso `TitleScene` espera al primer clic, toque o tecla para arrancar la música. En Electron no ocurre porque `electron/main.ts` desactiva esa política.
+Es la **política de autoplay** del navegador: el audio no puede empezar sin una interacción del usuario. Por eso `TitleScene` espera al primer clic, toque o tecla para arrancar la música. La aplicación de escritorio se comporta igual: ya no desactiva esa política.
 
 ### Esc no pausa o no vuelve atrás en pantalla completa
-El navegador usa Esc para salir de la pantalla completa y normalmente no la entrega a la página. Al entrar en pantalla completa el juego pide `navigator.keyboard.lock(['Escape'])` (Chrome, Edge y Electron), de modo que Esc llega al juego y mantenerla pulsada sigue saliendo. En navegadores sin esa API, salir de la pantalla completa pausa la partida; usa `P` para pausar.
+En la aplicación de escritorio no ocurre: la pantalla completa es nativa (F11) y Esc siempre llega al juego. En el navegador, Esc sirve para salir de la pantalla completa y normalmente no se entrega a la página. Al entrar en pantalla completa el juego pide `navigator.keyboard.lock(['Escape'])` (Chrome, Edge y Electron), de modo que Esc llega al juego y mantenerla pulsada sigue saliendo. En navegadores sin esa API, salir de la pantalla completa pausa la partida; usa `P` para pausar.
 
 ### Pantalla negra al abrir el juego desde el fichero
-Ocurre al abrir con `file://` (doble clic). Usa `npm run dev` o `npm run preview`. La causa histórica era el loader de audio de Phaser; ya se sustituyó por `new Audio()`.
+Ocurre al abrir `index.html` o `dist/index.html` con `file://` (doble clic): el navegador bloquea los módulos y la carga de ficheros. Usa `npm run dev` o `npm run preview`. La aplicación de escritorio no tiene este problema porque sirve `dist/` por `app://`.
 
-### Los assets (imágenes) no cargan en la app de escritorio
-Asegúrate de que `src/main.ts` tiene `loader: { imageLoadType: 'HTMLImageElement' }`. Si en el futuro usas JSON/atlas, esos sí van por `XHR` y necesitarán un protocolo local propio en Electron.
+### Un asset no carga en la app de escritorio
+El protocolo `app://` solo sirve ficheros de `dist/` y responde 404 a lo demás. Comprueba que el asset está en `public/` (o importado desde `src/`) y que se referencia con una ruta relativa (`music/foo.mp3`, no `/music/foo.mp3`). Si la consola muestra *Refused to load … Content Security Policy*, el tipo de recurso u origen no está permitido por la CSP de `vite.config.ts`.
 
 ### Errores `vaInitialize failed ... libva` al abrir Electron en Linux
 Son avisos de aceleración de vídeo por hardware; no impiden jugar. Ignóralos o ejecuta en un entorno con soporte VAAPI.
@@ -826,4 +852,3 @@ Notas:
 La hoja de ruta vigente está en el README (tabla *Roadmap*) y se gestiona con issues de GitHub y milestones por versión. Pendientes para después de la v1.0.0: alimentos de bonus (#13) y publicación de la web (#14). Ideas sin issue propia:
 
 - Más tipos de enemigos.
-- Valorar el protocolo local para Electron si se usan atlas JSON de sprites.

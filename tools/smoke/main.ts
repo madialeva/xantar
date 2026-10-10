@@ -1,6 +1,10 @@
-import { BrowserWindow, app, ipcMain } from 'electron';
+import { BrowserWindow, app, ipcMain, session } from 'electron';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { APP_ORIGIN, APP_URL } from '../../electron/appPath';
+import { registerAppScheme, serveApp } from '../../electron/appProtocol';
+import { CHANNELS } from '../../electron/channels';
+import { createGameWindow } from '../../electron/window';
 import { SCENARIOS, type SmokeRun } from './scenarios';
 import { type Step, parseSize, parseSteps } from './steps';
 
@@ -13,8 +17,13 @@ const root = process.env.XANTAR_ROOT ?? process.cwd();
 const outRoot = path.join(root, '.smoke');
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 const quitRequests = new Set<number>();
+const evalProbes = new Set<number>();
 
-ipcMain.on('app:quit', (event) => quitRequests.add(event.sender.id));
+const OUTSIDE_URL = 'https://example.com/';
+
+registerAppScheme();
+ipcMain.on(CHANNELS.quit, (event) => quitRequests.add(event.sender.id));
+ipcMain.on(CHANNELS.setFullScreen, () => undefined);
 
 if (process.env.XANTAR_SMOKE_SOFTWARE_GL === '1') {
   app.commandLine.appendSwitch('ignore-gpu-blocklist');
@@ -92,6 +101,66 @@ async function perform(
     case 'expectQuit':
       if (!quitRequests.has(webContents.id)) problems.push('the game did not ask to quit');
       return;
+    case 'security':
+      await checkConfinement(window, problems);
+      return;
+  }
+}
+
+interface PolicyIssue {
+  readonly issue?: {
+    readonly code?: string;
+    readonly details?: {
+      readonly contentSecurityPolicyIssueDetails?: {
+        readonly violatedDirective?: string;
+        readonly contentSecurityPolicyViolationType?: string;
+        readonly blockedURL?: string;
+      };
+    };
+  };
+}
+
+/**
+ * Reports every Content Security Policy violation, through the DevTools protocol: Chromium
+ * does not always log them to the console (for example, a caught `eval`).
+ */
+function watchPolicyViolations(window: BrowserWindow, problems: string[]): void {
+  const { debugger: devtools } = window.webContents;
+  devtools.attach('1.3');
+  devtools.on('message', (_event, method, params) => {
+    const { issue } = params as PolicyIssue;
+    if (method !== 'Audits.issueAdded' || issue?.code !== 'ContentSecurityPolicyIssue') return;
+    const details = issue.details?.contentSecurityPolicyIssueDetails;
+    const probed = evalProbes.has(window.webContents.id);
+    if (probed && details?.contentSecurityPolicyViolationType === 'kEvalViolation') return;
+    problems.push(
+      `content security policy: ${details?.violatedDirective ?? '?'} blocked ${details?.blockedURL ?? 'inline code'}`
+    );
+  });
+  // Not awaited: before the first navigation the command only settles once a page exists,
+  // and enabling also reports the issues found so far.
+  devtools.sendCommand('Audits.enable').catch((error: unknown) => {
+    problems.push(`cannot watch the content security policy: ${String(error)}`);
+  });
+}
+
+/** Checks that the page has no Node, cannot open windows and cannot leave the game. */
+async function checkConfinement(window: BrowserWindow, problems: string[]): Promise<void> {
+  const { webContents } = window;
+  const windows = BrowserWindow.getAllWindows().length;
+  evalProbes.add(webContents.id);
+  const reach = (await webContents.executeJavaScript(
+    `[typeof require, typeof process, typeof window.open('${OUTSIDE_URL}'),
+      (() => { try { return String(eval('1')); } catch { return 'blocked'; } })()]`
+  )) as string[];
+  if (reach[0] !== 'undefined') problems.push('the page can use require');
+  if (reach[1] !== 'undefined') problems.push('the page can use process');
+  if (reach[3] !== 'blocked') problems.push('the page can use eval (no Content Security Policy)');
+  await webContents.executeJavaScript(`window.location.href = '${OUTSIDE_URL}'; true`);
+  await sleep(1000);
+  if (BrowserWindow.getAllWindows().length !== windows) problems.push('the page opened a window');
+  if (!webContents.getURL().startsWith(APP_ORIGIN)) {
+    problems.push(`the page navigated to ${webContents.getURL()}`);
   }
 }
 
@@ -101,18 +170,15 @@ async function play(run: SmokeRun, outDir: string): Promise<RunResult> {
   const steps = parseSteps(run.steps);
   const log: string[] = [];
   const problems: string[] = [];
-  const window = new BrowserWindow({
+  const partition = `smoke-${run.name}-${Date.now()}`;
+  serveApp(path.join(root, 'dist'), session.fromPartition(partition));
+  const window = createGameWindow({
+    preload: path.join(root, 'dist-electron', 'preload.js'),
+    site: APP_ORIGIN,
     width,
     height,
     useContentSize: true,
-    show: true,
-    backgroundColor: '#000000',
-    webPreferences: {
-      partition: `smoke-${run.name}-${Date.now()}`,
-      preload: path.join(root, 'dist-electron', 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false
-    }
+    partition
   });
   window.webContents.on('console-message', (event) => {
     log.push(`[${event.level}] ${event.message}`);
@@ -121,7 +187,8 @@ async function play(run: SmokeRun, outDir: string): Promise<RunResult> {
   window.webContents.on('render-process-gone', (_event, details) => {
     problems.push(`renderer gone: ${details.reason}`);
   });
-  await window.loadFile(path.join(root, 'dist', 'index.html'), { search: run.query });
+  watchPolicyViolations(window, problems);
+  await window.loadURL(run.query ? `${APP_URL}?${run.query}` : APP_URL);
   for (const step of steps) await perform(window, step, outDir, problems);
   await writeFile(path.join(outDir, 'console.log'), `${log.join('\n')}\n`);
   window.destroy();

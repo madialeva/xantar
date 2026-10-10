@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import './styles.css';
 import { RENDER_TIER } from './config';
 import { detectLanguage } from './i18n/language';
 import { Localization } from './i18n/Localization';
@@ -12,7 +13,7 @@ import { Settings } from './settings/Settings';
 import { LocalStorageSettingsStore } from './settings/SettingsStore';
 import { TitleMusic } from './view/audio/TitleMusic';
 import { computeLayout } from './view/layout/computeLayout';
-import { desktopQuit } from './view/platform/desktop';
+import { createPlatform } from './view/platform/Platform';
 import { GameSession } from './view/session/GameSession';
 import { createThemeRegistry } from './view/themes';
 
@@ -39,6 +40,7 @@ localization.subscribe((language) => {
 });
 const session = new GameSession();
 const music = new TitleMusic('music/tap-back.mp3');
+const platform = createPlatform(window);
 const initial = computeLayout(window.innerWidth, window.innerHeight);
 
 const config: Phaser.Types.Core.GameConfig = {
@@ -55,8 +57,8 @@ const config: Phaser.Types.Core.GameConfig = {
   },
   scene: [
     new BootScene({ themes, tier, localization }),
-    new TitleScene({ tier, localization, music, themes }),
-    new MenuScene({ tier, localization, settings, themes, music, quitApp: desktopQuit(window) }),
+    new TitleScene({ tier, localization, music, themes, platform }),
+    new MenuScene({ tier, localization, settings, themes, music, platform }),
     new GameScene({ themes, urlTheme, tier, session, settings }),
     new HudScene({ tier, localization, session, themes })
   ]

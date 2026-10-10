@@ -25,13 +25,15 @@
     "lint:fix": "oxlint --type-aware --fix src vite.config.ts && oxlint --type-aware --fix --tsconfig tsconfig.electron.json electron scripts tools",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check:version": "node tools/ci/checkVersion.ts"
+    "check:version": "node tools/ci/checkVersion.ts",
+    "icon": "electron scripts/build-icon.mjs"
   },
   "build": {
     "appId": "com.xantar.game",
     "productName": "Xantar",
     "directories": {
-      "output": "release"
+      "output": "release",
+      "buildResources": "build"
     },
     "files": [
       "dist/**/*",
@@ -41,18 +43,31 @@
       "target": [
         "AppImage"
       ],
-      "category": "Game"
+      "category": "Game",
+      "icon": "build/icon.png"
     },
     "win": {
       "target": [
         "nsis"
-      ]
+      ],
+      "icon": "build/icon.png"
     },
     "mac": {
       "target": [
         "dmg"
       ],
-      "category": "public.app-category.games"
+      "category": "public.app-category.games",
+      "icon": "build/icon.png",
+      "identity": null
+    },
+    "electronFuses": {
+      "runAsNode": false,
+      "enableCookieEncryption": true,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "enableEmbeddedAsarIntegrityValidation": true,
+      "onlyLoadAppFromAsar": true,
+      "grantFileProtocolExtraPrivileges": false
     }
   },
   "devDependencies": {

@@ -10,7 +10,7 @@ import { RigAnimator } from '../view/rigs/RigAnimator';
 import { RigMotion } from '../view/rigs/RigMotion';
 import { chefRig } from '../view/rigs/rigs';
 import { chefStates } from '../view/rigs/states';
-import { enterFullscreen } from '../view/ui/fullscreen';
+import type { Platform } from '../view/platform/Platform';
 import type { ThemeRegistry } from '../view/theme/ThemeRegistry';
 
 export interface TitleSceneDependencies {
@@ -18,6 +18,7 @@ export interface TitleSceneDependencies {
   readonly localization: Localization;
   readonly music: TitleMusic;
   readonly themes: ThemeRegistry;
+  readonly platform: Platform;
 }
 
 const CHEF_ZOOM = 3;
@@ -71,6 +72,6 @@ export default class TitleScene extends Phaser.Scene {
     if (this.#leaving) return;
     this.#leaving = true;
     this.#deps.music.play();
-    void enterFullscreen(isMobile).finally(() => this.scene.start('MenuScene'));
+    void this.#deps.platform.enterFullscreen(isMobile).finally(() => this.scene.start('MenuScene'));
   }
 }
