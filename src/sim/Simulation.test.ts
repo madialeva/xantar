@@ -3,8 +3,10 @@ import classicDocument from '../levels/classic.level.json';
 import { loadLevel } from './level/loadLevel';
 import { parseLevelDocument } from './level/levelJson';
 import { SeededRng } from './rng';
+import { READY_TICKS } from './rules';
 import { NO_INPUT } from './SimInput';
 import { Simulation } from './Simulation';
+import { skipReady } from './testing/simulation';
 
 const create = (): Simulation =>
   new Simulation({
@@ -13,11 +15,24 @@ const create = (): Simulation =>
   });
 
 describe('Simulation', () => {
-  it('starts playing with the chef at the level start and announces the board', () => {
+  it('starts getting ready with the chef at the level start and announces the board', () => {
     const sim = create();
-    expect(sim.status).toBe('playing');
+    expect(sim.phase).toBe('ready');
     expect([sim.chef.x, sim.chef.row]).toEqual([10.5, 12]);
     expect(sim.step(NO_INPUT)).toEqual([{ type: 'boardStarted' }]);
+  });
+
+  it('keeps everyone still while getting ready and then starts playing', () => {
+    const sim = create();
+    const enemies = sim.enemies.map((enemy) => enemy.x);
+    const events = [];
+    for (let i = 0; i < READY_TICKS - 1; i++)
+      events.push(...sim.step({ ...NO_INPUT, right: true }));
+    expect(sim.phase).toBe('ready');
+    expect(sim.chef.x).toBe(10.5);
+    expect(sim.enemies.map((enemy) => enemy.x)).toEqual(enemies);
+    expect(sim.step(NO_INPUT)).toEqual([{ type: 'phaseChanged', from: 'ready', to: 'playing' }]);
+    expect(sim.phase).toBe('playing');
   });
 
   it('exposes the ingredients, the plates and the enemies of the level', () => {
@@ -28,14 +43,12 @@ describe('Simulation', () => {
   });
 
   it('returns no events for a tick without happenings', () => {
-    const sim = create();
-    sim.step(NO_INPUT);
+    const sim = skipReady(create());
     expect(sim.step(NO_INPUT)).toEqual([]);
   });
 
   it('moves the chef with the input of the tick and keeps the previous position', () => {
-    const sim = create();
-    sim.step(NO_INPUT);
+    const sim = skipReady(create());
     const before = sim.chef.x;
     sim.step({ ...NO_INPUT, right: true });
     expect(sim.chef.x).toBeGreaterThan(before);
@@ -43,15 +56,18 @@ describe('Simulation', () => {
   });
 
   it('restarts the board and puts the chef back', () => {
-    const sim = create();
+    const sim = skipReady(create());
     for (let i = 0; i < 30; i++) sim.step({ ...NO_INPUT, left: true });
     sim.startBoard();
     expect([sim.chef.x, sim.chef.prevX]).toEqual([10.5, 10.5]);
-    expect(sim.step(NO_INPUT)).toEqual([{ type: 'boardStarted' }]);
+    expect(sim.step(NO_INPUT)).toEqual([
+      { type: 'boardStarted' },
+      { type: 'phaseChanged', from: 'playing', to: 'ready' }
+    ]);
   });
 
   it('restores the ingredients when the board restarts', () => {
-    const sim = create();
+    const sim = skipReady(create());
     const lane = sim.ingredients.find(
       (ingredient) => ingredient.col === 11 && ingredient.row === 12
     );
@@ -65,15 +81,6 @@ describe('Simulation', () => {
     const sim = create();
     sim.newGame();
     expect([sim.stats.score, sim.stats.lives, sim.stats.level]).toEqual([0, 3, 1]);
-    expect(sim.status).toBe('playing');
-  });
-
-  it('ignores nextLevel when the level is not cleared', () => {
-    const sim = create();
-    sim.step(NO_INPUT);
-    for (let i = 0; i < 10; i++) sim.step({ ...NO_INPUT, left: true });
-    const x = sim.chef.x;
-    sim.nextLevel();
-    expect(sim.chef.x).toBe(x);
+    expect(sim.phase).toBe('ready');
   });
 });

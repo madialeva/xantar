@@ -48,6 +48,7 @@ export default class GameScene extends Phaser.Scene {
   #sim!: Simulation;
   readonly #stepper = new FixedStepper();
   #pepperPending = false;
+  #confirmPending = false;
 
   #chefView!: ChefView;
   #enemyViews: EnemyView[] = [];
@@ -98,9 +99,9 @@ export default class GameScene extends Phaser.Scene {
   override update(_time: number, delta: number): void {
     if (Phaser.Input.Keyboard.JustDown(this.#pepperKey)) this.#pepperPending = true;
 
-    if (this.#sim.status !== 'playing') {
-      this.#pepperPending = false;
-      if (Phaser.Input.Keyboard.JustDown(this.#enterKey)) this.#confirm();
+    if (Phaser.Input.Keyboard.JustDown(this.#enterKey)) {
+      if (this.#sim.phase === 'gameOver') this.#confirm();
+      else this.#confirmPending = true;
     }
 
     const events: SimEvent[] = [];
@@ -108,6 +109,7 @@ export default class GameScene extends Phaser.Scene {
     for (let i = 0; i < steps; i++) {
       events.push(...this.#sim.step(this.#readInput()));
       this.#pepperPending = false;
+      this.#confirmPending = false;
     }
 
     this.#syncViews(this.#stepper.alpha);
@@ -127,7 +129,8 @@ export default class GameScene extends Phaser.Scene {
       right: this.#cursors.right.isDown || this.#wasd.D.isDown,
       up: this.#cursors.up.isDown || this.#wasd.W.isDown,
       down: this.#cursors.down.isDown || this.#wasd.S.isDown,
-      pepper: this.#pepperPending
+      pepper: this.#pepperPending,
+      confirm: this.#confirmPending
     };
   }
 
@@ -184,6 +187,8 @@ export default class GameScene extends Phaser.Scene {
         case 'ingredientLanded':
           this.#ingredientViews.get(event.ingredientId)?.land();
           break;
+        case 'phaseChanged':
+          break;
         case 'segmentStomped': {
           const top = this.#ingredientViews.get(event.ingredientId)?.segmentTop(event.segment);
           if (top) this.#effects.dust(top.x, top.y);
@@ -221,8 +226,7 @@ export default class GameScene extends Phaser.Scene {
 
   #confirm(): void {
     this.#overlay.hide();
-    if (this.#sim.status === 'gameOver') this.#sim.newGame();
-    else this.#sim.nextLevel();
+    this.#sim.newGame();
     this.#stepper.reset();
   }
 

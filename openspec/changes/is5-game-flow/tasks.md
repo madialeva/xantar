@@ -6,9 +6,9 @@
 
 ## 2. Fases de partida en la simulación
 
-- [ ] 2.1 Añadir `confirm` a `SimInput` y `NO_INPUT`, las constantes `READY_TICKS`, `DYING_TICKS` y `LEVEL_CLEAR_TICKS` a `rules.ts` y el evento `phaseChanged`; verificar con `npm run typecheck` y las pruebas de eventos
-- [ ] 2.2 Implementar `GamePhase`, `PhaseHost` y las fases `ReadyPhase`, `PlayingPhase`, `DyingPhase`, `LevelClearPhase` y `GameOverPhase` en `src/sim/phases/`, y hacer que `Simulation` delegue en ellas (`phase` sustituye a `status`, desaparece `nextLevel()`, `newGame()` deja la partida en `ready`); verificar con pruebas de cada transición: preparado inicial sin movimiento, contacto → `dying` → `ready` con ingredientes conservados, última vida → `gameOver`, nivel completado → continuación automática a los 180 ticks y adelantada con `confirm`, `confirm` sin efecto en `playing` y `newGame()` desde `gameOver`
-- [ ] 2.3 Adaptar las pruebas existentes de `Simulation` (reglas, contacto, nivel superado, determinismo) a las fases y añadir a la de determinismo los ticks de cambio de fase; verificar con `npm run test` en verde
+- [x] 2.1 Añadir `confirm` a `SimInput` y `NO_INPUT`, las constantes `READY_TICKS`, `DYING_TICKS` y `LEVEL_CLEAR_TICKS` a `rules.ts` y el evento `phaseChanged`; verificar con `npm run typecheck` y las pruebas de eventos
+- [x] 2.2 Implementar `GamePhase`, `PhaseHost` y las fases `ReadyPhase`, `PlayingPhase`, `DyingPhase`, `LevelClearPhase` y `GameOverPhase` en `src/sim/phases/`, y hacer que `Simulation` delegue en ellas (`phase` sustituye a `status`, desaparece `nextLevel()`, `newGame()` deja la partida en `ready`); verificar con pruebas de cada transición: preparado inicial sin movimiento, contacto → `dying` → `ready` con ingredientes conservados, última vida → `gameOver`, nivel completado → continuación automática a los 180 ticks y adelantada con `confirm`, `confirm` sin efecto en `playing` y `newGame()` desde `gameOver`
+- [x] 2.3 Adaptar las pruebas existentes de `Simulation` (reglas, contacto, nivel superado, determinismo) a las fases y añadir a la de determinismo los ticks de cambio de fase; verificar con `npm run test` en verde
 
 ## 3. Textos por idioma
 

@@ -25,10 +25,11 @@ const scriptedInputs = (ticks: number): SimInput[] => {
         right: horizontal === 2,
         up: vertical === 1,
         down: vertical === 2,
-        pepper: script.chance(0.15)
+        pepper: script.chance(0.15),
+        confirm: script.chance(0.05)
       };
     } else {
-      current = { ...current, pepper: false };
+      current = { ...current, pepper: false, confirm: false };
     }
     inputs.push(current);
   }
@@ -37,7 +38,7 @@ const scriptedInputs = (ticks: number): SimInput[] => {
 
 const stateOf = (sim: Simulation): string =>
   JSON.stringify({
-    status: sim.status,
+    phase: sim.phase,
     stats: { ...sim.stats },
     chef: [sim.chef.x, sim.chef.y, sim.chef.row, sim.chef.facing],
     enemies: sim.enemies.map((e) => [e.x, e.y, e.row, e.active, e.stunTicksLeft]),
@@ -56,8 +57,7 @@ const play = (seed: number, board: Level = level): { states: string[]; events: S
   const states: string[] = [];
   const events: SimEvent[] = [];
   for (const input of scriptedInputs(TICKS)) {
-    if (sim.status === 'gameOver') sim.newGame();
-    if (sim.status === 'levelClear') sim.nextLevel();
+    if (sim.phase === 'gameOver') sim.newGame();
     events.push(...sim.step(input));
     states.push(stateOf(sim));
   }
@@ -65,7 +65,7 @@ const play = (seed: number, board: Level = level): { states: string[]; events: S
 };
 
 describe('Simulation determinism', () => {
-  it('produces the same states and events for the same seed and inputs', () => {
+  it('produces the same states, events and phase changes for the same seed and inputs', () => {
     const first = play(7);
     const second = play(7);
     expect(second.states).toEqual(first.states);
@@ -78,6 +78,7 @@ describe('Simulation determinism', () => {
     expect(types.has('chefHit')).toBe(true);
     expect(types.has('scoreChanged')).toBe(true);
     expect(types.has('pepperThrown')).toBe(true);
+    expect(types.has('phaseChanged')).toBe(true);
   });
 
   it('ignores the visual theme of the level', () => {
@@ -94,14 +95,15 @@ describe('Simulation determinism', () => {
 });
 
 describe('Simulation interpolation state', () => {
-  it('has no interpolation streak after the chef is hit', () => {
+  it('has no interpolation streak when everyone is put back after the chef is hit', () => {
     const sim = new Simulation({ level, rng: new SeededRng(3) });
-    sim.step(NO_INPUT);
-    let hit = false;
-    for (let tick = 0; tick < 3000 && !hit; tick++) {
-      hit = sim.step(NO_INPUT).some((event) => event.type === 'chefHit');
+    let respawned = false;
+    for (let tick = 0; tick < 4000 && !respawned; tick++) {
+      respawned = sim
+        .step(NO_INPUT)
+        .some((event) => event.type === 'phaseChanged' && event.from === 'dying');
     }
-    expect(hit).toBe(true);
+    expect(respawned).toBe(true);
     for (const entity of [sim.chef, ...sim.enemies]) {
       expect([entity.prevX, entity.prevY]).toEqual([entity.x, entity.y]);
     }
