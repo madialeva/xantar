@@ -7,8 +7,8 @@
 ## 2. Integración continua
 
 - [x] 2.1 Implementar `expectedVersion` en `tools/ci/branchVersion.ts` y `tools/ci/checkVersion.ts` con el script `npm run check:version`; verificar con pruebas (`develop/v1.2.3`, `release/v1.2.3` y `v1.2.3` → `1.2.3`; `change/...` → sin comprobación; en PR manda la rama destino) y ejecutando el script con `GITHUB_REF_NAME=develop/v9.9.9` (falla mostrando ambas versiones) y `develop/v1.0.0` (pasa)
-- [ ] 2.2 Crear `.github/workflows/ci.yml` con los jobs `check` (lint, formato, tipos, pruebas, build), `version` y `smoke` (xvfb, `npm run smoke -- quick`, `.smoke/` como artefacto) para PR y push a `develop/**`, `release/**` y etiquetas `v*`; verificar con `npm run format:check` y, tras el push del autor, que los tres jobs pasan en GitHub
-- [ ] 2.3 Crear `.github/workflows/desktop.yml` (matriz Linux, Windows y macOS, `electron-builder --publish never`, `CSC_IDENTITY_AUTO_DISCOVERY=false`, instaladores como artefactos) en `release/**`, etiquetas `v*` y `workflow_dispatch`; verificar lanzándolo a mano (lo dispara el autor) y descargando los tres instaladores
+- [x] 2.2 Crear `.github/workflows/ci.yml` con los jobs `check` (lint, formato, tipos, pruebas, build), `version` y `smoke` (xvfb, `npm run smoke -- quick`, `.smoke/` como artefacto) para PR y push a `develop/**`, `release/**` y etiquetas `v*`; verificar con `npm run format:check` y, tras el push del autor, que los tres jobs pasan en GitHub (la CI pasó en el PR #28)
+- [ ] 2.3 Crear `.github/workflows/desktop.yml` (matriz Linux, Windows y macOS, `electron-builder --publish never`, `CSC_IDENTITY_AUTO_DISCOVERY=false`, instaladores como artefactos) en `release/**`, etiquetas `v*` y `workflow_dispatch`; verificar lanzándolo a mano (lo dispara el autor) y descargando los tres instaladores (pendiente: el autor lo lanza y lo verifica tras el PR de cierre)
 - [x] 2.4 Documentar la CI en `docs/MANUAL.md` (jobs, cuándo se ejecutan, comprobaciones obligatorias en la protección de ramas, cómo descargar instaladores), en `docs/GAMEDEV_FUNDAMENTALS.md` (qué es la integración continua) y cambiar en `AGENTS.md` la comprobación manual de versión por la automática; verificar con `npm run format:check` y relectura
 
 ## 3. Endurecimiento de Electron
@@ -44,4 +44,4 @@
 ## 6. Verificación final
 
 - [x] 6.1 Ejecutar `npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build`, `npm run smoke` y los escenarios `controls`, `touch`, `audio` y `security`, y verificar que todo termina con código 0; revisar la hoja de arte en `/tools/art-sheet.html` con los gráficos táctiles nuevos
-- [ ] 6.2 Revisión manual del autor: teclado reasignado, mando y táctil (móvil real, también vertical), sonido de cada evento y de los menús, volúmenes y silencio, foco de la ventana, aplicación empaquetada (icono, instancia única, F11, Esc en pantalla completa) e instaladores de la CI en los tres sistemas
+- [x] 6.2 Revisión manual del autor: teclado reasignado, mando y táctil (móvil real, también vertical), sonido de cada evento y de los menús, volúmenes y silencio, foco de la ventana, aplicación empaquetada (icono, instancia única, F11, Esc en pantalla completa) e instaladores de la CI en los tres sistemas (revisada por el autor, que pidió la CI solo en PR y el giro automático a horizontal; los instaladores quedan en 2.3)
