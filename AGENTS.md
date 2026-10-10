@@ -185,9 +185,15 @@ English inside the Spanish text.
 
 - Conversation with the user in Spanish; durable context in repo files (this
   `AGENTS.md`) rather than internal memory.
-- The agent does **not** commit on its own: work stays uncommitted until the
-  user validates it, including visual verification. Push only when the user
-  asks.
+- While implementing an OpenSpec change, the agent commits **each task group
+  (block) of `tasks.md` as soon as it is finished**, as its own commit, instead
+  of one big commit at the end: only when the group's automated checks pass
+  (the hand-off checks listed under "Commands", plus `npm run smoke` for visual
+  or desktop work), with the group's tasks ticked in `tasks.md` and without
+  unrelated work in progress (stage only the block's files or hunks). Checks
+  that need the user (visual review, a real device, a push to GitHub) stay
+  unticked and are listed when handing off. Outside such blocks the agent does
+  not commit on its own. Push only when the user asks.
 - Commits, pull request descriptions, issues and comments carry no
   `Co-Authored-By` trailer, "Generated with ..." line or any other AI
   attribution: the author is the only author. This overrides the default
@@ -223,10 +229,9 @@ Each OpenSpec change is tracked on GitHub with this cycle:
    only when the change is archived.
 4. Branch created from the issue (Development panel → "Create a branch"; name
    like `change/is<n>-<slug>`) starting from `develop/vX.Y.Z`.
-5. Implementation on the branch + push (pushes are done by the user). The agent
-   never commits on its own: work stays uncommitted on the branch until the
-   user validates it (including running the game); commit only after the user
-   explicitly confirms.
+5. Implementation on the branch, one commit per finished task group (see
+   "Working preferences"), and push (pushes are done by the user). The user
+   validates the result (including running the game) before the PR.
 6. PR toward `develop/vX.Y.Z` with `Closes #<n>` in the description → the CI
    (once it exists) validates the PR → the user reviews the diff.
 7. Squash merge as the norm (one change = one clean commit on the development
