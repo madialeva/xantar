@@ -33,8 +33,10 @@ añadiendo jugabilidad en la v1.0.0.
   cambiar hasta dos teclas por acción, con intercambio si la tecla ya estaba
   usada, teclas reservadas (Esc, Enter, F11) y "Restaurar". Se guarda en los
   ajustes. El mando usa un mapeo fijo.
-- **Móvil en vertical**: aviso de "gira el dispositivo"; la partida se pausa
-  mientras se muestra.
+- **Móvil siempre en horizontal**: con el móvil en vertical el juego se gira
+  solo un cuarto de vuelta y se juega en horizontal, también con la rotación de
+  pantalla bloqueada; no se pide girar el dispositivo (cambio tras la revisión
+  del autor, que sustituye al aviso de "gira el dispositivo").
 - **Audio con el gestor de sonido de Phaser**: canales de **música** y
   **efectos** con volumen propio, silencio global (tecla M y Opciones) y pausa
   al perder el foco. La música de título pasa por el cargador de Phaser.
@@ -71,7 +73,7 @@ añadiendo jugabilidad en la v1.0.0.
 ### New Capabilities
 
 - `input-controls`: acciones independientes del dispositivo, teclado con
-  reasignación, mando, controles táctiles, aviso de orientación vertical y
+  reasignación, mando, controles táctiles, horizontal forzado en móvil y
   liberación de acciones al perder el foco.
 - `audio`: canales de música y efectos, efectos sintetizados, sonidos a partir
   de eventos y de los menús, volumen, silencio y pausa al perder el foco.
@@ -85,8 +87,8 @@ añadiendo jugabilidad en la v1.0.0.
 
 - `game-flow`: el título arranca también con el mando; los menús se manejan
   con el mando y Opciones gana Música, Efectos, Sonido y Controles; la pausa se
-  pide con la acción de pausa (teclado reasignable, Start del mando), al
-  desconectar el mando o al girar el móvil a vertical; el fin de partida se
+  pide con la acción de pausa (teclado reasignable, Start del mando) o al
+  desconectar el mando; el fin de partida se
   confirma también con el mando o el botón táctil.
 - `player-settings`: el registro guarda además los volúmenes, el silencio y
   las teclas asignadas, con valores por defecto si faltan o no son válidos.

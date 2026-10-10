@@ -106,17 +106,29 @@ pantalla táctil, los controles SHALL NOT mostrarse.
 - **WHEN** se juega con teclado y ratón
 - **THEN** no aparecen la cruceta ni el botón de pimienta
 
-### Requirement: Aviso de orientación vertical
-En un dispositivo táctil en orientación vertical, el juego SHALL mostrar un
-aviso, en el idioma activo, pidiendo girar el dispositivo, y SHALL pausar la
-partida en curso mientras se muestra. Al volver a horizontal, el aviso SHALL
-desaparecer y la partida SHALL seguir en pausa hasta que el jugador continúe.
+### Requirement: Siempre en horizontal en pantallas táctiles
+En un dispositivo táctil sujeto en vertical, el juego SHALL mostrarse girado un
+cuarto de vuelta, ocupando la pantalla con su disposición horizontal, de modo
+que se juegue en horizontal sin depender de que el dispositivo tenga activada la
+rotación de pantalla y sin pedir al jugador que lo gire. Los toques SHALL
+corresponder a lo que se ve en el juego girado. Cambiar la orientación del
+dispositivo SHALL NOT interrumpir ni pausar la partida.
 
-#### Scenario: Girar el móvil en mitad de la partida
-- **WHEN** el jugador gira el móvil a vertical durante la partida y luego lo
-  vuelve a horizontal
-- **THEN** ve el aviso de girar mientras está en vertical y, al volver, la
-  partida está en pausa con el menú de pausa visible
+#### Scenario: Móvil en vertical con la rotación bloqueada
+- **WHEN** el jugador abre el juego con el móvil en vertical y la rotación de
+  pantalla desactivada
+- **THEN** el título y el menú aparecen en horizontal ocupando la pantalla y,
+  al tocar Jugar, empieza la partida
+
+#### Scenario: Controles táctiles con el juego girado
+- **WHEN** con el juego girado el jugador mantiene la cruceta hacia la derecha
+  y toca el botón de pimienta
+- **THEN** el chef camina a la derecha y lanza una pimienta
+
+#### Scenario: Girar el móvil durante la partida
+- **WHEN** el jugador pasa el móvil de vertical a horizontal en mitad de la
+  partida
+- **THEN** la partida sigue sin pausarse, ahora sin girar
 
 ### Requirement: Sin acciones atascadas
 Si la ventana pierde el foco o un mando se desconecta, todas las acciones que

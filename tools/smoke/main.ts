@@ -68,15 +68,30 @@ interface TouchPoint {
 
 const fingers = new Map<number, Map<number, TouchPoint>>();
 
-/** Where a board coordinate falls in the window, from the canvas as the page lays it out. */
+/**
+ * Where a board coordinate falls in the window, from the canvas as the page lays it out. On an
+ * upright touch screen the game element is turned a quarter clockwise, so the point is turned
+ * back to the page.
+ */
 async function toWindow(window: BrowserWindow, x: number, y: number): Promise<TouchPoint> {
-  const rect = (await window.webContents.executeJavaScript(
-    `(() => { const r = document.querySelector('canvas').getBoundingClientRect();
-      return { left: r.left, top: r.top, width: r.width, height: r.height }; })()`
-  )) as { left: number; top: number; width: number; height: number };
-  const scale = rect.height / BOARD.height;
-  const panel = (rect.width / scale - BOARD.width) / 2;
-  return { id: 0, x: rect.left + (x + panel) * scale, y: rect.top + y * scale };
+  const frame = (await window.webContents.executeJavaScript(
+    `(() => { const c = document.querySelector('canvas');
+      return { left: c.offsetLeft, top: c.offsetTop, width: c.offsetWidth, height: c.offsetHeight,
+        turned: document.getElementById('game').classList.contains('turned'),
+        windowWidth: window.innerWidth }; })()`
+  )) as {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+    turned: boolean;
+    windowWidth: number;
+  };
+  const scale = frame.height / BOARD.height;
+  const panel = (frame.width / scale - BOARD.width) / 2;
+  const u = frame.left + (x + panel) * scale;
+  const v = frame.top + y * scale;
+  return frame.turned ? { id: 0, x: frame.windowWidth - v, y: u } : { id: 0, x: u, y: v };
 }
 
 /** Sends the fingers on the screen after a change, through the DevTools protocol. */

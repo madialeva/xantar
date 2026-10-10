@@ -43,10 +43,9 @@ mando, y con clic o toque sobre cada opción.
 ### Requirement: Pausa
 Durante la partida, la acción de pausa (Esc, la tecla asignada a pausa o Start
 en el mando), el botón de pausa del panel derecho, que la ventana pierda el
-foco, que se desconecte un mando o que el dispositivo táctil pase a vertical
-SHALL pausar la partida. En pausa, la simulación SHALL NOT avanzar, las
-animaciones y efectos SHALL quedar detenidos y SHALL mostrarse un menú con
-Continuar y Salir al menú. Al continuar, la partida SHALL reanudarse exactamente
+foco o que se desconecte un mando SHALL pausar la partida. En pausa, la
+simulación SHALL NOT avanzar, las animaciones y efectos SHALL quedar detenidos y
+SHALL mostrarse un menú con Continuar y Salir al menú. Al continuar, la partida SHALL reanudarse exactamente
 donde estaba, sin recuperar de golpe el tiempo pasado en pausa. La acción de
 pausa SHALL también reanudar.
 

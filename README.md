@@ -93,8 +93,9 @@ reserved. Gamepads with the standard layout work without setup (press a button
 once so the browser shows it); their buttons cannot be changed.
 
 The on-screen pad and pepper button appear as soon as you touch the screen,
-and you can walk and throw pepper with two fingers at once. Hold the phone
-sideways: in portrait the game asks you to turn it and pauses.
+and you can walk and throw pepper with two fingers at once. The game is always
+played sideways: if you hold the phone upright it turns itself to landscape, so
+it works even with the screen rotation locked.
 
 On a ladder you only move while you hold up or down, so you can stop and turn
 around anywhere on it. When you reach the height of a platform, press left or

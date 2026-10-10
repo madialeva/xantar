@@ -44,7 +44,8 @@ Estado tras #5 (motivación en `proposal.md`):
 **Non-Goals:**
 
 - Reasignar botones del mando o soportar mandos sin mapeo estándar.
-- Layout vertical jugable; en vertical solo hay aviso.
+- Layout vertical propio; en vertical el juego se gira y conserva el
+  horizontal.
 - Música durante la partida, música por nivel o efectos posicionales.
 - Ficheros de efectos de sonido o un editor de efectos.
 - Firma de código, notarización, publicación en GitHub Releases y
@@ -160,12 +161,20 @@ sonidos de interfaz (D7) se inyectan como `UiSounds` (interfaz) para no atar
 - Phaser se configura con `input.activePointers: 3` para multitáctil.
 - El botón de pimienta también produce confirmar (fin de nivel y fin de
   partida).
-- **Aviso de vertical:** elemento DOM fijo creado por `main.ts`
-  (`RotateNotice`) cuyo texto sale del catálogo y se actualiza al cambiar de
-  idioma; se muestra con la media query `(orientation: portrait) and (pointer:
-  coarse)`. `GameScene` escucha esa media query y pausa al entrar en vertical.
-  Se descarta un layout vertical (non-goal) y dibujarlo en Phaser (con el
-  lienzo en FIT el texto quedaría diminuto).
+- **Siempre en horizontal** (sustituye al aviso de "gira el dispositivo" tras la
+  revisión del autor: con la rotación de pantalla bloqueada el aviso no tenía
+  salida). `ForcedLandscape` (vista) gira el contenedor `#game` un cuarto de
+  vuelta horario con CSS (`translateX(ancho) rotate(90deg)`, tamaño de ventana
+  intercambiado) cuando se cumple `(orientation: portrait) and (pointer:
+  coarse)`. Phaser mide con `getBoundingClientRect`, que ve la caja girada
+  desde fuera, así que mientras está girado se sustituyen cuatro pasos de sus
+  gestores (Adapter): tamaño del padre, límites y centrado del lienzo (en el
+  marco girado, con `offsetWidth`/`offsetLeft`) y transformación del puntero
+  (`toTurnedFrame`, pura). El layout usa `viewport()`, que intercambia ancho y
+  alto. Girar el móvil no pausa. Se mantiene `screen.orientation.lock` en
+  pantalla completa (Android), que gira de verdad cuando se puede. Alternativa
+  descartada: layout vertical propio (non-goal) y dibujar el juego girado
+  dentro de Phaser (cámaras giradas en cada escena, más invasivo).
 
 ### D5. Plataforma: web y escritorio (Strategy)
 
@@ -386,8 +395,11 @@ importa `createGameWindow` y `registerAppProtocol` en lugar de duplicarlos.
   reasignación] → es intencionado para no perder nunca el acceso a los menús.
 - [Sondeo de `getGamepads()` en cada fotograma] → coste despreciable; solo se
   leen los mandos estándar conectados.
-- [El aviso de vertical depende de `pointer: coarse`] → tabletas con teclado
-  pueden no verlo; aceptable, la partida sigue siendo jugable.
+- [El giro depende de `pointer: coarse`] → una tableta con teclado y ratón no
+  se gira; aceptable, se ve con bandas y sigue siendo jugable.
+- [Sustituir métodos internos de Phaser al girar] → limitado a cuatro métodos,
+  solo activos con el juego girado y cubiertos por la prueba de humo
+  `portrait`; revisar al actualizar Phaser.
 
 ## Migration Plan
 

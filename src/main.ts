@@ -20,7 +20,7 @@ import { TouchPad } from './view/input/TouchPad';
 import { KeyboardSource } from './view/input/KeyboardSource';
 import { loadKeyboardLayout } from './view/input/keyboardLayout';
 import { createPlatform } from './view/platform/Platform';
-import { PORTRAIT_TOUCH_QUERY, RotateNotice } from './view/platform/RotateNotice';
+import { ForcedLandscape, PORTRAIT_TOUCH_QUERY } from './view/platform/ForcedLandscape';
 import { GameSession } from './view/session/GameSession';
 import { createThemeRegistry } from './view/themes';
 
@@ -45,11 +45,6 @@ localization.subscribe((language) => {
   document.documentElement.lang = language;
 });
 const session = new GameSession();
-const rotateNotice = new RotateNotice(
-  document,
-  window.matchMedia(PORTRAIT_TOUCH_QUERY),
-  localization
-);
 const audio = new GameAudio(settings.values, () => performance.now());
 settings.subscribe((values) => audio.apply(values));
 const platform = createPlatform(window);
@@ -63,11 +58,15 @@ let keyLayout: ReadonlyMap<string, string> | null = null;
 void loadKeyboardLayout(navigator).then((layout) => {
   keyLayout = layout;
 });
-const initial = computeLayout(window.innerWidth, window.innerHeight);
+const gameElement = document.getElementById('game')!;
+const landscape = new ForcedLandscape(gameElement, window.matchMedia(PORTRAIT_TOUCH_QUERY), window);
+const viewport = landscape.viewport();
+const initial = computeLayout(viewport.width, viewport.height);
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   backgroundColor: '#000000',
+  parent: gameElement,
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -102,7 +101,7 @@ const config: Phaser.Types.Core.GameConfig = {
       settings,
       input,
       sounds: audio,
-      interruptions: [(pause) => gamepad.onDisconnect(pause), (pause) => rotateNotice.onShow(pause)]
+      interruptions: [(pause) => gamepad.onDisconnect(pause)]
     }),
     new HudScene({
       tier,
@@ -118,6 +117,7 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 const game = new Phaser.Game(config);
+landscape.attach(game);
 game.events.on(Phaser.Core.Events.PRE_STEP, (time: number) => {
   input.update(time);
   if (input.justPressed('mute')) settings.setMuted(!settings.muted);
@@ -129,7 +129,9 @@ window.addEventListener('resize', () => {
   resizePending = true;
   requestAnimationFrame(() => {
     resizePending = false;
-    const layout = computeLayout(window.innerWidth, window.innerHeight);
+    landscape.apply();
+    const { width, height } = landscape.viewport();
+    const layout = computeLayout(width, height);
     game.scale.setGameSize(layout.width * tier, layout.height * tier);
     game.scale.refresh();
   });
