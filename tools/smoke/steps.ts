@@ -6,13 +6,25 @@ export type Step =
   | { readonly kind: 'up'; readonly key: string }
   | { readonly kind: 'shot'; readonly name: string }
   | { readonly kind: 'expectQuit' }
-  | { readonly kind: 'security' };
+  | { readonly kind: 'security' }
+  | { readonly kind: 'touch'; readonly x: number; readonly y: number }
+  | { readonly kind: 'touchDown'; readonly id: number; readonly x: number; readonly y: number }
+  | { readonly kind: 'touchUp'; readonly id: number }
+  | { readonly kind: 'size'; readonly width: number; readonly height: number };
 
 const DEFAULT_KEY_MS = 100;
 
 const positive = (text: string | undefined, step: string): number => {
   const value = Number(text);
   if (!Number.isFinite(value) || value < 0) throw new Error(`Invalid duration in step "${step}"`);
+  return value;
+};
+
+const coordinate = (text: string | undefined, step: string): number => {
+  const value = Number(text);
+  if (text === undefined || text === '' || !Number.isFinite(value)) {
+    throw new Error(`Invalid coordinate in step "${step}"`);
+  }
   return value;
 };
 
@@ -25,7 +37,10 @@ const required = (text: string | undefined, step: string): string => {
  * Reads a comma-separated list of steps such as
  * `wait:2500,click,down:Right,wait:900,up:Right,shot:game`. `expectQuit` checks that the
  * game asked the desktop app to close; `security` checks that the page cannot reach Node,
- * open windows or navigate away.
+ * open windows or navigate away. Touch steps take board coordinates (logical units, the
+ * board from 0 to 640; the left panel is negative): `touch:x:y` taps, `touchDown:id:x:y` puts
+ * finger `id` down (or slides it) and `touchUp:id` lifts it. `size:WxH` resizes the window,
+ * for example to turn a phone upright.
  */
 export function parseSteps(text: string): readonly Step[] {
   return text
@@ -33,7 +48,7 @@ export function parseSteps(text: string): readonly Step[] {
     .map((step) => step.trim())
     .filter(Boolean)
     .map((step): Step => {
-      const [kind, first, second] = step.split(':');
+      const [kind, first, second, third] = step.split(':');
       switch (kind) {
         case 'wait':
           return { kind, ms: positive(first, step) };
@@ -53,6 +68,19 @@ export function parseSteps(text: string): readonly Step[] {
         case 'expectQuit':
         case 'security':
           return { kind };
+        case 'touch':
+          return { kind, x: coordinate(first, step), y: coordinate(second, step) };
+        case 'touchDown':
+          return {
+            kind,
+            id: positive(first, step),
+            x: coordinate(second, step),
+            y: coordinate(third, step)
+          };
+        case 'touchUp':
+          return { kind, id: positive(first, step) };
+        case 'size':
+          return { kind, ...parseSize(required(first, step)) };
         default:
           throw new Error(`Unknown step "${step}"`);
       }

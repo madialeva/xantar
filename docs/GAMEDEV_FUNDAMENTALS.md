@@ -665,15 +665,35 @@ por tipo de enemigo están previstos en #17.
   puntuales.
 - **Pulsación mantenida y pulsación puntual**: andar es "mientras esté
   pulsada"; lanzar pimienta es "en el momento de pulsar" (*just pressed*).
-- **Acciones en lugar de teclas**: el juego debería pensar en "izquierda" o
-  "pimienta", no en "flecha izquierda" o "espacio". Una capa de **acciones**
-  traduce teclado, mando o pantalla táctil a esas acciones y permite
-  **reasignar** controles (#6). Xantar ya da un paso en esa dirección: la
-  simulación solo recibe un `SimInput` con acciones.
+- **Acciones en lugar de teclas** (*input mapping*): el juego piensa en
+  "izquierda" o "pimienta", no en "flecha izquierda" o "espacio". Una capa de
+  **acciones** traduce teclado, mando o pantalla táctil a esas acciones, de
+  modo que añadir un dispositivo o **reasignar** una tecla no toca la lógica.
+  En Xantar las escenas solo preguntan por acciones (`ActionInput`) y la
+  simulación recibe un `SimInput`; el jugador cambia sus teclas en Opciones →
+  Controles.
+- **Tecla física y carácter**: `KeyboardEvent.code` nombra la tecla por su
+  posición (la de la W en un teclado QWERTY es `KeyW` aunque en AZERTY ponga Z),
+  así que unas asignaciones siguen en su sitio con cualquier distribución;
+  para mostrarla se pide al navegador el carácter de la distribución del
+  jugador.
+- **Repetición en menús**: mantener una dirección mueve la selección una vez,
+  espera un poco y luego repite a ritmo fijo, como en un sistema operativo.
+- **Mando**: la *Gamepad API* no avisa de las pulsaciones; hay que leer el
+  mando en cada fotograma. El mapeo *standard* fija qué botón es cada número
+  (0 = A, 1 = B, 9 = Start, 12–15 = cruceta). Los sticks nunca vuelven
+  exactamente a 0, así que se usa una **zona muerta**.
+- **Que no se pierda nada**: si una tecla se suelta y se vuelve a pulsar entre
+  dos fotogramas, o la ventana pierde el foco con una tecla pulsada, sondear sin
+  más fallaría (pulsación perdida o tecla "pegada"). Xantar recuerda las
+  pulsaciones desde la última lectura y suelta todo al perder el foco.
 - **Búfer de entrada**: recordar una pulsación unos instantes para que no se
   pierda (lo que hacemos con la pimienta entre ticks).
 - **Táctil**: en móvil hacen falta controles en pantalla (cruceta y botones
-  virtuales) o gestos. Pendiente en #6; los menús de Xantar ya aceptan toques.
+  virtuales) o gestos. Xantar muestra una cruceta y un botón de pimienta en los
+  paneles en cuanto se usa la pantalla táctil; cada dedo se sigue por separado
+  (*multitáctil*) para poder andar y lanzar pimienta a la vez, y en vertical
+  pide girar el dispositivo.
 - **Teclas que se queda el navegador**: en pantalla completa, Esc sirve para
   salir de ella y normalmente no llega a la página. La API *Keyboard Lock*
   (`navigator.keyboard.lock`) permite recibirla; Xantar la usa y, donde no

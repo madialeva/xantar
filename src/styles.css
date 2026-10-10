@@ -8,3 +8,22 @@ body {
   overflow: hidden;
   background: #000;
 }
+
+.rotate-notice {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #14181f;
+  color: #ffc857;
+  font-weight: bold;
+  font-size: 22px;
+  text-align: center;
+}
+
+.rotate-notice[hidden] {
+  display: none;
+}

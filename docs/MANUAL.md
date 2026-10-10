@@ -136,7 +136,8 @@ xantar/
 │   │   └── classic.level.json   # Nivel clásico en el formato de nivel v1
 │   ├── devtools/                # Código de la lámina de arte (ArtSheetScene)
 │   ├── i18n/                    # Textos por idioma: catálogos es/en, Translator, Localization
-│   ├── settings/                # Ajustes del jugador (idioma, tema, récord) y su almacenamiento
+│   ├── settings/                # Ajustes del jugador (idioma, tema, récord, sonido, teclas) y su almacenamiento
+│   ├── input/                   # Acciones, asignaciones de teclas, estado por fotograma y cruceta (puro)
 │   ├── objects/                 # Vistas Phaser (sin lógica): ChefView, EnemyView, IngredientView
 │   ├── view/                    # Pipeline visual (ver 8.7)
 │   │   ├── art/<tema>/*.svg     # Fuentes SVG de cada tema (se incluyen en el bundle como texto)
@@ -145,11 +146,13 @@ xantar/
 │   │   ├── raster/              # SvgRasterizer (SVG -> textura) y ArtFactory (imágenes a escala)
 │   │   ├── layout/              # computeLayout (tablero + paneles) y cámara del tablero
 │   │   ├── board/               # MazeView: fondo, escaleras, plataformas, cruces y platos
-│   │   ├── hud/                 # HudPanels (paneles laterales) y OverlayView (fin de nivel/partida)
+│   │   ├── hud/                 # HudPanels (paneles laterales), OverlayView (fin de nivel/partida) y TouchControls
 │   │   ├── fx/                  # EventEffects: adornos breves para eventos de la simulación
 │   │   ├── rigs/                # Personajes por partes: rigs, animador y estados de animación
 │   │   ├── session/             # GameSession: mediador entre la partida y el HUD
-│   │   ├── ui/                  # MenuList (menús con teclado y puntero) y pantalla completa
+│   │   ├── ui/                  # MenuList, ControlsPage (menús por acciones y puntero) y pantalla completa
+│   │   ├── input/               # ActionInput y fuentes: teclado, mando, táctil; InputModality
+│   │   ├── platform/            # Platform (web o escritorio) y aviso de girar el dispositivo
 │   │   └── audio/               # TitleMusic (música de título y menú)
 │   └── scenes/
 │       ├── BootScene.ts         # Rasteriza el arte de todos los temas y pasa al título
@@ -472,16 +475,38 @@ El juego tiene **dos máquinas de estados** separadas a propósito:
 
 2. **Flujo de la aplicación** (vista). Escenas `BootScene` → `TitleScene` → `MenuScene` → `GameScene` + `HudScene`, y la **pausa**, que no es una fase porque no cambia ninguna regla: la simulación simplemente deja de recibir ticks.
    - `GameScene` publica el estado en un `GameSession` (`src/view/session/`, patrón Observer y mediador) y ejecuta sus órdenes (`pause`, `resume`, `quit`). `HudScene` solo escucha a la sesión: dibuja los paneles, los mensajes de `ready` y `levelClear`, la pantalla de fin de partida y el menú de pausa. Ninguna escena conoce a la otra.
-   - Pausar llama a `this.scene.pause()` en `GameScene` (se congelan su `update` y sus tweens) y al reanudar `stepper.reset()` descarta el tiempo acumulado. La tecla de pausa (Esc o P) la atiende solo `HudScene`. Perder el foco de la ventana, ocultar la pestaña o salir de la pantalla completa también pausan.
+   - Pausar llama a `this.scene.pause()` en `GameScene` (se congelan su `update` y sus tweens) y al reanudar `stepper.reset()` descarta el tiempo acumulado. La acción de pausa (Esc, P o Start del mando) la atiende solo `HudScene`. Perder el foco de la ventana, ocultar la pestaña, salir de la pantalla completa, desconectar el mando o girar el móvil a vertical también pausan (`GameScene` recibe estas *interrupciones* inyectadas).
    - Volver al menú detiene `HudScene` y arranca `MenuScene`; nunca se recarga la página. La puntuación se envía a los ajustes al acabar la partida y al salir.
-   - Los menús usan `MenuList` (`src/view/ui/`): flechas o WASD para moverse, Enter o Espacio para elegir, izquierda y derecha para cambiar un valor, Esc para volver, y clic o toque sobre cada opción.
+   - Los menús usan `MenuList` (`src/view/ui/`), que lee acciones (ver 8.9): arriba y abajo para moverse, confirmar para elegir, izquierda y derecha para cambiar un valor, volver para volver, y clic o toque sobre cada opción. La escena llama a `menu.update()` en cada fotograma. Los sonidos del menú llegan como `UiSounds`.
    - En la aplicación de escritorio, el menú principal termina con **Salir**, que cierra la aplicación por IPC (ver 8.4); Esc en el menú principal solo selecciona Salir, para no cerrar por accidente. En el navegador no aparece.
 
 **Idioma** (`src/i18n/`): todos los textos visibles salen de los catálogos `catalogs/es.ts` (el de referencia) y `catalogs/en.ts` (declarado como `Catalog`, de modo que si le falta, le sobra o cambia de forma alguna clave, falla `npm run typecheck`). Un texto es una cadena o una función `(parámetros, format) => string`; `format.number` y `format.plural` usan `Intl.NumberFormat` e `Intl.PluralRules` del idioma. `Localization` guarda el idioma activo y avisa a sus suscriptores al cambiarlo; `main.ts` mantiene el atributo `lang` del documento. El idioma inicial sale de `detectLanguage(navigator.languages)`: español si la primera preferencia es cualquier español, si no inglés.
 
-**Ajustes** (`src/settings/`): `Settings` guarda idioma, tema (`auto` o un id) y mejor puntuación en un único registro versionado (`{ "version": 1, ... }`) bajo la clave `xantar.settings` de `localStorage`, que también funciona en Electron. `parseSettings` lo lee campo a campo: un campo no válido toma su valor por defecto sin perder los demás, y un registro roto o de otra versión se ignora entero. Si el almacenamiento está bloqueado, el juego funciona sin recordar nada.
+**Ajustes** (`src/settings/`): `Settings` guarda idioma, tema (`auto` o un id), mejor puntuación, volúmenes de música y efectos (0–10), silencio y teclas asignadas en un único registro versionado (`{ "version": 1, ... }`) bajo la clave `xantar.settings` de `localStorage`, que también funciona en Electron. `parseSettings` lo lee campo a campo: un campo no válido toma su valor por defecto sin perder los demás, y un registro roto o de otra versión se ignora entero. Las teclas se validan como conjunto (`validateBindings`): si algo no cuadra, todas vuelven a las de por defecto. Los campos añadidos después de escribir un registro simplemente toman su valor por defecto, así que no hace falta cambiar de versión para añadir uno. `Settings` avisa a sus suscriptores en cada cambio (el teclado y el audio se actualizan así). Si el almacenamiento está bloqueado, el juego funciona sin recordar nada.
 
 **Tema**: `chooseTheme` aplica la prioridad URL (`?theme=`) → opción del jugador (salvo `auto`) → tema del nivel → `classic`.
+
+### 8.9 Entrada: acciones, teclado, mando y táctil
+
+Ninguna escena lee teclas. Todo pasa por **acciones** (`src/input/actions.ts`): `up`, `down`, `left`, `right`, `pepper`, `confirm`, `back`, `pause` y `mute`.
+
+```
+ KeyboardSource ─┐
+ GamepadSource  ─┼─► ActionInput.update() (PRE_STEP de Phaser, una vez por fotograma)
+ TouchPad       ─┘        │ isDown / justPressed / repeated
+                          ├─► GameScene → toSimInput() → Simulation.step
+                          ├─► HudScene (pausa, fin de partida, menú de pausa)
+                          └─► MenuList, ControlsPage, TitleScene
+```
+
+- **Fuentes** (`InputSource`, patrón Strategy): cada una devuelve en `poll()` las acciones mantenidas y las **pulsadas desde la lectura anterior** (así no se pierde una pulsación que empieza y acaba entre dos fotogramas, ni dos pulsaciones seguidas de la misma tecla). `pollAll` las combina: una acción está activa si cualquier dispositivo la activa.
+- **`ActionState`** (puro, con pruebas) calcula por fotograma `isDown`, `justPressed` y `repeated` (la pulsación y luego, mantenida, cada 120 ms tras 400 ms: para moverse por los menús). **`ActionInput`** (vista) es el único objeto que leen las escenas; `main.ts` lo crea y lo actualiza en `Phaser.Core.Events.PRE_STEP`, antes de los `update` de las escenas. Así todas ven el mismo estado y una escena en pausa no deja teclas "pegadas".
+- **Partida**: `GameScene` acumula `pepper` y `confirm` como pendientes hasta el siguiente tick (un fotograma puede no ejecutar ninguno) y `toSimInput` compone el `SimInput`. La simulación no cambia: sigue recibiendo direcciones, pimienta y confirmar.
+- **Teclado** (`KeyboardSource`): escucha `keydown`/`keyup` en `window` con `KeyboardEvent.code` (la tecla física, independiente de la distribución) y las traduce con las **asignaciones** vigentes (`src/input/bindings.ts`): de una a dos teclas por acción reasignable (`up`, `down`, `left`, `right`, `pepper`, `pause`, `mute`), nunca compartidas. Fijas: Esc → `back` y `pause`; Enter → `confirm`; las teclas de la pimienta → también `confirm`. Reservadas (no asignables): Esc, Enter, Intro del teclado numérico y F11. Solo llama a `preventDefault` en las teclas que entiende y suelta todo al perder el foco o al ocultarse la página. Ignora las combinaciones con Ctrl, Alt o Meta (atajos del navegador).
+- **Página Controles** (`ControlsPage`, en Opciones): filas por acción con dos huecos; confirmar captura la siguiente tecla (`KeyboardSource.capture`), Esc cancela y Retroceso vacía el hueco. `assign` intercambia la tecla si ya era de otra acción, de modo que ninguna se queda sin tecla y los menús siempre se pueden manejar. Las etiquetas salen de `keyLabel`: el carácter de la distribución del jugador (`navigator.keyboard.getLayoutMap()`, en Chrome, Edge y Electron) o el de una distribución US; las teclas con nombre (Espacio, Mayús…) salen de los catálogos (`key.*`).
+- **Mando** (`GamepadSource`): sondea `navigator.getGamepads()` en cada fotograma; solo mandos con mapeo `standard`. Mapeo fijo: cruceta o stick izquierdo (zona muerta 0,5) → direcciones; A → `pepper` y `confirm`; X → `pepper`; B → `back`; Start → `pause`. Avisa de la desconexión de un mando en uso y `GameScene` pausa. Los navegadores solo muestran el mando tras pulsar un botón con la página delante, y solo en contextos seguros (`https`, `localhost` o la aplicación de escritorio).
+- **Táctil**: `InputModality` detecta el primer toque (`pointerdown` con `pointerType === 'touch'`); desde entonces `HudScene` muestra `TouchControls`: cruceta (`hud.dpad`) abajo en el panel izquierdo y botón de pimienta (`hud.pepperButton`, que también confirma) abajo en el derecho, de hasta 160 unidades según el ancho del panel. Cada dedo se sigue por separado (Phaser con `input.activePointers: 3`) y se escribe en el `TouchPad` compartido; `dpadDirection` (pura) elige la dirección por el eje dominante con una zona muerta central, y deslizar el dedo cambia de dirección.
+- **Vertical**: `RotateNotice` (`src/view/platform/`) muestra un aviso HTML a pantalla completa con la media query `(orientation: portrait) and (pointer: coarse)` y su texto del catálogo; al aparecer, la partida se pausa.
 
 ---
 
@@ -640,6 +665,13 @@ Opción recomendada (CI): un workflow de GitHub Actions que ejecute `npm ci && n
 1. Añade el campo a `PlayerSettings` con su validación en `parseSettings` y su prueba (un valor no válido debe caer al valor por defecto sin afectar a los demás).
 2. Añade el método para cambiarlo en `Settings` (guarda en cada cambio) y su valor por defecto en `main.ts`.
 3. Añade la entrada al menú de opciones en `MenuScene.#optionItems` con `label`, `value` y `change`, y sus textos a los catálogos.
+
+### 9.15 Añadir una acción
+
+1. Añádela a `ACTIONS` (`src/input/actions.ts`) y, si el jugador debe poder cambiar su tecla, a `REMAPPABLE_ACTIONS` con su tecla por defecto en `DEFAULT_BINDINGS` (`src/input/bindings.ts`). Las asignaciones guardadas sin la acción nueva dejan de validar y vuelven a las de por defecto: avísalo en el PR.
+2. Si un botón del mando la produce, añádelo a `BUTTONS` en `GamepadSource`; si tiene control táctil, a `TouchControls`.
+3. Añade su nombre a los catálogos (`action.<nombre>`) para la página Controles.
+4. Léela en la escena que corresponda con `input.justPressed(...)` o `input.isDown(...)`, y añade las pruebas de `bindings`, de la fuente y, si toca, un escenario de humo.
 
 ## 10. Build y empaquetado
 

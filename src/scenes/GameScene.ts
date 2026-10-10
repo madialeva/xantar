@@ -4,12 +4,12 @@ import classicDocument from '../levels/classic.level.json';
 import ChefView from '../objects/ChefView';
 import EnemyView from '../objects/EnemyView';
 import IngredientView from '../objects/IngredientView';
+import type { ActionReader } from '../input/actions';
+import { toSimInput } from '../input/toSimInput';
 import {
   FixedStepper,
-  NO_INPUT,
   SeededRng,
   type SimEvent,
-  type SimInput,
   Simulation,
   loadLevel,
   parseLevelDocument
@@ -34,6 +34,9 @@ export interface GameSceneDependencies {
   readonly tier: RenderTier;
   readonly session: GameSession;
   readonly settings: Settings;
+  readonly input: ActionReader;
+  /** Events that pause the game (a gamepad lost, the phone turned upright); each returns a way to stop listening. */
+  readonly interruptions: readonly ((listener: () => void) => () => void)[];
 }
 
 /**
@@ -56,11 +59,6 @@ export default class GameScene extends Phaser.Scene {
   #enemyViews: EnemyView[] = [];
   #ingredientViews = new Map<number, IngredientView>();
   #effects!: EventEffects;
-
-  #cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-  #wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
-  #pepperKey!: Phaser.Input.Keyboard.Key;
-  #enterKey!: Phaser.Input.Keyboard.Key;
 
   constructor(deps: GameSceneDependencies) {
     super({ key: 'GameScene' });
@@ -87,7 +85,6 @@ export default class GameScene extends Phaser.Scene {
     this.#createViews();
     this.#effects = new EventEffects(this, this.#art, DEPTH.effects);
     followBoardCamera(this, tier);
-    this.#createInput();
     this.#rebuildIngredients();
     this.#syncViews(0);
     session.start(settings.bestScore);
@@ -97,16 +94,18 @@ export default class GameScene extends Phaser.Scene {
   }
 
   override update(_time: number, delta: number): void {
-    if (Phaser.Input.Keyboard.JustDown(this.#pepperKey)) {
-      this.#pepperPending = true;
-      this.#confirmPending = true;
-    }
-    if (Phaser.Input.Keyboard.JustDown(this.#enterKey)) this.#confirmPending = true;
+    const { input } = this.#deps;
+    if (input.justPressed('pepper')) this.#pepperPending = true;
+    if (input.justPressed('confirm')) this.#confirmPending = true;
 
     const events: SimEvent[] = [];
     const steps = this.#stepper.advance(delta);
     for (let i = 0; i < steps; i++) {
-      events.push(...this.#sim.step(this.#readInput()));
+      events.push(
+        ...this.#sim.step(
+          toSimInput(input, { pepper: this.#pepperPending, confirm: this.#confirmPending })
+        )
+      );
       this.#pepperPending = false;
       this.#confirmPending = false;
     }
@@ -138,12 +137,14 @@ export default class GameScene extends Phaser.Scene {
       if (!document.fullscreenElement) this.#pause();
     };
     const unsubscribe = this.#deps.session.onRequest(onRequest);
+    const stopInterruptions = this.#deps.interruptions.map((subscribe) => subscribe(onLeave));
     this.game.events.on(Phaser.Core.Events.BLUR, onLeave);
     this.game.events.on(Phaser.Core.Events.HIDDEN, onLeave);
     document.addEventListener('visibilitychange', onVisibility);
     document.addEventListener('fullscreenchange', onFullscreenChange);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       unsubscribe();
+      for (const stop of stopInterruptions) stop();
       this.game.events.off(Phaser.Core.Events.BLUR, onLeave);
       this.game.events.off(Phaser.Core.Events.HIDDEN, onLeave);
       document.removeEventListener('visibilitychange', onVisibility);
@@ -179,18 +180,6 @@ export default class GameScene extends Phaser.Scene {
     const choice = chooseTheme({ urlTheme, optionTheme: settings.theme, levelTheme }, themes);
     for (const warning of choice.warnings) console.warn(warning);
     return themes.resolve(choice.id);
-  }
-
-  #readInput(): SimInput {
-    return {
-      ...NO_INPUT,
-      left: this.#cursors.left.isDown || this.#wasd.A.isDown,
-      right: this.#cursors.right.isDown || this.#wasd.D.isDown,
-      up: this.#cursors.up.isDown || this.#wasd.W.isDown,
-      down: this.#cursors.down.isDown || this.#wasd.S.isDown,
-      pepper: this.#pepperPending,
-      confirm: this.#confirmPending
-    };
   }
 
   #createViews(): void {
@@ -260,16 +249,5 @@ export default class GameScene extends Phaser.Scene {
           break;
       }
     }
-  }
-
-  #createInput(): void {
-    const keyboard = this.input.keyboard!;
-    this.#cursors = keyboard.createCursorKeys();
-    this.#wasd = keyboard.addKeys('W,A,S,D') as Record<
-      'W' | 'A' | 'S' | 'D',
-      Phaser.Input.Keyboard.Key
-    >;
-    this.#pepperKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    this.#enterKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
   }
 }

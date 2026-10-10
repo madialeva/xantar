@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <circle class="f-shadow" cx="64" cy="67" r="59" opacity="0.25"/>
+  <circle class="f-backdropAccent s-outline" cx="64" cy="64" r="59" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <path class="f-backdrop s-outline" d="M49 12 H79 Q84 12 84 17 V44 H111 Q116 44 116 49 V79 Q116 84 111 84 H84 V111 Q84 116 79 116 H49 Q44 116 44 111 V84 H17 Q12 84 12 79 V49 Q12 44 17 44 H44 V17 Q44 12 49 12 Z" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <path class="f-highlight" d="M50 15 H78 Q81 15 81 18 V24 H47 V18 Q47 15 50 15 Z" opacity="0.15"/>
+  <circle class="f-backdropAccent" cx="64" cy="64" r="9"/>
+  <path class="f-hudText" d="M64 20 L76 36 H52 Z" stroke-linejoin="round"/>
+  <path class="f-hudText" d="M64 108 L52 92 H76 Z" stroke-linejoin="round"/>
+  <path class="f-hudText" d="M20 64 L36 52 V76 Z" stroke-linejoin="round"/>
+  <path class="f-hudText" d="M108 64 L92 76 V52 Z" stroke-linejoin="round"/>
+</svg>

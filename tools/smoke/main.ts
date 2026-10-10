@@ -58,6 +58,53 @@ function requestedRuns(args: readonly string[]): { scenario: string; runs: reado
   return { scenario, runs };
 }
 
+const BOARD = { width: 640, height: 480 };
+
+interface TouchPoint {
+  readonly id: number;
+  readonly x: number;
+  readonly y: number;
+}
+
+const fingers = new Map<number, Map<number, TouchPoint>>();
+
+/** Where a board coordinate falls in the window, from the canvas as the page lays it out. */
+async function toWindow(window: BrowserWindow, x: number, y: number): Promise<TouchPoint> {
+  const rect = (await window.webContents.executeJavaScript(
+    `(() => { const r = document.querySelector('canvas').getBoundingClientRect();
+      return { left: r.left, top: r.top, width: r.width, height: r.height }; })()`
+  )) as { left: number; top: number; width: number; height: number };
+  const scale = rect.height / BOARD.height;
+  const panel = (rect.width / scale - BOARD.width) / 2;
+  return { id: 0, x: rect.left + (x + panel) * scale, y: rect.top + y * scale };
+}
+
+/** Sends the fingers on the screen after a change, through the DevTools protocol. */
+async function sendTouches(window: BrowserWindow, type: 'touchStart' | 'touchEnd'): Promise<void> {
+  const points = [...(fingers.get(window.webContents.id)?.values() ?? [])];
+  await window.webContents.debugger.sendCommand('Input.dispatchTouchEvent', {
+    type: points.length === 0 ? 'touchEnd' : type,
+    touchPoints: points
+  });
+}
+
+async function touchDown(window: BrowserWindow, id: number, x: number, y: number): Promise<void> {
+  const point = await toWindow(window, x, y);
+  const active = fingers.get(window.webContents.id) ?? new Map<number, TouchPoint>();
+  fingers.set(window.webContents.id, active);
+  const type = active.has(id) ? 'touchMove' : 'touchStart';
+  active.set(id, { ...point, id });
+  await window.webContents.debugger.sendCommand('Input.dispatchTouchEvent', {
+    type,
+    touchPoints: [...active.values()]
+  });
+}
+
+async function touchUp(window: BrowserWindow, id: number): Promise<void> {
+  fingers.get(window.webContents.id)?.delete(id);
+  await sendTouches(window, 'touchStart');
+}
+
 async function perform(
   window: BrowserWindow,
   step: Step,
@@ -103,6 +150,20 @@ async function perform(
       return;
     case 'security':
       await checkConfinement(window, problems);
+      return;
+    case 'touch':
+      await touchDown(window, 99, step.x, step.y);
+      await sleep(60);
+      await touchUp(window, 99);
+      return;
+    case 'touchDown':
+      await touchDown(window, step.id, step.x, step.y);
+      return;
+    case 'touchUp':
+      await touchUp(window, step.id);
+      return;
+    case 'size':
+      window.setContentSize(step.width, step.height);
       return;
   }
 }
@@ -188,6 +249,12 @@ async function play(run: SmokeRun, outDir: string): Promise<RunResult> {
     problems.push(`renderer gone: ${details.reason}`);
   });
   watchPolicyViolations(window, problems);
+  if (run.touch) {
+    void window.webContents.debugger.sendCommand('Emulation.setTouchEmulationEnabled', {
+      enabled: true,
+      maxTouchPoints: 5
+    });
+  }
   await window.loadURL(run.query ? `${APP_URL}?${run.query}` : APP_URL);
   for (const step of steps) await perform(window, step, outDir, problems);
   await writeFile(path.join(outDir, 'console.log'), `${log.join('\n')}\n`);

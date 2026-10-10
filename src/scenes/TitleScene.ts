@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, type RenderTier } from '../config';
 import type { Localization } from '../i18n/Localization';
+import type { ActionReader } from '../input/actions';
 import type { TitleMusic } from '../view/audio/TitleMusic';
 import { hudText } from '../view/hud/textStyle';
 import { followBoardCamera } from '../view/layout/boardCamera';
@@ -19,6 +20,7 @@ export interface TitleSceneDependencies {
   readonly music: TitleMusic;
   readonly themes: ThemeRegistry;
   readonly platform: Platform;
+  readonly input: ActionReader;
 }
 
 const CHEF_ZOOM = 3;
@@ -66,6 +68,13 @@ export default class TitleScene extends Phaser.Scene {
     this.tweens.add({ targets: prompt, alpha: 0.2, duration: BLINK_MS, yoyo: true, repeat: -1 });
     this.input.once(Phaser.Input.Events.POINTER_UP, () => this.#start(isMobile));
     this.input.keyboard?.once('keydown', () => this.#start(isMobile));
+  }
+
+  override update(): void {
+    const { input } = this.#deps;
+    if (input.justPressed('confirm') || input.justPressed('pepper')) {
+      this.#start(this.sys.game.device.os.android || this.sys.game.device.os.iOS);
+    }
   }
 
   #start(isMobile: boolean): void {

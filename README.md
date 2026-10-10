@@ -69,26 +69,37 @@ menu**: **Play** starts a game and **Options** lets you choose the **language**
 (**Automatic** uses the one of each level). Your choices and your **best
 score** are remembered between sessions. In the desktop app the menu also has
 **Quit**, which closes the game. Menus work with the arrow keys and `Enter`, or
-by clicking or tapping an entry; `Esc` goes back (in the main menu of the
-desktop app it selects **Quit**).
+by clicking or tapping an entry, or with a gamepad; `Esc` goes back (in the
+main menu of the desktop app it selects **Quit**).
 
 ### Controls
 
-| Action                       | Key                                         |
-| ---------------------------- | ------------------------------------------- |
-| Move                         | Left/right arrows                           |
-| Climb up and down ladders    | Up/down arrows                              |
-| Throw pepper                 | `Space`                                     |
-| Skip the level clear pause   | `Enter` or `Space`                          |
-| Pause and resume             | `Esc`, `P` or the pause button in the panel |
-| Back to the menu (game over) | `Enter`, `Space`, click or tap              |
+| Action                       | Keyboard                                     | Gamepad                  | Touch screen               |
+| ---------------------------- | -------------------------------------------- | ------------------------ | -------------------------- |
+| Move and climb ladders       | Arrows or `W` `A` `S` `D`                    | D-pad or left stick      | On-screen pad (left panel) |
+| Throw pepper                 | `Space`                                      | `A` or `X`               | Pepper button (right)      |
+| Skip the level clear pause   | `Enter` or `Space`                           | `A`                      | Pepper button              |
+| Pause and resume             | `Esc`, `P` or the pause button               | `Start`                  | Pause button               |
+| Back to the menu (game over) | `Enter`, `Space`, click or tap               | `A`                      | Tap                        |
+| Menus                        | Arrows or `W` `S`, `Enter`, `Esc` to go back | D-pad or stick, `A`, `B` | Tap an entry               |
 
-You can also play with the `W`, `A`, `S`, `D` keys. On a ladder you only move
-while you hold up or down, so you can stop and turn around anywhere on it. When
-you reach the height of a platform, press left or right to step onto it.
+You can **change the keys** in **Options → Controls**: pick an action and a
+slot, press the new key (`Esc` cancels, `Backspace` clears the second slot).
+Each action has up to two keys; choosing a key that another action uses swaps
+them, and **Reset** brings back the defaults. `Esc`, `Enter` and `F11` are
+reserved. Gamepads with the standard layout work without setup (press a button
+once so the browser shows it); their buttons cannot be changed.
 
-The game also pauses on its own when its window loses the focus. The pause menu
-lets you resume or quit to the main menu.
+The on-screen pad and pepper button appear as soon as you touch the screen,
+and you can walk and throw pepper with two fingers at once. Hold the phone
+sideways: in portrait the game asks you to turn it and pauses.
+
+On a ladder you only move while you hold up or down, so you can stop and turn
+around anywhere on it. When you reach the height of a platform, press left or
+right to step onto it.
+
+The game also pauses on its own when its window loses the focus or a gamepad is
+disconnected. The pause menu lets you resume or quit to the main menu.
 
 ### Ingredients and falls
 

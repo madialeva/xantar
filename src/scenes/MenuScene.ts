@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, type RenderTier } from '../config';
 import { LANGUAGES } from '../i18n/language';
+import type { ActionReader } from '../input/actions';
 import type { Localization } from '../i18n/Localization';
 import { AUTO_THEME } from '../settings/PlayerSettings';
 import type { Settings } from '../settings/Settings';
@@ -10,6 +11,7 @@ import { hudText } from '../view/hud/textStyle';
 import { followBoardCamera } from '../view/layout/boardCamera';
 import type { ResolvedTheme } from '../view/theme/Theme';
 import type { ThemeRegistry } from '../view/theme/ThemeRegistry';
+import { ControlsPage, type KeyCapture } from '../view/ui/ControlsPage';
 import { type MenuItem, MenuList } from '../view/ui/MenuList';
 
 export interface MenuSceneDependencies {
@@ -19,9 +21,14 @@ export interface MenuSceneDependencies {
   readonly themes: ThemeRegistry;
   readonly music: TitleMusic;
   readonly platform: Platform;
+  readonly input: ActionReader;
+  readonly keyboard: KeyCapture;
+  readonly keyLayout: () => ReadonlyMap<string, string> | null;
 }
 
-type Page = 'main' | 'options';
+type Page = 'main' | 'options' | 'controls';
+
+const OPTION_ROWS = { controls: 2, back: 3 } as const;
 
 const cycle = <T>(values: readonly T[], current: T, direction: 1 | -1): T =>
   values[(values.indexOf(current) + direction + values.length) % values.length];
@@ -35,6 +42,7 @@ export default class MenuScene extends Phaser.Scene {
   readonly #deps: MenuSceneDependencies;
   #page: Phaser.GameObjects.GameObject[] = [];
   #menu: MenuList | null = null;
+  #controls: ControlsPage | null = null;
 
   constructor(deps: MenuSceneDependencies) {
     super({ key: 'MenuScene' });
@@ -44,6 +52,11 @@ export default class MenuScene extends Phaser.Scene {
   create(): void {
     followBoardCamera(this, this.#deps.tier);
     this.#show('main');
+  }
+
+  override update(): void {
+    if (this.#controls) this.#controls.update();
+    else this.#menu?.update();
   }
 
   #theme(): ResolvedTheme {
@@ -57,6 +70,9 @@ export default class MenuScene extends Phaser.Scene {
 
   #show(page: Page, selected = 0): void {
     this.#menu?.destroy();
+    this.#menu = null;
+    this.#controls?.destroy();
+    this.#controls = null;
     for (const object of this.#page) object.destroy();
     this.#page = [];
     const { tier, localization } = this.#deps;
@@ -77,7 +93,13 @@ export default class MenuScene extends Phaser.Scene {
       depth: 1,
       selected
     };
-    if (page === 'main') {
+    if (page === 'controls') {
+      this.#controls = new ControlsPage(this, {
+        ...this.#deps,
+        palette,
+        onBack: () => this.#show('options', OPTION_ROWS.controls)
+      });
+    } else if (page === 'main') {
       text(110, localization.t('game.title'), 64, palette.hudAccent);
       text(
         GAME_HEIGHT - 96,
@@ -88,19 +110,19 @@ export default class MenuScene extends Phaser.Scene {
       text(GAME_HEIGHT - 50, localization.t('menu.hint'), 12, palette.hudText);
       const items = this.#mainItems();
       const selectQuit = (): void => this.#menu?.selectIndex(items.length - 1);
-      this.#menu = new MenuList(
-        this,
-        items,
-        style,
+      this.#menu = new MenuList(this, items, style, {
         tier,
-        this.#deps.platform.quit ? selectQuit : undefined
-      );
+        input: this.#deps.input,
+        onBack: this.#deps.platform.quit ? selectQuit : undefined
+      });
     } else {
       text(110, localization.t('options.title'), 40, palette.hudAccent);
       text(GAME_HEIGHT - 50, localization.t('options.hint'), 12, palette.hudText);
-      this.#menu = new MenuList(this, this.#optionItems(), style, tier, () =>
-        this.#show('main', 1)
-      );
+      this.#menu = new MenuList(this, this.#optionItems(), style, {
+        tier,
+        input: this.#deps.input,
+        onBack: () => this.#show('main', 1)
+      });
     }
   }
 
@@ -149,6 +171,7 @@ export default class MenuScene extends Phaser.Scene {
           this.#show('options', 1);
         }
       },
+      { label: () => localization.t('options.controls'), select: () => this.#show('controls') },
       { label: () => localization.t('options.back'), select: () => this.#show('main', 1) }
     ];
   }
