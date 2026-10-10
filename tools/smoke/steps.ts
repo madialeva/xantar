@@ -10,7 +10,8 @@ export type Step =
   | { readonly kind: 'touch'; readonly x: number; readonly y: number }
   | { readonly kind: 'touchDown'; readonly id: number; readonly x: number; readonly y: number }
   | { readonly kind: 'touchUp'; readonly id: number }
-  | { readonly kind: 'size'; readonly width: number; readonly height: number };
+  | { readonly kind: 'size'; readonly width: number; readonly height: number }
+  | { readonly kind: 'reload' };
 
 const DEFAULT_KEY_MS = 100;
 
@@ -40,7 +41,7 @@ const required = (text: string | undefined, step: string): string => {
  * open windows or navigate away. Touch steps take board coordinates (logical units, the
  * board from 0 to 640; the left panel is negative): `touch:x:y` taps, `touchDown:id:x:y` puts
  * finger `id` down (or slides it) and `touchUp:id` lifts it. `size:WxH` resizes the window,
- * for example to turn a phone upright.
+ * for example to turn a phone upright, and `reload` reloads the page (settings persist).
  */
 export function parseSteps(text: string): readonly Step[] {
   return text
@@ -67,6 +68,7 @@ export function parseSteps(text: string): readonly Step[] {
           return { kind, name: required(first, step) };
         case 'expectQuit':
         case 'security':
+        case 'reload':
           return { kind };
         case 'touch':
           return { kind, x: coordinate(first, step), y: coordinate(second, step) };

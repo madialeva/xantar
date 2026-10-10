@@ -14,6 +14,7 @@ import {
   loadLevel,
   parseLevelDocument
 } from '../sim';
+import { type CuePlayer, EventSounds } from '../view/audio/EventSounds';
 import { MazeView } from '../view/board/MazeView';
 import { EventEffects } from '../view/fx/EventEffects';
 import { applyBloom } from '../view/fx/bloom';
@@ -35,6 +36,7 @@ export interface GameSceneDependencies {
   readonly session: GameSession;
   readonly settings: Settings;
   readonly input: ActionReader;
+  readonly sounds: CuePlayer;
   /** Events that pause the game (a gamepad lost, the phone turned upright); each returns a way to stop listening. */
   readonly interruptions: readonly ((listener: () => void) => () => void)[];
 }
@@ -59,6 +61,7 @@ export default class GameScene extends Phaser.Scene {
   #enemyViews: EnemyView[] = [];
   #ingredientViews = new Map<number, IngredientView>();
   #effects!: EventEffects;
+  #sounds!: EventSounds;
 
   constructor(deps: GameSceneDependencies) {
     super({ key: 'GameScene' });
@@ -84,6 +87,7 @@ export default class GameScene extends Phaser.Scene {
     new MazeView(this, this.#art, this.#sim.level).setDepth(DEPTH.maze);
     this.#createViews();
     this.#effects = new EventEffects(this, this.#art, DEPTH.effects);
+    this.#sounds = new EventSounds(this.#deps.sounds);
     followBoardCamera(this, tier);
     this.#rebuildIngredients();
     this.#syncViews(0);
@@ -207,6 +211,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   #handleEvents(events: readonly SimEvent[]): void {
+    this.#sounds.play(events);
     for (const event of events) {
       switch (event.type) {
         case 'boardStarted':

@@ -45,7 +45,7 @@ comes next.
 |   ✅   | Modern vector visuals: SVG art, themes and side panels                                                    |   —    |  #4   |
 |   ✅   | Game state machine, pause, high score, Spanish and English                                                |   —    |  #5   |
 |   ⬜   | Enemies riding ingredients (an extra level per rider)                                                     | v1.0.0 |  #9   |
-|   ⬜   | Gamepad and touch controls, music and sound effects, CI and a hardened desktop app                        | v1.0.0 |  #6   |
+|   ✅   | Gamepad and touch controls, music and sound effects, CI and a hardened desktop app                        |   —    |  #6   |
 |   ⬜   | Replay recording and debug tooling                                                                        | v1.0.0 |  #8   |
 |   ⬜   | In-game level editor with JSON import/export                                                              | later  |  #7   |
 |   ⬜   | Bonus food (ice cream, coffee, fries)                                                                     | later  |  #13  |
@@ -65,8 +65,9 @@ must bring them all the way down to the plate.
 
 The title screen waits for a click, a tap or any key, then opens the **main
 menu**: **Play** starts a game and **Options** lets you choose the **language**
-(Spanish or English; the first time it follows your browser) and the **theme**
-(**Automatic** uses the one of each level). Your choices and your **best
+(Spanish or English; the first time it follows your browser), the **theme**
+(**Automatic** uses the one of each level), the **music** and **effects**
+volumes, whether the **sound** is on, and the keyboard **controls**. Your choices and your **best
 score** are remembered between sessions. In the desktop app the menu also has
 **Quit**, which closes the game. Menus work with the arrow keys and `Enter`, or
 by clicking or tapping an entry, or with a gamepad; `Esc` goes back (in the
@@ -80,6 +81,7 @@ main menu of the desktop app it selects **Quit**).
 | Throw pepper                 | `Space`                                      | `A` or `X`               | Pepper button (right)      |
 | Skip the level clear pause   | `Enter` or `Space`                           | `A`                      | Pepper button              |
 | Pause and resume             | `Esc`, `P` or the pause button               | `Start`                  | Pause button               |
+| Mute and unmute              | `M`                                          | —                        | —                          |
 | Back to the menu (game over) | `Enter`, `Space`, click or tap               | `A`                      | Tap                        |
 | Menus                        | Arrows or `W` `S`, `Enter`, `Esc` to go back | D-pad or stick, `A`, `B` | Tap an entry               |
 
@@ -150,6 +152,15 @@ disconnected. The pause menu lets you resume or quit to the main menu.
   pepper carry over (every level uses the same layout for now).
 - When you lose every life, **GAME OVER** shows your score and whether it is a
   new best score; confirm to go back to the main menu.
+
+### Sound
+
+The title and menus have music, and the game makes arcade-style sound effects
+for pepper, steps, falling and landing ingredients, crushed and stunned enemies,
+finished burgers, lost lives, and the start, end of a level and game over. The
+effects are synthesized by the game itself. Music and effects have separate
+volumes in **Options**, `M` mutes everything at any time, and the sound pauses
+while the game is in the background.
 
 ### Screen and looks
 

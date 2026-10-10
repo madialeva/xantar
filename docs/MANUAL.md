@@ -153,7 +153,7 @@ xantar/
 │   │   ├── ui/                  # MenuList, ControlsPage (menús por acciones y puntero) y pantalla completa
 │   │   ├── input/               # ActionInput y fuentes: teclado, mando, táctil; InputModality
 │   │   ├── platform/            # Platform (web o escritorio) y aviso de girar el dispositivo
-│   │   └── audio/               # TitleMusic (música de título y menú)
+│   │   └── audio/               # GameAudio (buses, silencio), EventSounds, mezcla y synth/ (efectos sintetizados)
 │   └── scenes/
 │       ├── BootScene.ts         # Rasteriza el arte de todos los temas y pasa al título
 │       ├── TitleScene.ts        # Título: primer gesto -> pantalla completa, música y menú
@@ -243,25 +243,30 @@ xantar/
   <script type="module" src="/src/main.ts"></script>
   ```
 
-- `src/main.ts` es la **raíz de composición**: crea el registro de temas, lee `?theme=` de la URL, carga los ajustes del jugador, crea la localización, la sesión de partida y la música, calcula el tamaño del área de juego con `computeLayout` y construye las escenas pasándoles sus dependencias por constructor (Phaser acepta instancias de escena en `config.scene`). Lo esencial:
+- `src/main.ts` es la **raíz de composición**: crea el registro de temas, lee `?theme=` de la URL, carga los ajustes del jugador, crea la localización, la plataforma (web o escritorio), la entrada (`ActionInput` con teclado, mando y táctil), el audio (`GameAudio`), la sesión de partida y el aviso de girar el dispositivo, calcula el tamaño del área de juego con `computeLayout` y construye las escenas pasándoles sus dependencias por constructor (Phaser acepta instancias de escena en `config.scene`). Lo esencial:
 
   ```ts
-  const settings = new Settings(new LocalStorageSettingsStore(browserStorage()), {
-    language: detectLanguage(navigator.languages),
-    theme: AUTO_THEME,
-    bestScore: 0
-  });
-  const localization = new Localization(settings.language);
-  const session = new GameSession();
-  const music = new TitleMusic('music/tap-back.mp3');
+  const settings = new Settings(
+    new LocalStorageSettingsStore(browserStorage()),
+    defaultSettings(detectLanguage(navigator.languages))
+  );
+  const audio = new GameAudio(settings.values, () => performance.now());
+  settings.subscribe((values) => audio.apply(values));
+  const keyboard = new KeyboardSource(window, document, settings.keyBindings);
+  const input = new ActionInput([keyboard, gamepad, touchPad]);
   // ...
   scene: [
-    new BootScene({ themes, tier, localization }),
-    new TitleScene({ tier, localization, music, themes }),
-    new MenuScene({ tier, localization, settings, themes, music }),
-    new GameScene({ themes, urlTheme, tier, session, settings }),
-    new HudScene({ tier, localization, session, themes })
-  ]
+    new BootScene({ themes, tier, localization, audio }),
+    new TitleScene({ tier, localization, audio, themes, platform, input }),
+    new MenuScene({ tier, localization, settings, themes, audio, platform, input, keyboard, keyLayout }),
+    new GameScene({ themes, urlTheme, tier, session, settings, input, sounds: audio, interruptions }),
+    new HudScene({ tier, localization, session, themes, input, touchPad, modality, sounds: audio.ui })
+  ];
+  // Una vez por fotograma, antes de las escenas: entrada y tecla de silencio.
+  game.events.on(Phaser.Core.Events.PRE_STEP, (time: number) => {
+    input.update(time);
+    if (input.justPressed('mute')) settings.setMuted(!settings.muted);
+  });
   ```
 
   Al cambiar el tamaño de la ventana (agrupado con `requestAnimationFrame`) vuelve a calcular el layout y llama a `game.scale.setGameSize`.
@@ -297,13 +302,13 @@ Para cambiar de escena: `this.scene.start('GameScene')`; para lanzar otra en par
 **Flujo actual** (detalle en 8.8):
 
 ```
-index.html -> src/main.ts -> BootScene (rasteriza los temas) -> TitleScene
-TitleScene --(clic, toque o tecla)--> pantalla completa + música -> MenuScene
+index.html -> src/main.ts -> BootScene (carga la música, sintetiza los efectos, rasteriza los temas) -> TitleScene
+TitleScene --(clic, toque, tecla o botón del mando)--> pantalla completa + música -> MenuScene
 MenuScene --Jugar--> GameScene ══launch══> HudScene
 GameScene --(salir desde la pausa o fin de partida)--> MenuScene   (sin recargar la página)
 ```
 
-La música de título y menú se reproduce con `new Audio(...)` (`TitleMusic`) en lugar del gestor de sonido de Phaser, para que funcione también bajo `file://` (Electron); arranca con el primer gesto del jugador en el título, que es lo que exige el navegador.
+La música de título y menú y los efectos suenan con el gestor de sonido de Phaser a través de `GameAudio` (ver 8.10); la música arranca con el primer gesto del jugador en el título, que es lo que exige el navegador.
 
 ### 8.3 Assets y la carpeta `public/`
 
@@ -486,6 +491,16 @@ El juego tiene **dos máquinas de estados** separadas a propósito:
 
 **Tema**: `chooseTheme` aplica la prioridad URL (`?theme=`) → opción del jugador (salvo `auto`) → tema del nivel → `classic`.
 
+### 8.10 Audio: buses, efectos sintetizados y eventos
+
+El audio pasa por el gestor de sonido de Phaser (Web Audio) envuelto en **`GameAudio`** (`src/view/audio/`), que es lo único que conocen las escenas:
+
+- **Buses**: Phaser solo tiene un volumen maestro, así que los canales de **música** y **efectos** son lógicos: cada sonido se crea con la ganancia de su bus (`busGain`, curva `(nivel/10)²`) y, al cambiar un volumen, `GameAudio.apply` actualiza también los sonidos que ya suenan. El **silencio** usa el `mute` de Phaser y no toca los volúmenes. Los niveles salen de los ajustes (`musicVolume`, `sfxVolume`, `muted`) y `main.ts` los aplica en cada cambio. La acción `mute` (M) alterna el silencio en cualquier pantalla.
+- **Música**: `BootScene` la carga con `this.load.audio(TITLE_MUSIC, 'music/tap-back.mp3')`; `TitleScene` llama a `playMusic` dentro del primer gesto (Phaser la retiene hasta que el contexto de audio se desbloquea) y Jugar la para.
+- **Efectos sintetizados** (`synth/`, puro y con pruebas): cada efecto es una receta de datos (`SfxRecipe`: tonos con onda, barrido de frecuencia, envolvente y vibrato) que `renderRecipe` convierte en muestras deterministas (el ruido usa un generador con semilla, no `Math.random`). `BootScene` las renderiza a la frecuencia del contexto (unos 30 ms en total), crea un `AudioBuffer` por efecto y lo registra en `game.cache.audio`; desde ahí son sonidos normales de Phaser. No hay ficheros de efectos ni licencias que gestionar. Sin Web Audio no hay efectos y el juego sigue.
+- **Eventos → efectos**: `EventSounds` recibe los eventos de cada fotograma en `GameScene`, junto a `EventEffects`, y `eventCue` (una tabla por tipo de evento) dice qué efecto suena. `CueThrottle` descarta la repetición del mismo efecto dentro de un intervalo mínimo (pisadas, aterrizajes), para que una cascada no se amontone. Los menús suenan a través de `UiSounds`.
+- **Foco**: `pauseOnBlur` de Phaser (activo por defecto) pausa todo el sonido al perder el foco o al ocultar la pestaña, y lo reanuda al volver. Mientras el audio está bloqueado (antes del primer gesto) no se encolan efectos.
+
 ### 8.9 Entrada: acciones, teclado, mando y táctil
 
 Ninguna escena lee teclas. Todo pasa por **acciones** (`src/input/actions.ts`): `up`, `down`, `left`, `right`, `pepper`, `confirm`, `back`, `pause` y `mute`.
@@ -665,6 +680,17 @@ Opción recomendada (CI): un workflow de GitHub Actions que ejecute `npm ci && n
 1. Añade el campo a `PlayerSettings` con su validación en `parseSettings` y su prueba (un valor no válido debe caer al valor por defecto sin afectar a los demás).
 2. Añade el método para cambiarlo en `Settings` (guarda en cada cambio) y su valor por defecto en `main.ts`.
 3. Añade la entrada al menú de opciones en `MenuScene.#optionItems` con `label`, `value` y `change`, y sus textos a los catálogos.
+
+### 9.16 Añadir un efecto de sonido
+
+1. Añade el nombre a `SOUND_CUES` y su receta a `CUE_RECIPES` (`src/view/audio/synth/soundCues.ts`). Una receta es una lista de tonos (forma de onda, frecuencia inicial y final, ataque, sostén y caída, vibrato, inicio); los jingles son varios tonos con distinto `start`. Afínala de oído: `npm run dev`, ajusta y recarga.
+2. Si llega en ráfagas, dale un intervalo mínimo en `CUE_INTERVALS_MS` (`src/view/audio/mixing.ts`).
+3. `npm run test` comprueba que suena, que no satura, que dura como mucho 3 s y que acaba en silencio.
+
+### 9.17 Asociar un sonido a un evento
+
+- **Evento de la simulación**: cambia su entrada en `EVENT_CUES` (`src/view/audio/mixing.ts`); el tipo obliga a tener una entrada por cada tipo de evento, así que un evento nuevo no compila hasta decidir su sonido (o `null`). Añade el caso a la prueba de `eventCue`.
+- **Interfaz**: los menús llaman a `UiSounds` (`move`, `select`, `back`); otros componentes pueden recibir `GameAudio` (o la interfaz `CuePlayer`) y llamar a `cue(...)`.
 
 ### 9.15 Añadir una acción
 
@@ -856,7 +882,7 @@ Ficheros de configuración:
 Reglas destacadas de `.oxlintrc.json`:
 
 - Categoría `correctness` en error, más reglas con tipos: `no-floating-promises`, `no-misused-promises`, `await-thenable`, `unbound-method` y `switch-exhaustiveness-check`.
-- `no-empty` con `allowEmptyCatch: true`: permite `catch {}` vacíos (se usan en `TitleMusic` y en el almacenamiento de ajustes para que un fallo de audio o de `localStorage` no rompa el juego).
+- `no-empty` con `allowEmptyCatch: true`: permite `catch {}` vacíos (se usan, por ejemplo, en el almacenamiento de ajustes para que un fallo de `localStorage` no rompa el juego).
 - `no-unused-vars` (aviso) ignora parámetros y capturas con prefijo `_`.
 - Entorno de navegador por defecto y Node solo en `electron/`, `scripts/` y `tools/smoke/`.
 - **Fronteras de `src/sim/`**: no puede importar Phaser, Node, `scenes/`, `objects/` ni `config`, ni usar globales de navegador, `Date` o `Math.random` (se inyecta un `Rng`). Garantiza que el núcleo sea puro y determinista.

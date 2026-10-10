@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, type RenderTier } from '../config';
 import type { Localization } from '../i18n/Localization';
 import type { ActionReader } from '../input/actions';
-import type { TitleMusic } from '../view/audio/TitleMusic';
+import { type GameAudio, TITLE_MUSIC } from '../view/audio/GameAudio';
 import { hudText } from '../view/hud/textStyle';
 import { followBoardCamera } from '../view/layout/boardCamera';
 import { ArtFactory } from '../view/raster/ArtFactory';
@@ -17,7 +17,7 @@ import type { ThemeRegistry } from '../view/theme/ThemeRegistry';
 export interface TitleSceneDependencies {
   readonly tier: RenderTier;
   readonly localization: Localization;
-  readonly music: TitleMusic;
+  readonly audio: GameAudio;
   readonly themes: ThemeRegistry;
   readonly platform: Platform;
   readonly input: ActionReader;
@@ -80,7 +80,7 @@ export default class TitleScene extends Phaser.Scene {
   #start(isMobile: boolean): void {
     if (this.#leaving) return;
     this.#leaving = true;
-    this.#deps.music.play();
+    this.#deps.audio.playMusic(TITLE_MUSIC);
     void this.#deps.platform.enterFullscreen(isMobile).finally(() => this.scene.start('MenuScene'));
   }
 }

@@ -704,16 +704,32 @@ por tipo de enemigo están previstos en #17.
 ## 16. Audio
 
 - **Música** y **efectos de sonido** (*SFX*) se gestionan por separado, con
-  volúmenes independientes (**buses** o canales) y opción de silenciar.
+  volúmenes independientes (**buses** o canales) y opción de silenciar. En
+  Xantar, Opciones tiene Música, Efectos y Sonido, y M silencia en cualquier
+  momento.
+- **El oído no es lineal**: un volumen al 50 % de amplitud suena más fuerte que
+  "la mitad". Por eso el nivel de 0 a 10 se convierte en ganancia con una curva
+  (`(nivel/10)²`), para que cada paso se perciba parecido.
 - **Sonido a partir de eventos**: el mismo sistema de eventos de la simulación
-  sirve para disparar sonidos (`segmentStomped` → "plof").
+  sirve para disparar sonidos (`segmentStomped` → "plof"). Si llegan muchos
+  iguales a la vez (varios ingredientes aterrizando), se limita su repetición
+  para que no suene amontonado.
+- **Síntesis procedural**: en lugar de grabaciones, un efecto puede describirse
+  con números (forma de onda, tono que sube o baja, cuánto tarda en sonar y en
+  apagarse) y generarse al arrancar, como hacían las máquinas recreativas y
+  herramientas como *sfxr*. Xantar genera así todos sus efectos: no hay ficheros
+  que cargar ni licencias, y cambiar un sonido es cambiar unos números.
+  Formas de onda típicas: **cuadrada** (sonido "chiptune"), **triangular**
+  (más suave), **diente de sierra** (más áspera), **senoidal** (pura) y
+  **ruido** (golpes, explosiones, la pimienta). La **envolvente**
+  (*ataque, sostén, caída*) da la forma al volumen en el tiempo.
 - **Política de reproducción automática** (*autoplay*): los navegadores no
   dejan sonar audio hasta que el usuario interactúa con la página. Por eso la
   pantalla de título de Xantar espera un clic, un toque o una tecla: ese gesto
   desbloquea la música (y la pantalla completa, que tiene la misma regla).
 - **Pausa al perder el foco**: si el jugador cambia de pestaña, el juego y el
-  sonido deberían pausarse. Xantar ya pausa la partida; el sonido llega con
-  #6.
+  sonido se pausan (el gestor de sonido de Phaser lo hace solo) y vuelven al
+  regresar.
 
 ---
 

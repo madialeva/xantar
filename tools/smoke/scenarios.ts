@@ -52,7 +52,7 @@ export const SCENARIOS: Readonly<Record<string, readonly SmokeRun[]>> = {
       name: 'controls',
       size: SIZES['16x9'],
       query: '',
-      steps: `${TO_MENU},key:Down,key:Return,wait:300,key:Down,key:Down,key:Return,wait:400,shot:controls,key:Down,key:Down,key:Down,key:Down,key:Return,wait:300,shot:capturing,key:Return,wait:300,shot:reserved,key:X,wait:300,shot:pepper-on-x,key:Escape,wait:300,key:Escape,wait:300,key:Up,key:Return,wait:2500,key:X,wait:400,shot:pepper-thrown`
+      steps: `${TO_MENU},key:Down,key:Return,wait:300,${'key:Down,'.repeat(5)}key:Return,wait:400,shot:controls,key:Down,key:Down,key:Down,key:Down,key:Return,wait:300,shot:capturing,key:Return,wait:300,shot:reserved,key:X,wait:300,shot:pepper-on-x,key:Escape,wait:300,key:Escape,wait:300,key:Up,key:Return,wait:2500,key:X,wait:400,shot:pepper-thrown`
     }
   ],
   touch: [
@@ -80,6 +80,20 @@ export const SCENARIOS: Readonly<Record<string, readonly SmokeRun[]>> = {
       steps:
         'wait:2500,touch:320:240,wait:1500,touch:320:230,wait:2500,shot:landscape,' +
         'size:540x1170,wait:800,shot:portrait,size:1170x540,wait:800,shot:back-to-landscape'
+    }
+  ],
+  audio: [
+    {
+      name: 'audio',
+      size: SIZES['16x9'],
+      query: '',
+      steps: [
+        `${TO_MENU},key:Down,key:Return,wait:300,key:Right,wait:300`,
+        'key:Down,key:Down,key:Left,key:Left,key:Left,key:Down,key:Right,key:Down,key:Right',
+        'wait:300,shot:options-en-muted,key:M,wait:300,shot:unmuted-by-key',
+        'key:Up,key:Up,key:Up,key:Up,key:Right,wait:300,key:M,wait:300,shot:options-es',
+        `reload,${TO_MENU},key:Down,key:Return,wait:300,shot:after-reload`
+      ].join(',')
     }
   ],
   security: [

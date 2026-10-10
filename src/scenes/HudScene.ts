@@ -14,6 +14,7 @@ import type { GameSession, SessionState } from '../view/session/GameSession';
 import type { ResolvedTheme } from '../view/theme/Theme';
 import type { ThemeRegistry } from '../view/theme/ThemeRegistry';
 import { MenuList } from '../view/ui/MenuList';
+import type { UiSounds } from '../view/ui/UiSounds';
 
 export interface HudSceneDependencies {
   readonly tier: RenderTier;
@@ -23,6 +24,7 @@ export interface HudSceneDependencies {
   readonly input: ActionReader;
   readonly touchPad: TouchPad;
   readonly modality: InputModality;
+  readonly sounds: UiSounds;
 }
 
 export interface HudSceneData {
@@ -174,7 +176,7 @@ export default class HudScene extends Phaser.Scene {
         accent: palette.hudAccent,
         depth: DEPTH.menu
       },
-      { tier, input: this.#deps.input }
+      { tier, input: this.#deps.input, sounds: this.#deps.sounds }
     );
   }
 }

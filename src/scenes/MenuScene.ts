@@ -3,9 +3,9 @@ import { GAME_HEIGHT, GAME_WIDTH, type RenderTier } from '../config';
 import { LANGUAGES } from '../i18n/language';
 import type { ActionReader } from '../input/actions';
 import type { Localization } from '../i18n/Localization';
-import { AUTO_THEME } from '../settings/PlayerSettings';
+import { AUTO_THEME, type AudioBus } from '../settings/PlayerSettings';
 import type { Settings } from '../settings/Settings';
-import type { TitleMusic } from '../view/audio/TitleMusic';
+import type { GameAudio } from '../view/audio/GameAudio';
 import type { Platform } from '../view/platform/Platform';
 import { hudText } from '../view/hud/textStyle';
 import { followBoardCamera } from '../view/layout/boardCamera';
@@ -19,7 +19,7 @@ export interface MenuSceneDependencies {
   readonly localization: Localization;
   readonly settings: Settings;
   readonly themes: ThemeRegistry;
-  readonly music: TitleMusic;
+  readonly audio: GameAudio;
   readonly platform: Platform;
   readonly input: ActionReader;
   readonly keyboard: KeyCapture;
@@ -28,7 +28,8 @@ export interface MenuSceneDependencies {
 
 type Page = 'main' | 'options' | 'controls';
 
-const OPTION_ROWS = { controls: 2, back: 3 } as const;
+const OPTION_ROWS = { controls: 5, back: 6 } as const;
+const OPTIONS_STYLE = { titleY: 78, y: 150, spacing: 38, size: 22 } as const;
 
 const cycle = <T>(values: readonly T[], current: T, direction: 1 | -1): T =>
   values[(values.indexOf(current) + direction + values.length) % values.length];
@@ -52,6 +53,8 @@ export default class MenuScene extends Phaser.Scene {
   create(): void {
     followBoardCamera(this, this.#deps.tier);
     this.#show('main');
+    const unsubscribe = this.#deps.settings.subscribe(() => this.#menu?.refresh());
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, unsubscribe);
   }
 
   override update(): void {
@@ -97,6 +100,7 @@ export default class MenuScene extends Phaser.Scene {
       this.#controls = new ControlsPage(this, {
         ...this.#deps,
         palette,
+        sounds: this.#deps.audio.ui,
         onBack: () => this.#show('options', OPTION_ROWS.controls)
       });
     } else if (page === 'main') {
@@ -113,27 +117,35 @@ export default class MenuScene extends Phaser.Scene {
       this.#menu = new MenuList(this, items, style, {
         tier,
         input: this.#deps.input,
+        sounds: this.#deps.audio.ui,
         onBack: this.#deps.platform.quit ? selectQuit : undefined
       });
     } else {
-      text(110, localization.t('options.title'), 40, palette.hudAccent);
+      text(OPTIONS_STYLE.titleY, localization.t('options.title'), 40, palette.hudAccent);
       text(GAME_HEIGHT - 50, localization.t('options.hint'), 12, palette.hudText);
-      this.#menu = new MenuList(this, this.#optionItems(), style, {
-        tier,
-        input: this.#deps.input,
-        onBack: () => this.#show('main', 1)
-      });
+      const { y, spacing, size } = OPTIONS_STYLE;
+      this.#menu = new MenuList(
+        this,
+        this.#optionItems(),
+        { ...style, y, spacing, size },
+        {
+          tier,
+          input: this.#deps.input,
+          sounds: this.#deps.audio.ui,
+          onBack: () => this.#show('main', 1)
+        }
+      );
     }
   }
 
   #mainItems(): MenuItem[] {
-    const { localization, music, platform } = this.#deps;
+    const { localization, audio, platform } = this.#deps;
     const quitApp = platform.quit;
     return [
       {
         label: () => localization.t('menu.play'),
         select: () => {
-          music.stop();
+          audio.stopMusic();
           this.scene.start('GameScene');
         }
       },
@@ -144,6 +156,11 @@ export default class MenuScene extends Phaser.Scene {
 
   #optionItems(): MenuItem[] {
     const { localization, settings, themes } = this.#deps;
+    const volume = (bus: AudioBus, label: 'options.music' | 'options.effects'): MenuItem => ({
+      label: () => localization.t(label),
+      value: () => String(settings.volume(bus)),
+      change: (direction) => settings.setVolume(bus, settings.volume(bus) + direction)
+    });
     const themeIds = [AUTO_THEME, ...themes.ids];
     const currentTheme = (): string =>
       themeIds.includes(settings.theme) ? settings.theme : AUTO_THEME;
@@ -170,6 +187,13 @@ export default class MenuScene extends Phaser.Scene {
           settings.setTheme(cycle(themeIds, currentTheme(), direction));
           this.#show('options', 1);
         }
+      },
+      volume('music', 'options.music'),
+      volume('sfx', 'options.effects'),
+      {
+        label: () => localization.t('options.sound'),
+        value: () => localization.t(settings.muted ? 'sound.muted' : 'sound.on'),
+        change: () => settings.setMuted(!settings.muted)
       },
       { label: () => localization.t('options.controls'), select: () => this.#show('controls') },
       { label: () => localization.t('options.back'), select: () => this.#show('main', 1) }

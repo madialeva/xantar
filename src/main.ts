@@ -11,7 +11,7 @@ import TitleScene from './scenes/TitleScene';
 import { defaultSettings } from './settings/PlayerSettings';
 import { Settings } from './settings/Settings';
 import { LocalStorageSettingsStore } from './settings/SettingsStore';
-import { TitleMusic } from './view/audio/TitleMusic';
+import { GameAudio } from './view/audio/GameAudio';
 import { computeLayout } from './view/layout/computeLayout';
 import { ActionInput } from './view/input/ActionInput';
 import { GamepadSource } from './view/input/GamepadSource';
@@ -50,7 +50,8 @@ const rotateNotice = new RotateNotice(
   window.matchMedia(PORTRAIT_TOUCH_QUERY),
   localization
 );
-const music = new TitleMusic('music/tap-back.mp3');
+const audio = new GameAudio(settings.values, () => performance.now());
+settings.subscribe((values) => audio.apply(values));
 const platform = createPlatform(window);
 const keyboard = new KeyboardSource(window, document, settings.keyBindings);
 settings.subscribe((values) => keyboard.setBindings(values.keyBindings));
@@ -80,14 +81,14 @@ const config: Phaser.Types.Core.GameConfig = {
     activePointers: 3
   },
   scene: [
-    new BootScene({ themes, tier, localization }),
-    new TitleScene({ tier, localization, music, themes, platform, input }),
+    new BootScene({ themes, tier, localization, audio }),
+    new TitleScene({ tier, localization, audio, themes, platform, input }),
     new MenuScene({
       tier,
       localization,
       settings,
       themes,
-      music,
+      audio,
       platform,
       input,
       keyboard,
@@ -100,14 +101,27 @@ const config: Phaser.Types.Core.GameConfig = {
       session,
       settings,
       input,
+      sounds: audio,
       interruptions: [(pause) => gamepad.onDisconnect(pause), (pause) => rotateNotice.onShow(pause)]
     }),
-    new HudScene({ tier, localization, session, themes, input, touchPad, modality })
+    new HudScene({
+      tier,
+      localization,
+      session,
+      themes,
+      input,
+      touchPad,
+      modality,
+      sounds: audio.ui
+    })
   ]
 };
 
 const game = new Phaser.Game(config);
-game.events.on(Phaser.Core.Events.PRE_STEP, (time: number) => input.update(time));
+game.events.on(Phaser.Core.Events.PRE_STEP, (time: number) => {
+  input.update(time);
+  if (input.justPressed('mute')) settings.setMuted(!settings.muted);
+});
 
 let resizePending = false;
 window.addEventListener('resize', () => {

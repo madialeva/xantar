@@ -165,6 +165,9 @@ async function perform(
     case 'size':
       window.setContentSize(step.width, step.height);
       return;
+    case 'reload':
+      webContents.reload();
+      return;
   }
 }
 

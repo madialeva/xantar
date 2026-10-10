@@ -59,6 +59,7 @@ jobs:
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - run: npm ci
       - run: npm run smoke -- quick
+      - run: node scripts/smoke.mjs audio
       - name: Upload the captures
         if: always()
         uses: actions/upload-artifact@v7
