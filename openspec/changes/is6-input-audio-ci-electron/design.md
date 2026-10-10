@@ -317,8 +317,9 @@ importa `createGameWindow` y `registerAppProtocol` en lugar de duplicarlos.
 
 ### D13. Integración continua
 
-- `.github/workflows/ci.yml`: en `pull_request` hacia `develop/**` y
-  `release/**`, y en `push` a esas ramas y a etiquetas `v*`.
+- `.github/workflows/ci.yml`: solo en `pull_request` hacia `develop/**` y
+  `release/**` (cambio tras la revisión del autor: un push a esas ramas ya pasó
+  por su PR, así que no se repite la CI).
   - `check` (ubuntu): `actions/checkout`, `actions/setup-node` con
     `node-version-file: .nvmrc` y caché de npm, `npm ci` con
     `ELECTRON_SKIP_BINARY_DOWNLOAD=1`, y `lint`, `format:check`, `typecheck`,

@@ -98,7 +98,7 @@ npm run dev:desktop
 ```
 xantar/
 ├── .github/workflows/           # Integración continua (ver 10.4)
-│   ├── ci.yml                   # Comprobaciones de cada PR y push, versión y prueba de humo
+│   ├── ci.yml                   # Comprobaciones de cada PR (versión y prueba de humo incluidas)
 │   └── desktop.yml              # Instaladores de Linux, Windows y macOS
 ├── electron/                    # Proceso principal de Electron (no va al renderer)
 │   ├── main.ts                  # Ciclo de vida: instancia única, IPC, ventana (dev server o app://)
@@ -751,10 +751,10 @@ Dos workflows en `.github/workflows/`, solo con acciones oficiales de GitHub (`a
 
 | Workflow | Cuándo | Jobs |
 |----------|--------|------|
-| `ci.yml` | PR hacia `develop/**` o `release/**`; push a esas ramas y a etiquetas `v*` | `check`: lint, formato, tipos, pruebas y build web. `version`: `npm run check:version`. `smoke`: prueba de humo en Linux con `xvfb` (tras `check`), capturas como artefacto `smoke` |
+| `ci.yml` | Solo PR hacia `develop/**` o `release/**` (un push nunca la dispara: lo que llega a esas ramas ya pasó por su PR) | `check`: lint, formato, tipos, pruebas y build web. `version`: `npm run check:version`. `smoke`: prueba de humo en Linux con `xvfb` (tras `check`), capturas como artefacto `smoke` |
 | `desktop.yml` | Push a `release/**`, etiquetas `v*` y ejecución manual (*Run workflow*) | Matriz `ubuntu-latest`, `windows-latest`, `macos-latest`: `npm run build:desktop -- --publish never`; instaladores como artefactos `xantar-<os>` (14 días) |
 
-**Versión frente a la rama.** `tools/ci/branchVersion.ts` (`expectedVersion`, con pruebas) deduce la versión esperada: `develop/vX.Y.Z`, `release/vX.Y.Z` y la etiqueta `vX.Y.Z` exigen `X.Y.Z`; en un PR manda la rama destino; las demás ramas no se comprueban. `tools/ci/checkVersion.ts` la compara con `package.json`; Node 24 lo ejecuta directamente, sin compilar (elimina los tipos al cargarlo). Para probarlo en local:
+**Versión frente a la rama.** `tools/ci/branchVersion.ts` (`expectedVersion`, con pruebas) deduce la versión esperada a partir de la rama destino del PR: `develop/vX.Y.Z` y `release/vX.Y.Z` exigen `X.Y.Z`; las demás no se comprueban. (También entiende una rama o etiqueta sin PR, `GITHUB_REF_NAME`, para probarlo en local.) `tools/ci/checkVersion.ts` la compara con `package.json`; Node 24 lo ejecuta directamente, sin compilar (elimina los tipos al cargarlo). Para probarlo en local:
 
 ```bash
 GITHUB_REF_NAME=develop/v1.0.0 npm run check:version

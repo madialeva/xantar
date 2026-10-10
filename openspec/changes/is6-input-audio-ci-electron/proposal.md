@@ -46,8 +46,9 @@ añadiendo jugabilidad en la v1.0.0.
 - **Opciones ampliadas**: Música, Efectos, Sonido (activado o silenciado) y
   Controles, guardados junto al idioma, el tema y el récord.
 - **Integración continua (GitHub Actions)**: lint, formato, tipos, pruebas,
-  build y prueba de humo en cada PR; comprobación de que la versión de
-  `package.json` coincide con la rama `develop/**`/`release/**` o la etiqueta;
+  build y prueba de humo en cada PR (no en los push); comprobación de que la
+  versión de `package.json` coincide con la rama `develop/**`/`release/**`
+  destino del PR;
   instaladores de Linux, Windows y macOS en una matriz de tres sistemas.
 - **Endurecimiento de Electron**: el juego se sirve por un protocolo propio
   (`app://`) en lugar de `file://`; `sandbox: true`, CSP, navegación y ventanas
