@@ -103,6 +103,15 @@ Por eso es un estado de la aplicación:
   escena pausada no procesa entrada).
 - Perder el foco (`Phaser.Core.Events.BLUR` y `document.visibilitychange`)
   pausa la partida si está en curso.
+- **Esc en pantalla completa** (encontrado durante la implementación): el
+  navegador se queda Esc para salir de la pantalla completa y no lo entrega a
+  la página, así que no servía para pausar ni para volver en los menús. Al
+  entrar en pantalla completa se pide `navigator.keyboard.lock(['Escape'])`
+  (Chrome, Edge y Electron): Esc llega al juego y mantenerlo pulsado sigue
+  saliendo de la pantalla completa. Donde no existe, salir de la pantalla
+  completa (`fullscreenchange`) pausa la partida.
+- La tecla de pausa la atiende solo `HudScene` (pausar y reanudar), para que
+  una misma pulsación no pause en una escena y reanude en la otra.
 
 ### D3. Escenas
 

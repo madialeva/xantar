@@ -33,7 +33,7 @@ Xantar es un único proyecto que produce **dos artefactos** a partir del mismo c
 
 El código del juego no cambia entre ambos destinos; solo cambia el envoltorio. La lógica de escritorio vive exclusivamente en la carpeta `electron/`.
 
-Estado actual del juego: un juego de una sola pantalla con un nivel clásico, inspirado en **BurgerTime** (1982). `TapScene` es la pantalla de título ("CLICK PARA JUGAR") y `GameScene` es la vista del juego: ejecuta el núcleo de simulación (`src/sim/`: chef, ingredientes de segmentos que se pisan y caen, enemigos, pimienta, puntuación y vidas) y lo dibuja. La hoja de ruta está en el README y en las issues de GitHub.
+Estado actual del juego: un juego de una sola pantalla con un nivel clásico, inspirado en **BurgerTime** (1982). El recorrido es arranque → título → menú (con opciones de idioma y tema) → partida; `GameScene` ejecuta el núcleo de simulación (`src/sim/`: chef, ingredientes de segmentos que se pisan y caen, enemigos, pimienta, puntuación, vidas y fases de partida) y lo dibuja, y `HudScene` muestra a su lado los paneles, los mensajes y la pausa (ver 8.8). La hoja de ruta está en el README y en las issues de GitHub.
 
 Si los conceptos de desarrollo de juegos (bucle de juego, paso fijo, HUD, rig, filtros, tipos de assets…) son nuevos para ti, empieza por [`GAMEDEV_FUNDAMENTALS.md`](GAMEDEV_FUNDAMENTALS.md): los explica para principiantes y los relaciona con este proyecto.
 
@@ -120,10 +120,13 @@ xantar/
 │   │   ├── level/               # Documento JSON, registro de piezas, ensamblado, Level y validación
 │   │   ├── nav/                 # Grafo de navegación, NavPlace y camino más corto
 │   │   ├── entities/            # Chef, Enemy (+ EnemyBrain), Ingredient, IngredientField, Plate, pepper
+│   │   ├── phases/              # Fases de partida (State): ready, playing, dying, levelClear, gameOver
 │   │   └── testing/             # Niveles (cuadrículas) y dobles de prueba compartidos por los tests
 │   ├── levels/
 │   │   └── classic.level.json   # Nivel clásico en el formato de nivel v1
 │   ├── devtools/                # Código de la lámina de arte (ArtSheetScene)
+│   ├── i18n/                    # Textos por idioma: catálogos es/en, Translator, Localization
+│   ├── settings/                # Ajustes del jugador (idioma, tema, récord) y su almacenamiento
 │   ├── objects/                 # Vistas Phaser (sin lógica): ChefView, EnemyView, IngredientView
 │   ├── view/                    # Pipeline visual (ver 8.7)
 │   │   ├── art/<tema>/*.svg     # Fuentes SVG de cada tema (se incluyen en el bundle como texto)
@@ -134,11 +137,16 @@ xantar/
 │   │   ├── board/               # MazeView: fondo, escaleras, plataformas, cruces y platos
 │   │   ├── hud/                 # HudPanels (paneles laterales) y OverlayView (fin de nivel/partida)
 │   │   ├── fx/                  # EventEffects: adornos breves para eventos de la simulación
-│   │   └── rigs/                # Personajes por partes: rigs, animador y estados de animación
+│   │   ├── rigs/                # Personajes por partes: rigs, animador y estados de animación
+│   │   ├── session/             # GameSession: mediador entre la partida y el HUD
+│   │   ├── ui/                  # MenuList (menús con teclado y puntero) y pantalla completa
+│   │   └── audio/               # TitleMusic (música de título y menú)
 │   └── scenes/
-│       ├── BootScene.ts         # Rasteriza el arte de todos los temas y pasa a TapScene
-│       ├── TapScene.ts          # Pantalla "CLICK/TOCA PARA JUGAR" + música
-│       └── GameScene.ts         # Adaptador: ejecuta la simulación a paso fijo y la dibuja
+│       ├── BootScene.ts         # Rasteriza el arte de todos los temas y pasa al título
+│       ├── TitleScene.ts        # Título: primer gesto -> pantalla completa, música y menú
+│       ├── MenuScene.ts         # Menú principal (Jugar, Opciones, récord) y opciones
+│       ├── GameScene.ts         # Tablero: ejecuta la simulación a paso fijo y la dibuja
+│       └── HudScene.ts          # En paralelo a la partida: paneles, mensajes de fase, pausa
 ├── docs/
 │   ├── GAMEDEV_FUNDAMENTALS.md  # Fundamentos del desarrollo de juegos (para principiantes)
 │   ├── MANUAL.md                # Este manual de desarrollador
@@ -220,25 +228,25 @@ xantar/
   <script type="module" src="/src/main.ts"></script>
   ```
 
-- `src/main.ts` es la **raíz de composición**: crea el registro de temas, lee `?theme=` de la URL, calcula el tamaño del área de juego con `computeLayout` y construye las escenas pasándoles sus dependencias por constructor (Phaser acepta instancias de escena en `config.scene`):
+- `src/main.ts` es la **raíz de composición**: crea el registro de temas, lee `?theme=` de la URL, carga los ajustes del jugador, crea la localización, la sesión de partida y la música, calcula el tamaño del área de juego con `computeLayout` y construye las escenas pasándoles sus dependencias por constructor (Phaser acepta instancias de escena en `config.scene`). Lo esencial:
 
   ```ts
-  const tier = RENDER_TIER;
-  const themes = createThemeRegistry();
-  const urlTheme = new URLSearchParams(window.location.search).get('theme');
-  const initial = computeLayout(window.innerWidth, window.innerHeight);
-
-  const config: Phaser.Types.Core.GameConfig = {
-    type: Phaser.AUTO,
-    scale: {
-      mode: Phaser.Scale.FIT,
-      autoCenter: Phaser.Scale.CENTER_BOTH,
-      width: initial.width * tier,
-      height: initial.height * tier
-    },
-    loader: { imageLoadType: 'HTMLImageElement' },
-    scene: [new BootScene({ themes, tier }), new TapScene(tier), new GameScene({ themes, urlTheme, tier })]
-  };
+  const settings = new Settings(new LocalStorageSettingsStore(browserStorage()), {
+    language: detectLanguage(navigator.languages),
+    theme: AUTO_THEME,
+    bestScore: 0
+  });
+  const localization = new Localization(settings.language);
+  const session = new GameSession();
+  const music = new TitleMusic('music/tap-back.mp3');
+  // ...
+  scene: [
+    new BootScene({ themes, tier, localization }),
+    new TitleScene({ tier, localization, music, themes }),
+    new MenuScene({ tier, localization, settings, themes, music }),
+    new GameScene({ themes, urlTheme, tier, session, settings }),
+    new HudScene({ tier, localization, session, themes })
+  ]
   ```
 
   Al cambiar el tamaño de la ventana (agrupado con `requestAnimationFrame`) vuelve a calcular el layout y llama a `game.scale.setGameSize`.
@@ -252,9 +260,9 @@ Cada escena es una clase que extiende `Phaser.Scene` y se exporta por defecto:
 ```ts
 import Phaser from 'phaser';
 
-export default class TapScene extends Phaser.Scene {
-  constructor() {
-    super({ key: 'TapScene' });
+export default class TitleScene extends Phaser.Scene {
+  constructor(deps: TitleSceneDependencies) {
+    super({ key: 'TitleScene' });
   }
 
   create(): void { /* ... */ }
@@ -269,17 +277,18 @@ Ciclo de vida habitual:
 | `create()` | Una vez al arrancar la escena | Crear objetos, input, tweens |
 | `update(time, delta)` | Cada frame mientras la escena está activa | Lógica de juego |
 
-Para cambiar de escena: `this.scene.start('GameScene')`.
+Para cambiar de escena: `this.scene.start('GameScene')`; para lanzar otra en paralelo: `this.scene.launch('HudScene', datos)`.
 
-**Flujo actual:**
+**Flujo actual** (detalle en 8.8):
 
 ```
-index.html -> src/main.ts -> BootScene (rasteriza los temas) -> TapScene
-TapScene --(clic/tap)--> pantalla completa -> GameScene
-GameScene --(botón ✕ o ESC)--> window.location.href = 'index.html'   (vuelve al inicio)
+index.html -> src/main.ts -> BootScene (rasteriza los temas) -> TitleScene
+TitleScene --(clic, toque o tecla)--> pantalla completa + música -> MenuScene
+MenuScene --Jugar--> GameScene ══launch══> HudScene
+GameScene --(salir desde la pausa o fin de partida)--> MenuScene   (sin recargar la página)
 ```
 
-Detalle relevante de `TapScene`: la música se reproduce con `new Audio(...)` en lugar del gestor de sonido de Phaser, para que funcione también bajo `file://` (Electron) y no bloquee la escena si el audio falla.
+La música de título y menú se reproduce con `new Audio(...)` (`TitleMusic`) en lugar del gestor de sonido de Phaser, para que funcione también bajo `file://` (Electron); arranca con el primer gesto del jugador en el título, que es lo que exige el navegador.
 
 ### 8.3 Assets y la carpeta `public/`
 
@@ -328,12 +337,12 @@ En el juego se puede consultar con `(window as any).xantar?.isDesktop`. En el fu
 - **Paso fijo.** `GameScene` alimenta un `FixedStepper` con el tiempo de cada fotograma y ejecuta en `Simulation` el número de *ticks* resultante (60 por segundo, con un máximo por fotograma). El resultado no depende del framerate. La vista interpola entre el estado de los dos últimos ticks (`prevX`/`prevY` y `alpha`).
 - **Unidades lógicas.** El núcleo trabaja en tiles (1 unidad = 1 tile) y ticks. La vista convierte a píxeles con `TILE` (`src/config.ts`). Una entidad sobre la fila `r` está en `y = r`; la línea de plataforma en `y = r + 0,5`; el centro de la columna `c` en `x = c + 0,5`.
 - **Nivel como datos.** `Simulation` recibe un `Level` cargado con `loadLevel(documento)`; el documento es un JSON versionado (ver 8.6). `src/levels/classic.level.json` es el nivel actual (4 plataformas a todo el ancho, escaleras en las columnas 0, 9, 10 y 19, 4 ingredientes por plato y 4 platos). `loadLevel` ensambla el nivel con el registro de piezas, deriva el grafo de navegación y, por defecto, rechaza los niveles con errores de jugabilidad (`validateLevel`).
-- **Eventos.** `Simulation.step(input)` devuelve los `SimEvent` del tick (`ingredientLanded`, `enemySquashed`, `burgerDone`, `chefHit`, `levelCleared`, `gameOver`…). La vista los traduce a efectos (destello, nube de pimienta, pantallas de fin) y, más adelante, a sonido.
+- **Eventos.** `Simulation.step(input)` devuelve los `SimEvent` del tick (`ingredientLanded`, `enemySquashed`, `burgerDone`, `chefHit`, `levelCleared`, `gameOver`, `phaseChanged`…). La vista los traduce a efectos (destello, nube de pimienta, mensajes de fase) y, más adelante, a sonido.
 - **Aleatoriedad.** Se inyecta un `Rng` (`SeededRng`, con semilla). Con la misma semilla y la misma secuencia de entradas, la partida es idéntica.
 
 **Modelo de objetos del núcleo** (`src/sim/`):
 
-- `Simulation`: agregado raíz. Cada tick ejecuta chef → ingredientes → enemigos → pimienta → contacto. Estado de partida: `playing`, `levelClear`, `gameOver`; órdenes `startBoard`, `nextLevel`, `newGame`.
+- `Simulation`: agregado raíz. Lo que hace cada tick depende de la **fase de partida** (`phase`: `ready`, `playing`, `dying`, `levelClear`, `gameOver`; ver 8.8). En `playing` ejecuta chef → ingredientes → enemigos → pimienta → contacto. Órdenes: `startBoard` y `newGame`.
 - **Grafo de navegación** (`src/sim/nav/`): se deriva del nivel y tiene tramos de plataforma (`PlatformEdge`) y de escalera (`LadderEdge`) unidos en los cruces. La posición de chef y enemigos es un `NavPlace` (arista + desplazamiento); `graph.shortestPath` calcula el camino más corto y `graph.reachableFrom` la alcanzabilidad.
 - `Chef`: camina por su tramo de plataforma y se engancha a una escalera a ≤ 0,6 casillas del cruce. Sobre la escalera solo se mueve mientras pulsas arriba o abajo y puede parar e invertir en cualquier punto; a 0,4 casillas o menos de una plataforma, pulsar izquierda o derecha le hace pasar a ella. En plataforma, la entrada lateral tiene prioridad sobre engancharse a una escalera.
 - `Enemy` + `EnemyBrain` (Strategy): tres tipos (`hotdog`, `pickle`, `egg`) que hoy comparten `ChaseBrain`, que usa el camino más corto del grafo hacia el chef (en el mismo tramo de plataforma lo persigue en horizontal). Tiene aturdimiento, aplastamiento y reaparición en los marcadores de enemigo del nivel.
@@ -353,12 +362,13 @@ En el juego se puede consultar con `(window as any).xantar?.isDesktop`. En el fu
 |--------|-------|
 | Moverse / subir-bajar escaleras (en la escalera solo te mueves mientras pulsas arriba o abajo) | Flechas o `WASD` |
 | Lanzar pimienta | `Espacio` |
-| Confirmar (fin de nivel / game over) | `Enter` |
-| Salir al menú | `Esc` o botón `✕` |
+| Adelantar el fin de nivel | `Enter` o `Espacio` |
+| Pausar y reanudar | `Esc`, `P` o el botón de pausa del panel |
+| Volver al menú tras *GAME OVER* | `Enter`, `Espacio`, clic o toque |
 
-**Vidas y fin de partida**: 3 vidas. Tocar un enemigo no aturdido resta una vida; al llegar a 0 aparece *GAME OVER* y `Enter` reinicia.
+**Vidas y fin de partida**: 3 vidas. Tocar un enemigo no aturdido resta una vida: el chef cae (fase `dying`, 2 s), todos vuelven a su sitio y hay un nuevo *¡PREPARADO!* (1,5 s); los ingredientes no se tocan. Al llegar a 0 aparece *GAME OVER* con la puntuación y, si lo es, *¡NUEVO RÉCORD!*; confirmar vuelve al menú.
 
-**Pendiente / ideas**: alimentos de bonus (helado, café, patatas), más enemigos, música y efectos de sonido, controles táctiles y puntuación persistente.
+**Pendiente / ideas**: alimentos de bonus (helado, café, patatas), más enemigos, efectos de sonido y controles táctiles en partida.
 
 ### 8.6 Formato de nivel y registro de piezas
 
@@ -415,6 +425,32 @@ Para pasar a 4× basta con cambiar `RENDER_TIER` en `src/config.ts`: texturas, c
 
 **Efectos** (`EventEffects`): adornos de vida corta (nube de pimienta, destello al pisar un segmento, aplastamiento de enemigo, chispas al completar una hamburguesa) que se destruyen solos y que `GameScene` limpia en `boardStarted`.
 
+### 8.8 Flujo del juego, fases de partida, idioma y ajustes
+
+El juego tiene **dos máquinas de estados** separadas a propósito:
+
+1. **Fases de partida** (reglas, en la simulación, deterministas). `Simulation` delega cada tick en un objeto `GamePhase` (patrón State, `src/sim/phases/`) y emite `phaseChanged { from, to }` al cambiar:
+
+   ```
+   new ──► ready ──► playing ──contacto──► dying ──vidas > 0──► ready
+                       │                     └──vidas = 0──► gameOver ──newGame()──► ready
+                       └──todo apilado──► levelClear ──180 ticks o confirm──► ready (tablero nuevo)
+   ```
+
+   `ready` dura 90 ticks (1,5 s), `dying` 120 (2 s) y `levelClear` 180 (3 s); las duraciones están en `rules.ts` (`READY_TICKS`, `DYING_TICKS`, `LEVEL_CLEAR_TICKS`). Solo `playing` mueve el mundo. La acción `confirm` de `SimInput` adelanta el fin de nivel. Las fases hablan con la simulación a través de la interfaz `PhaseHost`, así que no conocen sus entidades y se prueban con un doble.
+
+2. **Flujo de la aplicación** (vista). Escenas `BootScene` → `TitleScene` → `MenuScene` → `GameScene` + `HudScene`, y la **pausa**, que no es una fase porque no cambia ninguna regla: la simulación simplemente deja de recibir ticks.
+   - `GameScene` publica el estado en un `GameSession` (`src/view/session/`, patrón Observer y mediador) y ejecuta sus órdenes (`pause`, `resume`, `quit`). `HudScene` solo escucha a la sesión: dibuja los paneles, los mensajes de `ready` y `levelClear`, la pantalla de fin de partida y el menú de pausa. Ninguna escena conoce a la otra.
+   - Pausar llama a `this.scene.pause()` en `GameScene` (se congelan su `update` y sus tweens) y al reanudar `stepper.reset()` descarta el tiempo acumulado. La tecla de pausa (Esc o P) la atiende solo `HudScene`. Perder el foco de la ventana, ocultar la pestaña o salir de la pantalla completa también pausan.
+   - Volver al menú detiene `HudScene` y arranca `MenuScene`; nunca se recarga la página. La puntuación se envía a los ajustes al acabar la partida y al salir.
+   - Los menús usan `MenuList` (`src/view/ui/`): flechas o WASD para moverse, Enter o Espacio para elegir, izquierda y derecha para cambiar un valor, Esc para volver, y clic o toque sobre cada opción.
+
+**Idioma** (`src/i18n/`): todos los textos visibles salen de los catálogos `catalogs/es.ts` (el de referencia) y `catalogs/en.ts` (declarado como `Catalog`, de modo que si le falta, le sobra o cambia de forma alguna clave, falla `npm run typecheck`). Un texto es una cadena o una función `(parámetros, format) => string`; `format.number` y `format.plural` usan `Intl.NumberFormat` e `Intl.PluralRules` del idioma. `Localization` guarda el idioma activo y avisa a sus suscriptores al cambiarlo; `main.ts` mantiene el atributo `lang` del documento. El idioma inicial sale de `detectLanguage(navigator.languages)`: español si la primera preferencia es cualquier español, si no inglés.
+
+**Ajustes** (`src/settings/`): `Settings` guarda idioma, tema (`auto` o un id) y mejor puntuación en un único registro versionado (`{ "version": 1, ... }`) bajo la clave `xantar.settings` de `localStorage`, que también funciona en Electron. `parseSettings` lo lee campo a campo: un campo no válido toma su valor por defecto sin perder los demás, y un registro roto o de otra versión se ignora entero. Si el almacenamiento está bloqueado, el juego funciona sin recordar nada.
+
+**Tema**: `chooseTheme` aplica la prioridad URL (`?theme=`) → opción del jugador (salvo `auto`) → tema del nivel → `classic`.
+
 ---
 
 ## 9. Recetas para tareas comunes
@@ -442,7 +478,7 @@ Para pasar a 4× basta con cambiar `RENDER_TIER` en `src/config.ts`: texturas, c
    ```ts
    import MiEscena from './scenes/MiEscena';
    // ...
-   scene: [TapScene, StartScene, MiEscena]
+   scene: [/* ... */, new MiEscena(/* dependencias */)]
    ```
 
 3. Navega a ella con `this.scene.start('MiEscena')`.
@@ -549,10 +585,33 @@ Opción recomendada (CI): un workflow de GitHub Actions que ejecute `npm ci && n
 ### 9.11 Verificar visualmente un cambio
 
 1. **Prueba de humo**: `npm run smoke` compila la web y abre `dist/` en Electron (bajo `file://`, como la app de escritorio). Por defecto ejecuta el escenario `review`: los dos temas a 1920×1080, 1024×768 y 2340×1080, pulsando derecha un momento. Por cada ejecución guarda `.smoke/<escenario>/<ejecución>/*.png` y `console.log`, imprime `ok` o `FAILED` y termina con código 1 si la consola registra algún error o el renderizador se cae.
-   - Otros escenarios: `npm run smoke -- quick`, `climb` o `game-over` (definidos en `tools/smoke/scenarios.ts`; añadir uno es añadir datos).
+   - Otros escenarios: `npm run smoke -- quick`, `climb`, `game-over`, `menu` (menú y opciones en los dos idiomas) o `pause` (definidos en `tools/smoke/scenarios.ts`; añadir uno es añadir datos). Todos pasan por el título (clic) y el menú (`Enter` en Jugar). Cada ventana usa un almacenamiento propio en memoria, así que los ajustes de una ejecución no afectan a la siguiente.
    - Una ejecución a medida: `npm run smoke -- --size 1280x720 --query theme=midnight --steps "wait:2500,click,wait:2000,down:Up,wait:500,shot:sube,up:Up" --name prueba`. Pasos: `wait:<ms>`, `click` (centro de la ventana), `key:<tecla>[:<ms>]`, `down:<tecla>`, `up:<tecla>` y `shot:<nombre>`; las teclas usan los nombres de Electron (`Left`, `Up`, `Space`, `Return`…).
    - En Linux usa `xvfb-run` si está instalado, sin abrir ventanas y con WebGL por software; `--visible` lo desactiva. Si `dist/` ya está al día, `node scripts/smoke.mjs <escenario>` se salta la compilación.
 2. **Lámina de arte**: con `npm run dev`, abre http://localhost:5173/tools/art-sheet.html. Dibuja con el código del juego (rasterizador, temas y rigs) todos los gráficos del catálogo, las tiras de ingredientes y platos de 4, 3 y 2 segmentos, un tramo de plataforma con escalera y cada personaje en cada estado de animación; el selector cambia de tema. Al editar un SVG, Vite recarga la página. Solo existe en desarrollo: `npm run build` no la incluye.
+
+### 9.12 Añadir un texto a la interfaz
+
+1. Añade la clave al catálogo español (`src/i18n/catalogs/es.ts`): una cadena, o una función si lleva parámetros, por ejemplo:
+
+   ```ts
+   'hud.combo': (p: { combo: number }, f: Format) => `COMBO ×${f.number(p.combo)}`,
+   ```
+
+2. Añádela con la misma forma al catálogo inglés. Si te olvidas, `npm run typecheck` falla señalando la clave.
+3. Úsala con `localization.t('hud.combo', { combo })`. Nunca escribas el texto directamente en una escena.
+
+### 9.13 Añadir un idioma
+
+1. Añade su código a `LANGUAGES` (`src/i18n/language.ts`) y, si quieres que se elija solo, ajusta `detectLanguage` y su prueba.
+2. Crea `src/i18n/catalogs/<código>.ts` como `export const fr: Catalog = { ... }` y regístralo en `CATALOGS` (`src/i18n/Localization.ts`).
+3. Añade su nombre a los catálogos (`'language.fr'`): el selector de Opciones lo recorre solo. Revisa los plurales con `format.plural` (algunos idiomas tienen más formas que `one` y `other`; amplía `PluralForms` si hace falta).
+
+### 9.14 Añadir una opción del jugador
+
+1. Añade el campo a `PlayerSettings` con su validación en `parseSettings` y su prueba (un valor no válido debe caer al valor por defecto sin afectar a los demás).
+2. Añade el método para cambiarlo en `Settings` (guarda en cada cambio) y su valor por defecto en `main.ts`.
+3. Añade la entrada al menú de opciones en `MenuScene.#optionItems` con `label`, `value` y `change`, y sus textos a los catálogos.
 
 ## 10. Build y empaquetado
 
@@ -612,7 +671,10 @@ Phaser va dentro del bundle de Vite, por lo que **no** se incluye `node_modules/
 ## 12. Solución de problemas
 
 ### La música no suena la primera vez en el navegador
-Es la **política de autoplay** del navegador: `audio.play()` se rechaza si no ha habido interacción del usuario. No es un bug. En Electron no ocurre porque `main.ts` desactiva esa política. En web, opciones: dejar que arranque en el primer clic, o aceptar que solo suene a partir de la primera interacción.
+Es la **política de autoplay** del navegador: `audio.play()` se rechaza si no ha habido interacción del usuario. Por eso `TitleScene` espera al primer clic, toque o tecla para arrancar la música. En Electron no ocurre porque `electron/main.ts` desactiva esa política.
+
+### Esc no pausa o no vuelve atrás en pantalla completa
+El navegador usa Esc para salir de la pantalla completa y normalmente no la entrega a la página. Al entrar en pantalla completa el juego pide `navigator.keyboard.lock(['Escape'])` (Chrome, Edge y Electron), de modo que Esc llega al juego y mantenerla pulsada sigue saliendo. En navegadores sin esa API, salir de la pantalla completa pausa la partida; usa `P` para pausar.
 
 ### Pantalla negra al abrir el juego desde el fichero
 Ocurre al abrir con `file://` (doble clic). Usa `npm run dev` o `npm run preview`. La causa histórica era el loader de audio de Phaser; ya se sustituyó por `new Audio()`.
@@ -704,7 +766,7 @@ Ficheros de configuración:
 Reglas destacadas de `.oxlintrc.json`:
 
 - Categoría `correctness` en error, más reglas con tipos: `no-floating-promises`, `no-misused-promises`, `await-thenable`, `unbound-method` y `switch-exhaustiveness-check`.
-- `no-empty` con `allowEmptyCatch: true`: permite `catch {}` vacíos (se usan en `TapScene` para que un fallo de audio no rompa la escena).
+- `no-empty` con `allowEmptyCatch: true`: permite `catch {}` vacíos (se usan en `TitleMusic` y en el almacenamiento de ajustes para que un fallo de audio o de `localStorage` no rompa el juego).
 - `no-unused-vars` (aviso) ignora parámetros y capturas con prefijo `_`.
 - Entorno de navegador por defecto y Node solo en `electron/`, `scripts/` y `tools/smoke/`.
 - **Fronteras de `src/sim/`**: no puede importar Phaser, Node, `scenes/`, `objects/` ni `config`, ni usar globales de navegador, `Date` o `Math.random` (se inyecta un `Rng`). Garantiza que el núcleo sea puro y determinista.

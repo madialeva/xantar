@@ -25,8 +25,8 @@ It is written in **TypeScript** with the **Phaser** engine and bundled with
 **Vite**. The same code runs in the browser and ships as a desktop application
 through **Electron** (like VS Code or Discord).
 
-Xantar is under active development towards **version 1.0.0**. In-game texts are
-currently in Spanish; English and Spanish will be selectable (see the roadmap).
+Xantar is under active development towards **version 1.0.0**. The game is in
+English and Spanish.
 
 ---
 
@@ -43,8 +43,8 @@ comes next.
 |   ✅   | Levels described as data, validated on load, and automated tests of the game rules                        |   —    |  #2   |
 |   ✅   | Level model: tile pieces, ingredient segments, navigation graph and validator; turn around mid-ladder     |   —    |  #3   |
 |   ✅   | Modern vector visuals: SVG art, themes and side panels                                                    |   —    |  #4   |
+|   ✅   | Game state machine, pause, high score, Spanish and English                                                |   —    |  #5   |
 |   ⬜   | Enemies riding ingredients (an extra level per rider)                                                     | v1.0.0 |  #9   |
-|   ⬜   | Game state machine, pause, high score, Spanish and English                                                | v1.0.0 |  #5   |
 |   ⬜   | Gamepad and touch controls, music and sound effects, CI and a hardened desktop app                        | v1.0.0 |  #6   |
 |   ⬜   | Replay recording and debug tooling                                                                        | v1.0.0 |  #8   |
 |   ⬜   | In-game level editor with JSON import/export                                                              | later  |  #7   |
@@ -61,19 +61,32 @@ Assemble **every burger** on the screen. Each burger has four pieces: bottom
 bun, patty, lettuce and top bun. They start spread over the platforms and you
 must bring them all the way down to the plate.
 
+### Starting a game
+
+The title screen waits for a click, a tap or any key, then opens the **main
+menu**: **Play** starts a game and **Options** lets you choose the **language**
+(Spanish or English; the first time it follows your browser) and the **theme**
+(**Automatic** uses the one of each level). Your choices and your **best
+score** are remembered between sessions. Menus work with the arrow keys and
+`Enter`, or by clicking or tapping an entry; `Esc` goes back.
+
 ### Controls
 
-| Action                            | Key                                        |
-| --------------------------------- | ------------------------------------------ |
-| Move                              | Left/right arrows                          |
-| Climb up and down ladders         | Up/down arrows                             |
-| Throw pepper                      | `Space`                                    |
-| Confirm (level clear / game over) | `Enter`                                    |
-| Back to the title                 | `Esc` or the `✕` button in the right panel |
+| Action                       | Key                                         |
+| ---------------------------- | ------------------------------------------- |
+| Move                         | Left/right arrows                           |
+| Climb up and down ladders    | Up/down arrows                              |
+| Throw pepper                 | `Space`                                     |
+| Skip the level clear pause   | `Enter` or `Space`                          |
+| Pause and resume             | `Esc`, `P` or the pause button in the panel |
+| Back to the menu (game over) | `Enter`, `Space`, click or tap              |
 
 You can also play with the `W`, `A`, `S`, `D` keys. On a ladder you only move
 while you hold up or down, so you can stop and turn around anywhere on it. When
 you reach the height of a platform, press left or right to step onto it.
+
+The game also pauses on its own when its window loses the focus. The pause menu
+lets you resume or quit to the main menu.
 
 ### Ingredients and falls
 
@@ -116,23 +129,28 @@ you reach the height of a platform, press left or right to step onto it.
 
 - You have **3 lives**.
 - Every touch from a non-stunned enemy costs a life.
-- Complete all four burgers to advance to the next level: the board is rebuilt
-  and your score, lives and pepper carry over (every level uses the same layout
-  for now).
-- When you lose every life, **GAME OVER** appears; press `Enter` to restart.
+- Every board starts with a short **GET READY!** pause. When an enemy catches
+  you, the chef falls, everyone goes back to the start and you get ready again;
+  the ingredients stay as they were.
+- Complete all four burgers to advance to the next level: after a short **LEVEL
+  CLEAR!** pause the board is rebuilt on its own, and your score, lives and
+  pepper carry over (every level uses the same layout for now).
+- When you lose every life, **GAME OVER** shows your score and whether it is a
+  new best score; confirm to go back to the main menu.
 
 ### Screen and looks
 
 - The 20×15 board sits in the middle of the screen, and the score, level, lives
   and pepper shots are shown in **side panels**. On widescreen monitors and on
   phones held sideways the game fills the whole screen; narrower screens show
-  bars above and below.
+  bars above and below. The left panel also shows your best score.
 - Everything is drawn from **vector art**, so it stays sharp at any size. The
   characters are made of separate parts that bounce, swing and squash as they
   move.
 - The game comes with two **themes**: `classic` and `midnight` (a night-blue,
-  neon look). Each level says which theme it uses; in the browser version you
-  can try another one by adding `?theme=midnight` to the address.
+  neon look). Each level says which theme it uses, and you can force one in
+  **Options**; in the browser version you can also add `?theme=midnight` to the
+  address.
 
 ---
 

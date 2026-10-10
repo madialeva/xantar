@@ -32,8 +32,8 @@
 
 ## 7. Documentación
 
-- [ ] 7.1 Actualizar `README.md` (menú, opciones de idioma y tema, pausa con Esc o P, récord, fin de nivel automático, tabla de controles) y la fila de #5 en la hoja de ruta; verificar con `npm run format:check` y relectura
-- [ ] 7.2 Actualizar `docs/MANUAL.md` (flujo de escenas, fases de partida, `GameSession`, ajustes y recetas "Añadir un texto", "Añadir un idioma" y "Añadir una opción") y `docs/GAMEDEV_FUNDAMENTALS.md` (apartados de flujo del juego, pausa e internacionalización, ya implementados en Xantar); verificar con `npm run format:check` y que los nombres citados existen en el código
+- [x] 7.1 Actualizar `README.md` (menú, opciones de idioma y tema, pausa con Esc o P, récord, fin de nivel automático, tabla de controles) y la fila de #5 en la hoja de ruta; verificar con `npm run format:check` y relectura
+- [x] 7.2 Actualizar `docs/MANUAL.md` (flujo de escenas, fases de partida, `GameSession`, ajustes y recetas "Añadir un texto", "Añadir un idioma" y "Añadir una opción") y `docs/GAMEDEV_FUNDAMENTALS.md` (apartados de flujo del juego, pausa e internacionalización, ya implementados en Xantar); verificar con `npm run format:check` y que los nombres citados existen en el código
 
 ## 8. Verificación final
 
