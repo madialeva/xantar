@@ -17,7 +17,7 @@
 
 ## 4. Ajustes del jugador y récord
 
-- [ ] 4.1 Implementar `src/settings/` (`PlayerSettings`, `parseSettings`, `SettingsStore`, `LocalStorageSettingsStore`, `MemorySettingsStore`, `Settings` con `submitScore`); verificar con pruebas de registro ausente, JSON roto, versión desconocida, un campo no válido conservando el resto, almacenamiento que lanza al leer y al escribir, récord mayor, menor e igual, y guardado en cada cambio
+- [x] 4.1 Implementar `src/settings/` (`PlayerSettings`, `parseSettings`, `SettingsStore`, `LocalStorageSettingsStore`, `MemorySettingsStore`, `Settings` con `submitScore`); verificar con pruebas de registro ausente, JSON roto, versión desconocida, un campo no válido conservando el resto, almacenamiento que lanza al leer y al escribir, récord mayor, menor e igual, y guardado en cada cambio
 
 ## 5. Tema con la opción del jugador
 
