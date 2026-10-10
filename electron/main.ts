@@ -1,9 +1,11 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'node:path';
 
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
 const devServerUrl = process.env.VITE_DEV_SERVER_URL;
+
+ipcMain.on('app:quit', () => app.quit());
 
 function createWindow(): void {
   const win = new BrowserWindow({

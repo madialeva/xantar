@@ -43,8 +43,7 @@ Estado tras #4 (ver `proposal.md` para la motivación):
   música de título sigue con `new Audio`.
 - Mando, controles táctiles en partida y reasignación de teclas (#6). Los
   menús sí aceptan clic y toque.
-- Transiciones animadas entre escenas (fundidos), pantalla de créditos y
-  opción de salir de la aplicación de escritorio.
+- Transiciones animadas entre escenas (fundidos) y pantalla de créditos.
 - Guardar una partida a medias para continuarla.
 
 ## Decisions
@@ -223,6 +222,24 @@ partida.
 Los escenarios de `tools/smoke/scenarios.ts` pasan por el título (clic) y el
 menú (Enter en Jugar) antes de jugar. Se añaden `menu` (capturas del menú y de
 las opciones en los dos idiomas) y `pause` (pausar con Esc y capturar).
+
+### D11. Salir de la aplicación de escritorio
+
+Añadido tras la revisión del autor en Electron: a pantalla completa y sin barra
+de título, y con Esc dedicada a pausar y volver, no había forma de cerrar el
+juego salvo Alt+F4.
+
+- El preload de Electron amplía `window.xantar` con `quit()`, que envía el
+  mensaje IPC `app:quit`; el proceso principal responde con `app.quit()`. La
+  página sigue sin acceso directo a Electron.
+- `src/view/platform/desktop.ts` lee ese puente de forma tipada y `main.ts`
+  inyecta en `MenuScene` una función `quitApp` o `null` (navegador). Con
+  `null`, el menú no muestra Salir.
+- En el menú principal, Esc mueve la selección a Salir (`MenuList.selectIndex`)
+  en lugar de cerrar, para evitar cierres accidentales. El menú de pausa no
+  ofrece salir de la aplicación: primero se sale al menú.
+- La prueba de humo carga el preload real de la aplicación y registra los
+  `app:quit` en lugar de cerrar; un paso `expectQuit` falla si no llegó.
 
 ## Risks / Trade-offs
 

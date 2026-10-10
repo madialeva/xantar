@@ -17,6 +17,7 @@ export interface MenuSceneDependencies {
   readonly settings: Settings;
   readonly themes: ThemeRegistry;
   readonly music: TitleMusic;
+  readonly quitApp: (() => void) | null;
 }
 
 type Page = 'main' | 'options';
@@ -25,8 +26,9 @@ const cycle = <T>(values: readonly T[], current: T, direction: 1 | -1): T =>
   values[(values.indexOf(current) + direction + values.length) % values.length];
 
 /**
- * Main menu (play, options and best score) and options page (language and theme), both
- * driven by keyboard or pointer. Options are applied and saved at once.
+ * Main menu (play, options, best score and, on the desktop, quit) and options page
+ * (language and theme), both driven by keyboard or pointer. Options are applied and saved
+ * at once.
  */
 export default class MenuScene extends Phaser.Scene {
   readonly #deps: MenuSceneDependencies;
@@ -77,13 +79,21 @@ export default class MenuScene extends Phaser.Scene {
     if (page === 'main') {
       text(110, localization.t('game.title'), 64, palette.hudAccent);
       text(
-        GAME_HEIGHT - 120,
+        GAME_HEIGHT - 96,
         localization.t('menu.best', { score: this.#deps.settings.bestScore }),
         18,
         palette.hudText
       );
       text(GAME_HEIGHT - 50, localization.t('menu.hint'), 12, palette.hudText);
-      this.#menu = new MenuList(this, this.#mainItems(), style, tier);
+      const items = this.#mainItems();
+      const selectQuit = (): void => this.#menu?.selectIndex(items.length - 1);
+      this.#menu = new MenuList(
+        this,
+        items,
+        style,
+        tier,
+        this.#deps.quitApp ? selectQuit : undefined
+      );
     } else {
       text(110, localization.t('options.title'), 40, palette.hudAccent);
       text(GAME_HEIGHT - 50, localization.t('options.hint'), 12, palette.hudText);
@@ -94,7 +104,7 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   #mainItems(): MenuItem[] {
-    const { localization, music } = this.#deps;
+    const { localization, music, quitApp } = this.#deps;
     return [
       {
         label: () => localization.t('menu.play'),
@@ -103,7 +113,8 @@ export default class MenuScene extends Phaser.Scene {
           this.scene.start('GameScene');
         }
       },
-      { label: () => localization.t('menu.options'), select: () => this.#show('options') }
+      { label: () => localization.t('menu.options'), select: () => this.#show('options') },
+      ...(quitApp ? [{ label: () => localization.t('menu.quit'), select: quitApp }] : [])
     ];
   }
 

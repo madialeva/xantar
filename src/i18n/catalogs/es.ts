@@ -7,6 +7,7 @@ export const es = {
   'title.startTouch': 'TOCA PARA EMPEZAR',
   'menu.play': 'JUGAR',
   'menu.options': 'OPCIONES',
+  'menu.quit': 'SALIR',
   'menu.best': (p: { score: number }, f: Format) => `RÉCORD  ${f.number(p.score)}`,
   'menu.hint': '↑ ↓ ELEGIR · ENTER ACEPTAR',
   'options.title': 'OPCIONES',

@@ -52,6 +52,27 @@ sobre cada opción.
 - **WHEN** el jugador hace clic sobre Jugar en el menú principal
 - **THEN** empieza la partida
 
+### Requirement: Salir del juego en la versión de escritorio
+En la aplicación de escritorio, el menú principal SHALL ofrecer Salir como
+última opción, que cierra la aplicación. En el navegador, Salir SHALL NOT
+mostrarse, porque una página no puede cerrar su pestaña. En el menú principal,
+Esc SHALL llevar la selección a Salir sin cerrar la aplicación; cerrarla SHALL
+requerir elegir Salir.
+
+#### Scenario: Salir en el escritorio
+- **WHEN** el jugador elige Salir en el menú principal de la aplicación de
+  escritorio
+- **THEN** la aplicación se cierra
+
+#### Scenario: Esc en el menú principal
+- **WHEN** el jugador pulsa Esc en el menú principal de la aplicación de
+  escritorio
+- **THEN** la selección pasa a Salir y la aplicación sigue abierta
+
+#### Scenario: Navegador
+- **WHEN** se abre el menú principal en el navegador
+- **THEN** no aparece la opción Salir
+
 ### Requirement: HUD en una escena paralela
 Durante la partida, los paneles laterales, los mensajes de fase, la pantalla de
 fin de partida y el menú de pausa SHALL dibujarse en una escena propia que se

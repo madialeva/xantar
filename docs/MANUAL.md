@@ -196,7 +196,7 @@ xantar/
 | `npm run test:watch` | Vitest en modo observador |
 | `npm run format` | Formatea todo el código con Prettier |
 | `npm run format:check` | Comprueba el formato sin modificar ficheros (ideal para CI) |
-| `npm run smoke` | Compila la web y ejecuta la prueba de humo en Electron (capturas y consola en `.smoke/`) |
+| `npm run smoke` | Compila la web y Electron y ejecuta la prueba de humo (capturas y consola en `.smoke/`) |
 
 ---
 
@@ -314,19 +314,21 @@ Configuración **imprescindible** para Electron: `loader.imageLoadType: 'HTMLIma
 - Añade `--autoplay-policy=no-user-gesture-required`, de modo que el audio puede sonar sin interacción previa (a diferencia del navegador).
 - Crea una `BrowserWindow` con `contextIsolation: true` y `nodeIntegration: false` (configuración segura).
 - En desarrollo carga `VITE_DEV_SERVER_URL`; en producción carga `dist/index.html`.
+- Atiende el mensaje IPC `app:quit` cerrando la aplicación (`app.quit()`).
 
 **`electron/preload.ts`**: expone una API mínima al renderer mediante `contextBridge`:
 
 ```ts
-import { contextBridge } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('xantar', {
   isDesktop: true,
-  platform: process.platform
+  platform: process.platform,
+  quit: (): void => ipcRenderer.send('app:quit')
 });
 ```
 
-En el juego se puede consultar con `(window as any).xantar?.isDesktop`. En el futuro, cualquier comunicación con el sistema operativo (guardar partida, abrir diálogos, etc.) debe pasar por aquí vía IPC.
+En el juego no se lee `window.xantar` directamente: `desktopQuit(window)` (`src/view/platform/desktop.ts`) comprueba el puente de forma tipada y devuelve una función que cierra la aplicación, o `null` en el navegador. `main.ts` la inyecta en `MenuScene`, que solo muestra **Salir** cuando existe. Cualquier otra comunicación con el sistema operativo (guardar partida, abrir diálogos, etc.) debe pasar también por aquí vía IPC.
 
 **Compilación**: `scripts/build-electron.mjs` usa esbuild para convertir `electron/*.ts` a CommonJS en `dist-electron/` y genera un `dist-electron/package.json` con `{"type":"commonjs"}`. Esto es necesario porque el `package.json` raíz es ESM (`"type": "module"`) y Electron carga `main.js` como CommonJS.
 
@@ -444,6 +446,7 @@ El juego tiene **dos máquinas de estados** separadas a propósito:
    - Pausar llama a `this.scene.pause()` en `GameScene` (se congelan su `update` y sus tweens) y al reanudar `stepper.reset()` descarta el tiempo acumulado. La tecla de pausa (Esc o P) la atiende solo `HudScene`. Perder el foco de la ventana, ocultar la pestaña o salir de la pantalla completa también pausan.
    - Volver al menú detiene `HudScene` y arranca `MenuScene`; nunca se recarga la página. La puntuación se envía a los ajustes al acabar la partida y al salir.
    - Los menús usan `MenuList` (`src/view/ui/`): flechas o WASD para moverse, Enter o Espacio para elegir, izquierda y derecha para cambiar un valor, Esc para volver, y clic o toque sobre cada opción.
+   - En la aplicación de escritorio, el menú principal termina con **Salir**, que cierra la aplicación por IPC (ver 8.4); Esc en el menú principal solo selecciona Salir, para no cerrar por accidente. En el navegador no aparece.
 
 **Idioma** (`src/i18n/`): todos los textos visibles salen de los catálogos `catalogs/es.ts` (el de referencia) y `catalogs/en.ts` (declarado como `Catalog`, de modo que si le falta, le sobra o cambia de forma alguna clave, falla `npm run typecheck`). Un texto es una cadena o una función `(parámetros, format) => string`; `format.number` y `format.plural` usan `Intl.NumberFormat` e `Intl.PluralRules` del idioma. `Localization` guarda el idioma activo y avisa a sus suscriptores al cambiarlo; `main.ts` mantiene el atributo `lang` del documento. El idioma inicial sale de `detectLanguage(navigator.languages)`: español si la primera preferencia es cualquier español, si no inglés.
 
@@ -584,10 +587,10 @@ Opción recomendada (CI): un workflow de GitHub Actions que ejecute `npm ci && n
 
 ### 9.11 Verificar visualmente un cambio
 
-1. **Prueba de humo**: `npm run smoke` compila la web y abre `dist/` en Electron (bajo `file://`, como la app de escritorio). Por defecto ejecuta el escenario `review`: los dos temas a 1920×1080, 1024×768 y 2340×1080, pulsando derecha un momento. Por cada ejecución guarda `.smoke/<escenario>/<ejecución>/*.png` y `console.log`, imprime `ok` o `FAILED` y termina con código 1 si la consola registra algún error o el renderizador se cae.
-   - Otros escenarios: `npm run smoke -- quick`, `climb`, `game-over`, `menu` (menú y opciones en los dos idiomas) o `pause` (definidos en `tools/smoke/scenarios.ts`; añadir uno es añadir datos). Todos pasan por el título (clic) y el menú (`Enter` en Jugar). Cada ventana usa un almacenamiento propio en memoria, así que los ajustes de una ejecución no afectan a la siguiente.
+1. **Prueba de humo**: `npm run smoke` compila la web y Electron y abre `dist/` en Electron (bajo `file://` y con el preload real de la aplicación, como la app de escritorio). En lugar de cerrar, registra las peticiones de salida (`app:quit`). Por defecto ejecuta el escenario `review`: los dos temas a 1920×1080, 1024×768 y 2340×1080, pulsando derecha un momento. Por cada ejecución guarda `.smoke/<escenario>/<ejecución>/*.png` y `console.log`, imprime `ok` o `FAILED` y termina con código 1 si la consola registra algún error o el renderizador se cae.
+   - Otros escenarios: `npm run smoke -- quick`, `climb`, `game-over`, `menu` (menú y opciones en los dos idiomas), `pause` o `quit` (Esc selecciona Salir y Enter pide cerrar; el paso `expectQuit` falla si no llegó la petición) (definidos en `tools/smoke/scenarios.ts`; añadir uno es añadir datos). Todos pasan por el título (clic) y el menú (`Enter` en Jugar). Cada ventana usa un almacenamiento propio en memoria, así que los ajustes de una ejecución no afectan a la siguiente.
    - Una ejecución a medida: `npm run smoke -- --size 1280x720 --query theme=midnight --steps "wait:2500,click,wait:2000,down:Up,wait:500,shot:sube,up:Up" --name prueba`. Pasos: `wait:<ms>`, `click` (centro de la ventana), `key:<tecla>[:<ms>]`, `down:<tecla>`, `up:<tecla>` y `shot:<nombre>`; las teclas usan los nombres de Electron (`Left`, `Up`, `Space`, `Return`…).
-   - En Linux usa `xvfb-run` si está instalado, sin abrir ventanas y con WebGL por software; `--visible` lo desactiva. Si `dist/` ya está al día, `node scripts/smoke.mjs <escenario>` se salta la compilación.
+   - En Linux usa `xvfb-run` si está instalado, sin abrir ventanas y con WebGL por software; `--visible` lo desactiva. Si `dist/` y `dist-electron/` ya están al día, `node scripts/smoke.mjs <escenario>` se salta la compilación.
 2. **Lámina de arte**: con `npm run dev`, abre http://localhost:5173/tools/art-sheet.html. Dibuja con el código del juego (rasterizador, temas y rigs) todos los gráficos del catálogo, las tiras de ingredientes y platos de 4, 3 y 2 segmentos, un tramo de plataforma con escalera y cada personaje en cada estado de animación; el selector cambia de tema. Al editar un SVG, Vite recarga la página. Solo existe en desarrollo: `npm run build` no la incluye.
 
 ### 9.12 Añadir un texto a la interfaz

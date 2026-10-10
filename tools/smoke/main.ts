@@ -1,4 +1,4 @@
-import { BrowserWindow, app } from 'electron';
+import { BrowserWindow, app, ipcMain } from 'electron';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { SCENARIOS, type SmokeRun } from './scenarios';
@@ -12,6 +12,9 @@ interface RunResult {
 const root = process.env.XANTAR_ROOT ?? process.cwd();
 const outRoot = path.join(root, '.smoke');
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+const quitRequests = new Set<number>();
+
+ipcMain.on('app:quit', (event) => quitRequests.add(event.sender.id));
 
 if (process.env.XANTAR_SMOKE_SOFTWARE_GL === '1') {
   app.commandLine.appendSwitch('ignore-gpu-blocklist');
@@ -46,7 +49,12 @@ function requestedRuns(args: readonly string[]): { scenario: string; runs: reado
   return { scenario, runs };
 }
 
-async function perform(window: BrowserWindow, step: Step, outDir: string): Promise<void> {
+async function perform(
+  window: BrowserWindow,
+  step: Step,
+  outDir: string,
+  problems: string[]
+): Promise<void> {
   const { webContents } = window;
   switch (step.kind) {
     case 'wait':
@@ -81,6 +89,9 @@ async function perform(window: BrowserWindow, step: Step, outDir: string): Promi
       await writeFile(path.join(outDir, `${step.name}.png`), image.toPNG());
       return;
     }
+    case 'expectQuit':
+      if (!quitRequests.has(webContents.id)) problems.push('the game did not ask to quit');
+      return;
   }
 }
 
@@ -96,7 +107,12 @@ async function play(run: SmokeRun, outDir: string): Promise<RunResult> {
     useContentSize: true,
     show: true,
     backgroundColor: '#000000',
-    webPreferences: { partition: `smoke-${run.name}-${Date.now()}` }
+    webPreferences: {
+      partition: `smoke-${run.name}-${Date.now()}`,
+      preload: path.join(root, 'dist-electron', 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
+    }
   });
   window.webContents.on('console-message', (event) => {
     log.push(`[${event.level}] ${event.message}`);
@@ -106,7 +122,7 @@ async function play(run: SmokeRun, outDir: string): Promise<RunResult> {
     problems.push(`renderer gone: ${details.reason}`);
   });
   await window.loadFile(path.join(root, 'dist', 'index.html'), { search: run.query });
-  for (const step of steps) await perform(window, step, outDir);
+  for (const step of steps) await perform(window, step, outDir, problems);
   await writeFile(path.join(outDir, 'console.log'), `${log.join('\n')}\n`);
   window.destroy();
   return { name: run.name, problems };

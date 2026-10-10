@@ -7,8 +7,11 @@ const outfile = '.smoke/smoke-main.cjs';
 
 try {
   await access('dist/index.html');
+  await access('dist-electron/preload.js');
 } catch {
-  console.error('dist/ is missing: run "npm run build" first (or use "npm run smoke").');
+  console.error(
+    'dist/ or dist-electron/ is missing: run "npm run build" and "npm run build:electron" first (or use "npm run smoke").'
+  );
   process.exit(1);
 }
 

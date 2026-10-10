@@ -63,6 +63,10 @@ export class MenuList {
     this.refresh();
   }
 
+  selectIndex(index: number): void {
+    this.#select(Math.max(0, Math.min(index, this.#items.length - 1)));
+  }
+
   setEnabled(enabled: boolean): void {
     this.#enabled = enabled;
     for (const text of this.#texts) text.setVisible(enabled);

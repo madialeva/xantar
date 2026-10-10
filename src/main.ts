@@ -12,6 +12,7 @@ import { Settings } from './settings/Settings';
 import { LocalStorageSettingsStore } from './settings/SettingsStore';
 import { TitleMusic } from './view/audio/TitleMusic';
 import { computeLayout } from './view/layout/computeLayout';
+import { desktopQuit } from './view/platform/desktop';
 import { GameSession } from './view/session/GameSession';
 import { createThemeRegistry } from './view/themes';
 
@@ -55,7 +56,7 @@ const config: Phaser.Types.Core.GameConfig = {
   scene: [
     new BootScene({ themes, tier, localization }),
     new TitleScene({ tier, localization, music, themes }),
-    new MenuScene({ tier, localization, settings, themes, music }),
+    new MenuScene({ tier, localization, settings, themes, music, quitApp: desktopQuit(window) }),
     new GameScene({ themes, urlTheme, tier, session, settings }),
     new HudScene({ tier, localization, session, themes })
   ]

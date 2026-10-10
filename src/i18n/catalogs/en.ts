@@ -8,6 +8,7 @@ export const en: Catalog = {
   'title.startTouch': 'TAP TO START',
   'menu.play': 'PLAY',
   'menu.options': 'OPTIONS',
+  'menu.quit': 'QUIT',
   'menu.best': (p: { score: number }, f: Format) => `BEST  ${f.number(p.score)}`,
   'menu.hint': '↑ ↓ SELECT · ENTER CONFIRM',
   'options.title': 'OPTIONS',

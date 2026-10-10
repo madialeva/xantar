@@ -45,6 +45,14 @@ export const SCENARIOS: Readonly<Record<string, readonly SmokeRun[]>> = {
       steps: `${TO_MENU},shot:title-to-menu,key:Down,key:Return,wait:500,shot:options,key:Right,wait:500,shot:options-other-language,key:Down,key:Right,wait:500,shot:options-theme,key:Escape,wait:500,shot:menu-after-options`
     }
   ],
+  quit: [
+    {
+      name: 'quit',
+      size: SIZES['16x9'],
+      query: '',
+      steps: `${TO_MENU},key:Escape,wait:400,shot:quit-selected,key:Return,wait:500,expectQuit`
+    }
+  ],
   pause: [
     {
       name: 'pause',

@@ -67,8 +67,10 @@ The title screen waits for a click, a tap or any key, then opens the **main
 menu**: **Play** starts a game and **Options** lets you choose the **language**
 (Spanish or English; the first time it follows your browser) and the **theme**
 (**Automatic** uses the one of each level). Your choices and your **best
-score** are remembered between sessions. Menus work with the arrow keys and
-`Enter`, or by clicking or tapping an entry; `Esc` goes back.
+score** are remembered between sessions. In the desktop app the menu also has
+**Quit**, which closes the game. Menus work with the arrow keys and `Enter`, or
+by clicking or tapping an entry; `Esc` goes back (in the main menu of the
+desktop app it selects **Quit**).
 
 ### Controls
 
