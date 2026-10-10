@@ -316,6 +316,35 @@ exportar desde Inkscape como "SVG plano" y sustituir colores por clases.
   (acoplaría el dominio a la vista y rompería la carga de niveles creados con
   temas que no estén instalados).
 
+### D13. Herramientas de verificación visual en el repositorio
+
+Añadido durante la implementación a petición del autor: las utilidades que se
+usaron para revisar el cambio pasan al repositorio, en TypeScript (sin otros
+lenguajes) y sin dependencias nuevas.
+
+- **Prueba de humo** (`npm run smoke`): el proceso principal de Electron que
+  abre `dist/`, simula clics y teclas, guarda capturas y la consola vive en
+  `tools/smoke/*.ts` (comprobado con `tsconfig.electron.json` y Oxlint). Un
+  lanzador mínimo `scripts/smoke.mjs`, como `build-electron.mjs`, lo compila
+  con esbuild y arranca Electron; en Linux usa `xvfb-run` si está disponible
+  para no abrir ventanas. Los escenarios (tamaños, URL y pasos) son datos en
+  `tools/smoke/scenarios.ts`; el escenario por defecto, `review`, captura los
+  dos temas a 16:9, 4:3 y 19,5:9. Las salidas van a `.smoke/` (ignorada por
+  git) y el comando termina con error si la consola registra errores o el
+  renderizador se cae, de modo que la CI de #6 podrá usarlo.
+- **Lámina de arte** (`npm run dev` → `/tools/art-sheet.html`): página solo de
+  desarrollo que usa el código real (`ThemeRegistry`, `SvgRasterizer`,
+  `ArtFactory`, rigs y estados de animación) para mostrar todos los gráficos,
+  tiras de ingredientes y platos de 2, 3 y 4 segmentos, un tramo de
+  plataforma con escalera y cada personaje en cada estado de animación, con
+  selector de tema. Su código vive en `src/devtools/` (comprobado como el
+  resto del renderer); Vite solo empaqueta `index.html`, así que no llega a la
+  build publicada.
+- **Alternativas descartadas:** los generadores de SVG usados para el primer
+  dibujo (los SVG del repositorio son la fuente editable y regenerarlos
+  borraría retoques) y una lámina estática que replicase la paleta y las
+  posiciones de los rigs fuera del código del juego.
+
 ### Resultado de la evaluación de post-procesado
 
 Modo de prueba opcional, sin efecto si no se pide: `?filters=` con `glow`

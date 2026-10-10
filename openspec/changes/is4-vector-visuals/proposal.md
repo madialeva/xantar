@@ -101,7 +101,9 @@ que esos cambios se construyan sobre el dibujo provisional.
   arranque mínima que rasteriza los temas antes de `TapScene`;
   `LevelDocument`, `parseLevelDocument` y `serializeLevel` aceptan `theme`; `src/main.ts`
   cambia el modo de escala y el tamaño del lienzo; `src/config.ts` pierde las
-  constantes de color y alturas.
+  constantes de color y alturas. Herramientas de verificación visual en
+  TypeScript: prueba de humo de Electron (`tools/smoke/`, `npm run smoke`) y
+  lámina de arte de desarrollo (`tools/art-sheet.html`, `src/devtools/`).
 - **Dependencias**: ninguna nueva en tiempo de ejecución. Una declaración de
   tipos para los módulos `*.svg?raw`.
 - **Jugabilidad**: ninguna diferencia; las reglas y los niveles no se tocan.

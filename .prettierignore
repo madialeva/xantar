@@ -1,6 +1,7 @@
 dist
 dist-electron
 release
+.smoke
 node_modules
 docs
 package-lock.json

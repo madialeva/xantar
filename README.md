@@ -207,6 +207,7 @@ The project supports web and desktop development from the same code:
 | `npm run typecheck`         | Type checking                  |
 | `npm run lint` / `format`   | Oxlint and Prettier            |
 | `npm run test`              | Unit tests (Vitest)            |
+| `npm run smoke`             | Screenshots of the desktop app |
 
 The full technical documentation (architecture, internal mechanics and
 workflow) lives in [`docs/MANUAL.md`](docs/MANUAL.md).

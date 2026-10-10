@@ -102,7 +102,11 @@ xantar/
 │   └── music/
 │       └── tap-back.mp3
 ├── scripts/
-│   └── build-electron.mjs       # Compila electron/*.ts -> dist-electron/ (CJS)
+│   ├── build-electron.mjs       # Compila electron/*.ts -> dist-electron/ (CJS)
+│   └── smoke.mjs                # Lanzador de la prueba de humo (compila tools/smoke y abre Electron)
+├── tools/                       # Herramientas de desarrollo (no van en la build publicada)
+│   ├── smoke/                   # Prueba de humo en Electron: pasos, escenarios y proceso principal
+│   └── art-sheet.html           # Lámina de arte (se abre con npm run dev)
 ├── src/                         # Código del juego (renderer)
 │   ├── main.ts                  # Punto de entrada: config de Phaser + new Phaser.Game()
 │   ├── config.ts                # Solo de la vista: tamaño de tile, rejilla y nivel de escala de dibujo
@@ -117,6 +121,7 @@ xantar/
 │   │   └── testing/             # Niveles (cuadrículas) y dobles de prueba compartidos por los tests
 │   ├── levels/
 │   │   └── classic.level.json   # Nivel clásico en el formato de nivel v1
+│   ├── devtools/                # Código de la lámina de arte (ArtSheetScene)
 │   ├── objects/                 # Vistas Phaser (sin lógica): ChefView, EnemyView, IngredientView
 │   ├── view/                    # Pipeline visual (ver 8.7)
 │   │   ├── art/<tema>/*.svg     # Fuentes SVG de cada tema (se incluyen en el bundle como texto)
@@ -148,7 +153,7 @@ xantar/
 ├── .prettierrc.json             # Reglas de estilo de Prettier
 ├── .prettierignore              # Exclusiones de Prettier
 ├── .editorconfig                # Convenciones básicas de editor
-└── .gitignore                   # Ignora node_modules/, dist/, dist-electron/, release/
+└── .gitignore                   # Ignora node_modules/, dist/, dist-electron/, release/, .smoke/
 ```
 
 **Directorios generados (no editar, están en `.gitignore`):**
@@ -180,6 +185,7 @@ xantar/
 | `npm run test:watch` | Vitest en modo observador |
 | `npm run format` | Formatea todo el código con Prettier |
 | `npm run format:check` | Comprueba el formato sin modificar ficheros (ideal para CI) |
+| `npm run smoke` | Compila la web y ejecuta la prueba de humo en Electron (capturas y consola en `.smoke/`) |
 
 ---
 
@@ -535,6 +541,14 @@ Opción recomendada (CI): un workflow de GitHub Actions que ejecute `npm ci && n
 2. Para animarla, edita el estado en `src/view/rigs/states.ts`: `motion.swing(parte, desde, hasta, ms)` la mueve de ida y vuelta, `motion.once(...)` una sola vez y `motion.hold(...)` la deja en una postura. Los desplazamientos son relativos a la postura base (`dx`, `dy`, `angle`, `scaleX`, `scaleY`).
 3. Un estado nuevo se añade al tipo (`ChefAnimation` o `EnemyAnimation`), a la función que lo elige (`chooseAnimation.ts`, con su prueba) y a la tabla de estados.
 
+### 9.11 Verificar visualmente un cambio
+
+1. **Prueba de humo**: `npm run smoke` compila la web y abre `dist/` en Electron (bajo `file://`, como la app de escritorio). Por defecto ejecuta el escenario `review`: los dos temas a 1920×1080, 1024×768 y 2340×1080, pulsando derecha un momento. Por cada ejecución guarda `.smoke/<escenario>/<ejecución>/*.png` y `console.log`, imprime `ok` o `FAILED` y termina con código 1 si la consola registra algún error o el renderizador se cae.
+   - Otros escenarios: `npm run smoke -- quick`, `climb` o `game-over` (definidos en `tools/smoke/scenarios.ts`; añadir uno es añadir datos).
+   - Una ejecución a medida: `npm run smoke -- --size 1280x720 --query theme=midnight --steps "wait:2500,click,wait:2000,down:Up,wait:500,shot:sube,up:Up" --name prueba`. Pasos: `wait:<ms>`, `click` (centro de la ventana), `key:<tecla>[:<ms>]`, `down:<tecla>`, `up:<tecla>` y `shot:<nombre>`; las teclas usan los nombres de Electron (`Left`, `Up`, `Space`, `Return`…).
+   - En Linux usa `xvfb-run` si está instalado, sin abrir ventanas y con WebGL por software; `--visible` lo desactiva. Si `dist/` ya está al día, `node scripts/smoke.mjs <escenario>` se salta la compilación.
+2. **Lámina de arte**: con `npm run dev`, abre http://localhost:5173/tools/art-sheet.html. Dibuja con el código del juego (rasterizador, temas y rigs) todos los gráficos del catálogo, las tiras de ingredientes y platos de 4, 3 y 2 segmentos, un tramo de plataforma con escalera y cada personaje en cada estado de animación; el selector cambia de tema. Al editar un SVG, Vite recarga la página. Solo existe en desarrollo: `npm run build` no la incluye.
+
 ## 10. Build y empaquetado
 
 ### 10.1 Web
@@ -687,10 +701,10 @@ Reglas destacadas de `.oxlintrc.json`:
 - Categoría `correctness` en error, más reglas con tipos: `no-floating-promises`, `no-misused-promises`, `await-thenable`, `unbound-method` y `switch-exhaustiveness-check`.
 - `no-empty` con `allowEmptyCatch: true`: permite `catch {}` vacíos (se usan en `TapScene` para que un fallo de audio no rompa la escena).
 - `no-unused-vars` (aviso) ignora parámetros y capturas con prefijo `_`.
-- Entorno de navegador por defecto y Node solo en `electron/` y `scripts/`.
+- Entorno de navegador por defecto y Node solo en `electron/`, `scripts/` y `tools/smoke/`.
 - **Fronteras de `src/sim/`**: no puede importar Phaser, Node, `scenes/`, `objects/` ni `config`, ni usar globales de navegador, `Date` o `Math.random` (se inyecta un `Rng`). Garantiza que el núcleo sea puro y determinista.
 
-El análisis con tipos usa un `tsconfig` por ejecución, por eso `npm run lint` lanza dos: una para el renderer (`tsconfig.json`) y otra para `electron/` y `scripts/` (`tsconfig.electron.json`).
+El análisis con tipos usa un `tsconfig` por ejecución, por eso `npm run lint` lanza dos: una para el renderer (`tsconfig.json`) y otra para `electron/`, `scripts/` y `tools/` (`tsconfig.electron.json`, que también comprueba los tipos de `tools/smoke/`).
 
 Comandos:
 

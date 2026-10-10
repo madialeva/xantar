@@ -38,22 +38,25 @@ roadmap lives in the GitHub issues and in the README.
 
 ## Commands
 
-| Command                           | Purpose                                                |
-| --------------------------------- | ------------------------------------------------------ |
-| `npm run dev`                     | Web dev server (http://localhost:5173)                 |
-| `npm run dev:desktop`             | Vite + Electron window (renderer hot-reload)           |
-| `npm run build`                   | Type-check renderer + web build into `dist/`           |
-| `npm run preview`                 | Serve `dist/` to test the production web build         |
-| `npm run build:electron`          | Compile `electron/*.ts` into `dist-electron/`          |
-| `npm run build:desktop`           | Type-check + web + Electron + installers in `release/` |
-| `npm run build:desktop:dir`       | Same, unpacked app (fast local test)                   |
-| `npm run typecheck`               | Type-check renderer **and** Electron process           |
-| `npm run lint` / `lint:fix`       | Oxlint with type-aware rules                           |
-| `npm run test` / `test:watch`     | Vitest (simulation core and pure logic)                |
-| `npm run format` / `format:check` | Prettier                                               |
+| Command                           | Purpose                                                 |
+| --------------------------------- | ------------------------------------------------------- |
+| `npm run dev`                     | Web dev server (http://localhost:5173)                  |
+| `npm run dev:desktop`             | Vite + Electron window (renderer hot-reload)            |
+| `npm run build`                   | Type-check renderer + web build into `dist/`            |
+| `npm run preview`                 | Serve `dist/` to test the production web build          |
+| `npm run build:electron`          | Compile `electron/*.ts` into `dist-electron/`           |
+| `npm run build:desktop`           | Type-check + web + Electron + installers in `release/`  |
+| `npm run build:desktop:dir`       | Same, unpacked app (fast local test)                    |
+| `npm run typecheck`               | Type-check renderer **and** Electron process            |
+| `npm run lint` / `lint:fix`       | Oxlint with type-aware rules                            |
+| `npm run test` / `test:watch`     | Vitest (simulation core and pure logic)                 |
+| `npm run format` / `format:check` | Prettier                                                |
+| `npm run smoke`                   | Web build + Electron smoke test (captures in `.smoke/`) |
 
 Before handing off a change, run `npm run lint && npm run format:check &&
-npm run typecheck && npm run test && npm run build` and keep a runnable build. Opening
+npm run typecheck && npm run test && npm run build` and keep a runnable build.
+For visual changes, also run `npm run smoke` and check the art sheet at
+`/tools/art-sheet.html` on the dev server. Opening
 `index.html` directly does **not** work: use the Vite dev server or the built
 `dist/`.
 
