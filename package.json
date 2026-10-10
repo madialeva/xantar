@@ -24,7 +24,8 @@
     "lint": "oxlint --type-aware src vite.config.ts && oxlint --type-aware --tsconfig tsconfig.electron.json electron scripts tools",
     "lint:fix": "oxlint --type-aware --fix src vite.config.ts && oxlint --type-aware --fix --tsconfig tsconfig.electron.json electron scripts tools",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "check:version": "node tools/ci/checkVersion.ts"
   },
   "build": {
     "appId": "com.xantar.game",

@@ -773,8 +773,13 @@ sensación.
   muestra todos los gráficos y animaciones con el código real.
 - **Lint, formato y tipos**: herramientas automáticas que detectan errores y
   mantienen el estilo (`npm run lint`, `format:check`, `typecheck`).
-- **Integración continua** (*CI*): que todo lo anterior se ejecute solo en
-  cada cambio (#6).
+- **Integración continua** (*CI*): un servidor ejecuta todo lo anterior, solo,
+  en cada propuesta de cambio, en una máquina limpia. Así un error no depende de
+  acordarse de pasar las pruebas, y "en mi equipo funciona" deja de valer: si la
+  CI está en rojo, el cambio no entra. En Xantar, GitHub Actions comprueba cada
+  pull request (lint, formato, tipos, pruebas, build y prueba de humo) y genera
+  los instaladores de los tres sistemas operativos, cada uno en su sistema, algo
+  que un solo ordenador no puede hacer.
 - **Pruebas de juego** (*playtesting*): jugar y observar a otros jugar. Es la
   única forma de saber si algo es divertido, difícil o confuso.
 

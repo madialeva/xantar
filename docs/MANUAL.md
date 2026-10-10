@@ -97,6 +97,9 @@ npm run dev:desktop
 
 ```
 xantar/
+├── .github/workflows/           # Integración continua (ver 10.4)
+│   ├── ci.yml                   # Comprobaciones de cada PR y push, versión y prueba de humo
+│   └── desktop.yml              # Instaladores de Linux, Windows y macOS
 ├── electron/                    # Proceso principal de Electron (no va al renderer)
 │   ├── main.ts                  # Crea la ventana, carga dev server o dist/
 │   └── preload.ts               # Puente seguro renderer ↔ main (contextBridge)
@@ -108,6 +111,7 @@ xantar/
 │   └── smoke.mjs                # Lanzador de la prueba de humo (compila tools/smoke y abre Electron)
 ├── tools/                       # Herramientas de desarrollo (no van en la build publicada)
 │   ├── smoke/                   # Prueba de humo en Electron: pasos, escenarios y proceso principal
+│   ├── ci/                      # Comprobación de versión frente a la rama (CI)
 │   └── art-sheet.html           # Lámina de arte (se abre con npm run dev)
 ├── src/                         # Código del juego (renderer)
 │   ├── main.ts                  # Punto de entrada: config de Phaser + new Phaser.Game()
@@ -197,6 +201,7 @@ xantar/
 | `npm run format` | Formatea todo el código con Prettier |
 | `npm run format:check` | Comprueba el formato sin modificar ficheros (ideal para CI) |
 | `npm run smoke` | Compila la web y Electron y ejecuta la prueba de humo (capturas y consola en `.smoke/`) |
+| `npm run check:version` | Comprueba que la versión de `package.json` coincide con la rama o etiqueta de la CI (`GITHUB_REF_NAME`, `GITHUB_BASE_REF`) |
 
 ---
 
@@ -642,7 +647,7 @@ Objetivos configurados en `package.json` (campo `build`):
 | Windows | NSIS (`.exe`) |
 | macOS | DMG |
 
-**Limitación importante:** electron-builder solo puede generar el instalador de la plataforma en la que ejecutas el build. Para publicar en las tres hay que usar CI (GitHub Actions con una matriz Linux/Windows/macOS). Además, para distribuir de verdad se necesitan **iconos** propios y **firma de código** (obligatoria en macOS y recomendable en Windows).
+**Limitación importante:** electron-builder solo puede generar el instalador de la plataforma en la que ejecutas el build. Los tres instaladores los genera la CI con una matriz Linux/Windows/macOS (ver 10.4). Para distribuir de verdad se necesitan además **iconos** propios y **firma de código** (obligatoria en macOS y recomendable en Windows).
 
 ### 10.3 Qué se incluye en el paquete
 
@@ -655,6 +660,30 @@ Gracias a la configuración de `build.files`, el `app.asar` solo contiene:
 ```
 
 Phaser va dentro del bundle de Vite, por lo que **no** se incluye `node_modules/phaser` (evita ~140 MB extra). Por eso `phaser` figura en `devDependencies`.
+
+### 10.4 Integración continua (GitHub Actions)
+
+Dos workflows en `.github/workflows/`, solo con acciones oficiales de GitHub (`actions/*`) y la versión de Node de `.nvmrc`:
+
+| Workflow | Cuándo | Jobs |
+|----------|--------|------|
+| `ci.yml` | PR hacia `develop/**` o `release/**`; push a esas ramas y a etiquetas `v*` | `check`: lint, formato, tipos, pruebas y build web. `version`: `npm run check:version`. `smoke`: prueba de humo en Linux con `xvfb` (tras `check`), capturas como artefacto `smoke` |
+| `desktop.yml` | Push a `release/**`, etiquetas `v*` y ejecución manual (*Run workflow*) | Matriz `ubuntu-latest`, `windows-latest`, `macos-latest`: `npm run build:desktop -- --publish never`; instaladores como artefactos `xantar-<os>` (14 días) |
+
+**Versión frente a la rama.** `tools/ci/branchVersion.ts` (`expectedVersion`, con pruebas) deduce la versión esperada: `develop/vX.Y.Z`, `release/vX.Y.Z` y la etiqueta `vX.Y.Z` exigen `X.Y.Z`; en un PR manda la rama destino; las demás ramas no se comprueban. `tools/ci/checkVersion.ts` la compara con `package.json`; Node 24 lo ejecuta directamente, sin compilar (elimina los tipos al cargarlo). Para probarlo en local:
+
+```bash
+GITHUB_REF_NAME=develop/v1.0.0 npm run check:version
+```
+
+**Detalles del entorno de Actions:**
+
+- `check` instala sin el binario de Electron (`ELECTRON_SKIP_BINARY_DOWNLOAD=1`), que no necesita.
+- `smoke` desactiva la restricción de AppArmor sobre los espacios de nombres de usuario (`kernel.apparmor_restrict_unprivileged_userns=0`); sin eso, el sandbox de Chromium no arranca en Ubuntu 24.04.
+- `desktop.yml` fija `CSC_IDENTITY_AUTO_DISCOVERY=false`: los instaladores se generan **sin firmar** (ver 10.2). No se publican como versión de GitHub; se descargan desde la ejecución del workflow (*Artifacts*).
+- La ejecución manual de `desktop.yml` solo aparece cuando el workflow está en la rama por defecto del repositorio.
+
+**Protección de ramas.** Tras el primer merge, marcar `Lint, format, types, tests and build`, `Version matches the branch` y `Desktop smoke test` como comprobaciones obligatorias en la regla de protección de `develop/**` (Settings → Rules) para que un PR no se pueda fusionar con la CI en rojo.
 
 ---
 

@@ -211,9 +211,9 @@ currently under development. Releasing cuts `release/vX.Y.Z` from it and tags
 `vX.Y.Z`; hotfixes bump the patch digit. When a new cycle starts,
 `develop/vX.Y.Z` is created from the released tag and becomes the default
 branch. The program version lives as the single source of truth in
-`package.json` (`version`) and must match the branch suffix. Until the CI
-workflow exists, check it by hand when cutting a branch; the CI change adds the
-automatic check on `develop/**` and `release/**` pushes.
+`package.json` (`version`) and must match the branch suffix. The CI checks it
+on every push to `develop/**`, `release/**` and `v*` tags and on every pull
+request toward those branches (`npm run check:version`).
 
 Each OpenSpec change is tracked on GitHub with this cycle:
 
@@ -233,7 +233,7 @@ Each OpenSpec change is tracked on GitHub with this cycle:
    "Working preferences"), and push (pushes are done by the user). The user
    validates the result (including running the game) before the PR.
 6. PR toward `develop/vX.Y.Z` with `Closes #<n>` in the description → the CI
-   (once it exists) validates the PR → the user reviews the diff.
+   validates the PR → the user reviews the diff.
 7. Squash merge as the norm (one change = one clean commit on the development
    branch). Exception: PRs whose intermediate commits have standalone value
    (e.g. massive deletions separated from new code) → normal merge.
