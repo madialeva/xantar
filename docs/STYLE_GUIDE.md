@@ -48,7 +48,8 @@ mediante una clase, y el tema activo decide el color. Paleta del tema `classic`:
 | `patty` / `pattyShade` | `#7b3f1d` / `#5a2b12` | carne |
 | `lettuce` / `lettuceShade` | `#6cc24a` / `#3f8f2c` | lechuga |
 | `chef` / `chefShade` / `skin` / `cheek` | `#ffffff` / `#d7dde5` / `#f3c58f` / `#f29c8f` | chef |
-| `scarf` / `trousers` | `#e2504c` / `#3a4252` | pañuelo y pantalón del chef |
+| `scarf` / `trousers` | `#e2504c` / `#5b84d8` | pañuelo y pantalón del chef (y botones de la chaqueta) |
+| `hair` / `shoe` | `#7a4421` / `#c98a52` | pelo y bigote; zapatos (claros para destacar sobre fondo oscuro) |
 | `hotdog` / `sausage` | `#e3a052` / `#c8442f` | perrito |
 | `pickle` / `pickleShade` | `#5f9e3a` / `#3e6e24` | pepinillo |
 | `egg` / `yolk` | `#fbfbf6` / `#f6c03b` | huevo |

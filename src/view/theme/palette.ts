@@ -29,6 +29,8 @@ export const PALETTE_TOKENS = [
   'cheek',
   'scarf',
   'trousers',
+  'hair',
+  'shoe',
   'outline',
   'shadow',
   'highlight',

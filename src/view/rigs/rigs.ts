@@ -3,14 +3,14 @@ import type { RigDefinition } from './RigDefinition';
 
 export const chefRig: RigDefinition = {
   parts: [
-    { name: 'armLeft', graphic: 'chef.armLeft', x: -7, y: -8, originY: 0.1 },
-    { name: 'legLeft', graphic: 'chef.legLeft', x: -3, y: 2, originY: 0 },
-    { name: 'legRight', graphic: 'chef.legRight', x: 3, y: 2, originY: 0 },
+    { name: 'armLeft', graphic: 'chef.armLeft', x: -5.6, y: -8, originY: 0.1 },
+    { name: 'legLeft', graphic: 'chef.legLeft', x: -3, y: 1, originY: 0 },
+    { name: 'legRight', graphic: 'chef.legRight', x: 3, y: 1, originY: 0 },
     { name: 'body', graphic: 'chef.body', x: 0, y: 4, originY: 1 },
-    { name: 'head', graphic: 'chef.head', x: 0.5, y: -14 },
-    { name: 'eyes', graphic: 'chef.eyes', x: 1, y: -14.5 },
-    { name: 'hat', graphic: 'chef.hat', x: 0, y: -17, originY: 1 },
-    { name: 'armRight', graphic: 'chef.armRight', x: 7, y: -8, originY: 0.1 }
+    { name: 'head', graphic: 'chef.head', x: 0.5, y: -13.5 },
+    { name: 'eyes', graphic: 'chef.eyes', x: 1.2, y: -15 },
+    { name: 'hat', graphic: 'chef.hat', x: 0, y: -16.4, originY: 1 },
+    { name: 'armRight', graphic: 'chef.armRight', x: 5.6, y: -8, originY: 0.1 }
   ]
 };
 
