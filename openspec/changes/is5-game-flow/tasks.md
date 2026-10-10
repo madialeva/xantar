@@ -21,7 +21,7 @@
 
 ## 5. Tema con la opción del jugador
 
-- [ ] 5.1 Ampliar `chooseTheme` con `optionTheme` (prioridad URL → opción salvo `auto` → nivel → `classic`, aviso con origen "the settings" para un tema guardado que ya no existe); verificar con pruebas de las combinaciones de la prioridad
+- [x] 5.1 Ampliar `chooseTheme` con `optionTheme` (prioridad URL → opción salvo `auto` → nivel → `classic`, aviso con origen "the settings" para un tema guardado que ya no existe); verificar con pruebas de las combinaciones de la prioridad
 
 ## 6. Escenas, HUD paralelo, menús y pausa
 

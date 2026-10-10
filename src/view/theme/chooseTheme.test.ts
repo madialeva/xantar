@@ -43,4 +43,31 @@ describe('chooseTheme', () => {
     expect(chooseTheme({ urlTheme: '', levelTheme: 'midnight' }, themes).id).toBe('midnight');
     expect(chooseTheme({ urlTheme: null }, themes)).toEqual({ id: 'classic', warnings: [] });
   });
+
+  it('uses the theme the player chose over the level', () => {
+    expect(chooseTheme({ optionTheme: 'midnight', levelTheme: 'classic' }, themes).id).toBe(
+      'midnight'
+    );
+  });
+
+  it('follows the level when the player chose automatic', () => {
+    expect(chooseTheme({ optionTheme: 'auto', levelTheme: 'midnight' }, themes)).toEqual({
+      id: 'midnight',
+      warnings: []
+    });
+  });
+
+  it('lets the URL override the player choice', () => {
+    expect(chooseTheme({ urlTheme: 'classic', optionTheme: 'midnight' }, themes).id).toBe(
+      'classic'
+    );
+  });
+
+  it('skips a saved theme that no longer exists, warning about the settings', () => {
+    const choice = chooseTheme({ optionTheme: 'neon', levelTheme: 'midnight' }, themes);
+    expect(choice.id).toBe('midnight');
+    expect(choice.warnings).toEqual([
+      'Unknown theme "neon" requested by the settings; ignoring it'
+    ]);
+  });
 });
