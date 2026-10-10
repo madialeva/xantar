@@ -43,5 +43,5 @@
 
 ## 6. Verificación final
 
-- [ ] 6.1 Ejecutar `npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build`, `npm run smoke` y los escenarios `controls`, `touch`, `audio` y `security`, y verificar que todo termina con código 0; revisar la hoja de arte en `/tools/art-sheet.html` con los gráficos táctiles nuevos
+- [x] 6.1 Ejecutar `npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build`, `npm run smoke` y los escenarios `controls`, `touch`, `audio` y `security`, y verificar que todo termina con código 0; revisar la hoja de arte en `/tools/art-sheet.html` con los gráficos táctiles nuevos
 - [ ] 6.2 Revisión manual del autor: teclado reasignado, mando y táctil (móvil real, también vertical), sonido de cada evento y de los menús, volúmenes y silencio, foco de la ventana, aplicación empaquetada (icono, instancia única, F11, Esc en pantalla completa) e instaladores de la CI en los tres sistemas

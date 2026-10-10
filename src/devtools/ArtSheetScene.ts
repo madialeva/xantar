@@ -21,6 +21,8 @@ export const SHEET_HEIGHT = 940;
 
 const MARGIN = 20;
 const GRID_COLUMNS = 10;
+/** Graphics larger than this are shrunk to fit their cell, and their label says so. */
+const CELL_ART_SIZE = 40;
 const GRID_CELL = { width: 96, height: 66 };
 const HIT_REPLAY_MS = 1600;
 const SPECIMEN_ZOOM = 1.6;
@@ -133,8 +135,11 @@ export default class ArtSheetScene extends Phaser.Scene {
     graphics.forEach((id, index) => {
       const x = MARGIN + (index % GRID_COLUMNS) * GRID_CELL.width + GRID_CELL.width / 2;
       const y = top + 24 + Math.floor(index / GRID_COLUMNS) * GRID_CELL.height;
-      this.#art.image(id, x, y + 20);
-      this.#label(x - GRID_CELL.width / 2 + 4, y + 44, id, 8);
+      const image = this.#art.image(id, x, y + 20);
+      const fit = Math.min(1, CELL_ART_SIZE / Math.max(image.displayWidth, image.displayHeight));
+      image.setScale(image.scale * fit);
+      const shrunk = fit < 1 ? ` (${Math.round(fit * 100)} %)` : '';
+      this.#label(x - GRID_CELL.width / 2 + 4, y + 44, `${id}${shrunk}`, 8);
     });
     return top + 24 + Math.ceil(graphics.length / GRID_COLUMNS) * GRID_CELL.height;
   }
