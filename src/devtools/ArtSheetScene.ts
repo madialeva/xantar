@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { TILE, type RenderTier, platformY } from '../config';
 import IngredientView from '../objects/IngredientView';
 import { type IngredientKind, type IngredientSnapshot } from '../sim';
+import { applyBloom } from '../view/fx/bloom';
 import { HUD_FONT } from '../view/hud/textStyle';
 import { ArtFactory } from '../view/raster/ArtFactory';
 import { SvgRasterizer } from '../view/raster/SvgRasterizer';
@@ -59,6 +60,7 @@ export default class ArtSheetScene extends Phaser.Scene {
   create(): void {
     this.cameras.main.setBackgroundColor(this.#theme.palette.background).setZoom(this.#tier);
     this.cameras.main.setOrigin(0, 0);
+    if (this.#theme.bloom) applyBloom(this);
     this.#art = new ArtFactory(this, this.#theme.id, this.#tier);
     void new SvgRasterizer(this.textures, this.#tier)
       .rasterizeTheme(this.#theme)

@@ -13,7 +13,10 @@ Un tema SHALL tener un identificador, un nombre, una paleta que asigna un color
 a cada token de la guía de estilo y, opcionalmente, una fuente SVG propia para
 cualquier gráfico identificado por el id de su pieza, ingrediente, personaje o
 elemento del HUD. Los gráficos de las piezas SHALL identificarse por el id que
-la pieza tiene en el registro de piezas.
+la pieza tiene en el registro de piezas. Un tema MAY activar el efecto de
+resplandor (*bloom*) sobre la imagen del juego; el efecto SHALL NOT heredarse
+del tema por defecto y SHALL omitirse sin error cuando el renderizador no lo
+admita.
 
 #### Scenario: Tema que solo cambia colores
 - **WHEN** un tema define únicamente su paleta
@@ -24,6 +27,11 @@ la pieza tiene en el registro de piezas.
 - **WHEN** un tema aporta su propia fuente SVG para la pieza `platform`
 - **THEN** las plataformas se dibujan con esa fuente y el resto de gráficos con
   las del tema por defecto
+
+#### Scenario: Tema con resplandor
+- **WHEN** se juega con el tema `midnight`, que activa el resplandor
+- **THEN** la imagen del juego se dibuja con resplandor, y con el tema
+  `classic` se dibuja sin él
 
 ### Requirement: Herencia del tema por defecto
 El sistema SHALL tener un tema por defecto (`classic`) completo: paleta con

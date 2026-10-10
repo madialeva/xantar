@@ -3,16 +3,12 @@ import { RENDER_TIER } from './config';
 import BootScene from './scenes/BootScene';
 import GameScene from './scenes/GameScene';
 import TapScene from './scenes/TapScene';
-import { FilterTrial } from './view/fx/FilterTrial';
-import { parseFilterTrial } from './view/fx/parseFilterTrial';
 import { computeLayout } from './view/layout/computeLayout';
 import { createThemeRegistry } from './view/themes';
 
 const tier = RENDER_TIER;
 const themes = createThemeRegistry();
-const search = new URLSearchParams(window.location.search);
-const urlTheme = search.get('theme');
-const filterTrial = new FilterTrial(parseFilterTrial(search.get('filters')));
+const urlTheme = new URLSearchParams(window.location.search).get('theme');
 const initial = computeLayout(window.innerWidth, window.innerHeight);
 
 const config: Phaser.Types.Core.GameConfig = {
@@ -30,7 +26,7 @@ const config: Phaser.Types.Core.GameConfig = {
   scene: [
     new BootScene({ themes, tier }),
     new TapScene(tier),
-    new GameScene({ themes, urlTheme, tier, filterTrial })
+    new GameScene({ themes, urlTheme, tier })
   ]
 };
 

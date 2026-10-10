@@ -66,7 +66,8 @@ export class ThemeRegistry {
       id: theme.id,
       name: theme.name,
       palette: { ...this.#fallback.palette, ...theme.palette } as ResolvedTheme['palette'],
-      art: { ...this.#fallback.art, ...theme.art } as ResolvedTheme['art']
+      art: { ...this.#fallback.art, ...theme.art } as ResolvedTheme['art'],
+      bloom: theme.bloom ?? false
     };
   }
 

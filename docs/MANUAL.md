@@ -408,6 +408,8 @@ Para pasar a 4× basta con cambiar `RENDER_TIER` en `src/config.ts`: texturas, c
 
 **Personajes por partes** (`src/view/rigs/`): el chef y cada enemigo son un `CharacterRig` (un `Container` con una imagen por parte) descrito como datos en `rigs.ts` (`RigDefinition`: nombre, gráfico, posición respecto al centro de su casilla y punto de giro). `chefAnimation` y `enemyAnimation` deciden, como funciones puras del snapshot, en qué estado está cada personaje; `RigAnimator` cambia de estado (patrón State: `AnimationState` en `states.ts`) parando los tweens, volviendo a la postura base y arrancando los del nuevo. Los tweens solo tocan partes y nunca la posición del personaje, que sigue saliendo de la interpolación de la simulación.
 
+**Rendimiento y post-procesado**: la referencia es una gráfica integrada modesta (AMD Radeon de un Ryzen «Renoir»); cualquier efecto debe mantener 60 fps en ella. Por eso las sombras y brillos van dibujados dentro de los SVG y el único filtro de Phaser en uso es el resplandor de los temas con `bloom` (`src/view/fx/bloom.ts`), una sola pasada sobre la cámara. Los filtros por objeto (brillo o sombra en cada ingrediente o personaje) se descartaron: con unas 20 pasadas extra por fotograma el juego dejaba de ser fluido en el equipo de referencia.
+
 **Efectos** (`EventEffects`): adornos de vida corta (nube de pimienta, destello al pisar un segmento, aplastamiento de enemigo, chispas al completar una hamburguesa) que se destruyen solos y que `GameScene` limpia en `boardStarted`.
 
 ---
@@ -532,7 +534,7 @@ Opción recomendada (CI): un workflow de GitHub Actions que ejecute `npm ci && n
 
 1. Crea `src/view/themes/<id>.ts` con su paleta parcial (`Partial<Palette>`): solo los tokens que cambian.
 2. Si sustituye gráficos, pon sus SVG en `src/view/art/<id>/` con el mismo nombre que en `classic`; lo que no sustituya se toma de `classic`.
-3. Regístralo en `createThemeRegistry` (`src/view/themes/index.ts`) con `registry.register({ id, name, palette, art: art.get(id) ?? {} })`.
+3. Regístralo en `createThemeRegistry` (`src/view/themes/index.ts`) con `registry.register({ id, name, palette, art: art.get(id) ?? {} })`. Añade `bloom: true` si el tema se dibuja con resplandor (una sola pasada de cámara con `applyBloom`; solo con WebGL y sin heredarse de `classic`). Hoy lo usa `midnight`.
 4. Pruébalo con `?theme=<id>` en la URL o con `"theme": "<id>"` en un nivel. `npm run test` comprueba que solo usa tokens y gráficos existentes y colores válidos.
 
 ### 9.10 Añadir o animar una parte de un personaje

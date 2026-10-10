@@ -61,8 +61,9 @@ que esos cambios se construyan sobre el dibujo provisional.
   adorno ligero para eventos hoy ignorados (pisar un segmento, aterrizar un
   ingrediente, aplastar un enemigo, completar una hamburguesa).
 - **Evaluación de post-procesado** (filtros de Phaser 4: `Glow`, `Shadow`,
-  bloom) con una decisión documentada en `design.md` antes de adoptarlos; por
-  defecto, sombras y brillos horneados en los SVG.
+  bloom) con una decisión documentada en `design.md` antes de adoptarlos;
+  sombras y brillos horneados en los SVG. Resultado: un tema puede activar el
+  resplandor (*bloom*), que usa `midnight`; el resto se descarta por ahora.
 - **Retirada del dibujo provisional**: desaparecen `INGREDIENT_COLORS`,
   `INGREDIENT_HEIGHTS` y `COLORS` de `src/config.ts` y los assets de ejemplo
   sin uso (`public/assets/red.png`, `space.png`).

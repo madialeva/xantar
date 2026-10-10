@@ -347,34 +347,27 @@ lenguajes) y sin dependencias nuevas.
 
 ### Resultado de la evaluación de post-procesado
 
-Modo de prueba opcional, sin efecto si no se pide: `?filters=` con `glow`
-(brillo en los ingredientes con el token `sparkle`), `shadow` (sombra en chef
-y enemigos), `bloom` (brillo de cámara), combinaciones separadas por comas,
-`all` o `none` (solo contador). Muestra los fotogramas por segundo en el panel
-izquierdo. Código en `src/view/fx/FilterTrial.ts`; se retira o se adopta según
-la decisión.
+Se probó con un modo opcional `?filters=` (ya retirado) que aplicaba `Glow` a
+cada ingrediente, `Shadow` a cada personaje y un brillo de cámara (*bloom*), y
+mostraba los fotogramas por segundo.
 
-Medido en el entorno de pruebas (Electron, WebGL por software SwiftShader, sin
-GPU, 1920×1080, tema `midnight`):
+- **Entorno de pruebas** (Electron, WebGL por software, 1920×1080, tema
+  `midnight`): 59 fps sin filtros y unos 26 con cualquiera de ellos.
+- **Equipo del autor**, que pasa a ser la **referencia de rendimiento** del
+  proyecto: gráfica integrada AMD Radeon (Ryzen «Renoir», Mesa 25.0.7) con
+  WebGL acelerado por hardware en Chrome. Brillo y sombra por objeto hacen que
+  el juego deje de ser fluido y cueste jugar; el *bloom* va fluido.
+- **Causa:** brillo y sombra se aplicaban objeto a objeto (unas 20 pasadas de
+  framebuffer extra por fotograma); el *bloom* es una sola pasada de cámara.
 
-| Filtros | fps |
-|---|---|
-| ninguno | 59 |
-| `glow` | 27 |
-| `shadow` | 26 |
-| `bloom` | 26 |
-| todos | 27 |
-
-Lectura: por software cualquier filtro cuesta una pasada de framebuffer que
-divide los fps a la mitad; no representa una GPU real, pero indica que el
-coste no es despreciable en equipos modestos. A la vista, el brillo sobre
-`midnight` aporta, y la sombra direccional sobre personajes pequeños se lee
-peor que la sombra horneada.
-
-**Pendiente del autor:** medir `none`, `glow` y `all` en Chrome y Electron en
-su equipo y en un móvil Android medio, y decidir. Recomendación provisional:
-mantener sombras y brillos horneados y, como mucho, adoptar `glow` solo en
-temas que lo pidan (como `midnight`) si las mediciones reales sostienen 60 fps.
+**Decisión del autor:** se adopta el *bloom* como opción de tema
+(`Theme.bloom`), activada solo en `midnight`, porque realza los ingredientes;
+el brillo y la sombra por objeto se abandonan por ahora y las sombras y
+brillos siguen horneados en los SVG. Sin prueba en Android: el autor prefiere
+avanzar con el resto del juego y no dedicar más tiempo a efectos de
+renderizado. Cualquier efecto futuro debe mantener 60 fps en el equipo de
+referencia; si se retoma el brillo, hacerlo en una sola pasada (una capa con
+todos los ingredientes o un filtro de cámara), no por objeto.
 
 ## Risks / Trade-offs
 

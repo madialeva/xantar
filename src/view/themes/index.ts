@@ -16,6 +16,7 @@ export function createThemeRegistry(): ThemeRegistry {
     id: 'midnight',
     name: 'Midnight',
     palette: midnightPalette,
-    art: art.get('midnight') ?? {}
+    art: art.get('midnight') ?? {},
+    bloom: true
   });
 }

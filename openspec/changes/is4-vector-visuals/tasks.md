@@ -50,14 +50,14 @@
 ## 8. Tema alternativo y post-procesado
 
 - [x] 8.1 Crear el tema `midnight` (paleta propia y al menos `platform.*` sustituido) y registrarlo; verificar con la prueba de arte y de temas en verde, en `npm run dev` con `?theme=midnight` que el nivel clásico se juega igual con el otro aspecto, y con una copia temporal del nivel clásico con `"theme": "midnight"` que el nivel elige su tema sin URL
-- [ ] 8.2 Evaluar los filtros de Phaser 4 (`Glow`, `Shadow`, bloom aproximado) según D9 midiendo fotogramas a 1920×1080 en Chrome, Electron y un móvil Android; anotar en `design.md` la sección "Resultado de la evaluación de post-procesado" con los datos y la decisión del autor, y aplicar o retirar el código de prueba según esa decisión
+- [x] 8.2 Evaluar los filtros de Phaser 4 (`Glow`, `Shadow`, bloom aproximado) según D9 en el equipo del autor (gráfica integrada AMD, referencia de rendimiento); anotar en `design.md` el resultado y la decisión (bloom como opción de tema `Theme.bloom`, solo en `midnight`; el resto se abandona) y retirar el modo de prueba `?filters=`; verificar con las pruebas del registro de temas y con `npm run smoke` que `midnight` se dibuja con resplandor y `classic` sin él
 - [x] 8.3 Actualizar `README.md` (aspecto vectorial, paneles, temas, el campo `theme` de los niveles y cómo forzar uno con `?theme=` en la versión web); verificar con `npm run format:check` y relectura
 
 ## 9. Verificación final
 
 - [x] 9.1 Ejecutar `npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build` y verificar que todo termina con código 0
 - [x] 9.2 Prueba de humo en Electron sobre `dist/` con `npm run build:desktop:dir`: capturas con ambos temas a 16:9, 4:3 y 19,5:9 y consola sin errores; dejar las capturas para el autor
-- [ ] 9.3 Revisión visual del autor en navegador, Electron y un móvil en horizontal: nitidez, límites de anchura (paneles sin bandas en 16:9 y 19,5:9, bandas en 4:3 y 32:9), animaciones de chef y enemigos, efectos, cambio de tamaño de ventana durante la partida y misma jugabilidad que en `develop/v1.0.0`
+- [x] 9.3 Revisión visual del autor en navegador, Electron y un móvil en horizontal: nitidez, límites de anchura (paneles sin bandas en 16:9 y 19,5:9, bandas en 4:3 y 32:9), animaciones de chef y enemigos, efectos, cambio de tamaño de ventana durante la partida y misma jugabilidad que en `develop/v1.0.0` (hecha por el autor en navegador y en un Android con `npm run preview -- --host`; la música de título que no suena en la web móvil es la política de reproducción automática, anotada en #6)
 
 ## 10. Herramientas de verificación visual
 

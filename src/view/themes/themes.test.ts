@@ -17,4 +17,10 @@ describe('createThemeRegistry', () => {
     expect(midnight.art['chef.hat']).toBe(classic.art['chef.hat']);
     expect(midnight.palette.bun).toBe(classic.palette.bun);
   });
+
+  it('draws midnight with bloom and classic without it', () => {
+    const registry = createThemeRegistry();
+    expect(registry.resolve('midnight').bloom).toBe(true);
+    expect(registry.resolve('classic').bloom).toBe(false);
+  });
 });

@@ -35,6 +35,17 @@ describe('ThemeRegistry', () => {
     expect(resolved.art['platform.left']).toBe('<svg id="platform.left"/>');
   });
 
+  it('turns bloom on only for the themes that ask for it', () => {
+    const registry = new ThemeRegistry({ ...completeTheme('classic'), bloom: true }).register({
+      id: 'night',
+      name: 'Night',
+      palette: {},
+      art: {}
+    });
+    expect(registry.resolve('classic').bloom).toBe(true);
+    expect(registry.resolve('night').bloom).toBe(false);
+  });
+
   it('requires the default theme to be complete', () => {
     const { palette, art } = completeTheme();
     const partial = { ...palette, shadow: undefined };
