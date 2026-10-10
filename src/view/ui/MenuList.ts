@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import type { RenderTier } from '../../config';
+import type { ActionReader } from '../../input/actions';
 import { hudText } from '../hud/textStyle';
+import { SILENT_UI, type UiSounds } from './UiSounds';
 
 /** One entry of a menu: an action, a value that can be changed, or both. */
 export interface MenuItem {
@@ -23,14 +25,24 @@ export interface MenuListStyle {
 
 const MARKER = '▶ ';
 
+/** What drives a menu: the input it reads, its sounds and what going back does. */
+export interface MenuControls {
+  readonly tier: RenderTier;
+  readonly input: ActionReader;
+  readonly sounds?: UiSounds;
+  readonly onBack?: () => void;
+}
+
 /**
- * A vertical menu driven by keyboard (arrows or WASD to move, Enter or Space to choose,
- * left and right to change a value, Esc to go back) and by pointer (click or tap an entry).
+ * A vertical menu driven by actions (up and down to move, confirm to choose, left and right to
+ * change a value, back to go back) from any device, and by pointer (click or tap an entry).
+ * Its scene calls `update` every frame.
  */
 export class MenuList {
-  readonly #scene: Phaser.Scene;
   readonly #items: readonly MenuItem[];
   readonly #style: MenuListStyle;
+  readonly #input: ActionReader;
+  readonly #sounds: UiSounds;
   readonly #onBack: (() => void) | undefined;
   readonly #texts: Phaser.GameObjects.Text[];
   #selected = 0;
@@ -40,31 +52,51 @@ export class MenuList {
     scene: Phaser.Scene,
     items: readonly MenuItem[],
     style: MenuListStyle,
-    tier: RenderTier,
-    onBack?: () => void
+    controls: MenuControls
   ) {
-    this.#scene = scene;
     this.#items = items;
     this.#style = style;
-    this.#onBack = onBack;
+    this.#input = controls.input;
+    this.#sounds = controls.sounds ?? SILENT_UI;
+    this.#onBack = controls.onBack;
     this.#selected = style.selected ?? 0;
     this.#texts = items.map((_item, index) => {
       const text = scene.add
-        .text(style.x, style.y + index * style.spacing, '', hudText(style.size, style.color, tier))
+        .text(
+          style.x,
+          style.y + index * style.spacing,
+          '',
+          hudText(style.size, style.color, controls.tier)
+        )
         .setOrigin(0.5)
         .setDepth(style.depth)
         .setInteractive({ useHandCursor: true });
-      text.on('pointerover', () => this.#select(index));
+      text.on('pointerover', () => this.#select(index, true));
       text.on('pointerup', () => this.#activate(index));
       return text;
     });
-    scene.input.keyboard?.on('keydown', this.#onKey);
     scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.destroy());
     this.refresh();
   }
 
+  /** Reads this frame's actions; call it once per frame from the scene's `update`. */
+  update(): void {
+    if (!this.#enabled || this.#texts.length === 0) return;
+    const input = this.#input;
+    const count = this.#items.length;
+    if (input.repeated('up')) this.#select((this.#selected + count - 1) % count, true);
+    else if (input.repeated('down')) this.#select((this.#selected + 1) % count, true);
+    else if (input.repeated('left')) this.#change(-1);
+    else if (input.repeated('right')) this.#change(1);
+    else if (input.justPressed('confirm')) this.#activate(this.#selected);
+    else if (input.justPressed('back') && this.#onBack) {
+      this.#sounds.back();
+      this.#onBack();
+    }
+  }
+
   selectIndex(index: number): void {
-    this.#select(Math.max(0, Math.min(index, this.#items.length - 1)));
+    this.#select(Math.max(0, Math.min(index, this.#items.length - 1)), true);
   }
 
   setEnabled(enabled: boolean): void {
@@ -84,59 +116,32 @@ export class MenuList {
   }
 
   destroy(): void {
-    this.#scene.input.keyboard?.off('keydown', this.#onKey);
     for (const text of this.#texts) text.destroy();
     this.#texts.length = 0;
   }
 
-  readonly #onKey = (event: KeyboardEvent): void => {
-    if (!this.#enabled || this.#texts.length === 0) return;
-    switch (event.code) {
-      case 'ArrowUp':
-      case 'KeyW':
-        this.#select((this.#selected + this.#items.length - 1) % this.#items.length);
-        break;
-      case 'ArrowDown':
-      case 'KeyS':
-        this.#select((this.#selected + 1) % this.#items.length);
-        break;
-      case 'ArrowLeft':
-      case 'KeyA':
-        this.#change(-1);
-        break;
-      case 'ArrowRight':
-      case 'KeyD':
-        this.#change(1);
-        break;
-      case 'Enter':
-      case 'NumpadEnter':
-      case 'Space':
-        this.#activate(this.#selected);
-        break;
-      case 'Escape':
-        this.#onBack?.();
-        break;
-    }
-  };
-
-  #select(index: number): void {
+  #select(index: number, audible: boolean): void {
     if (index === this.#selected) return;
     this.#selected = index;
+    if (audible) this.#sounds.move();
     this.refresh();
   }
 
   #change(direction: 1 | -1): void {
     const item = this.#items[this.#selected];
     if (!item?.change) return;
+    this.#sounds.move();
     item.change(direction);
     this.refresh();
   }
 
   #activate(index: number): void {
-    if (!this.#enabled) return;
-    this.#select(index);
+    if (!this.#enabled || this.#texts.length === 0) return;
+    this.#select(index, false);
     const item = this.#items[index];
-    if (item?.select) item.select();
-    else if (item?.change) this.#change(1);
+    if (item?.select) {
+      this.#sounds.select();
+      item.select();
+    } else if (item?.change) this.#change(1);
   }
 }

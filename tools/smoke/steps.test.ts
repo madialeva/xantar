@@ -5,7 +5,10 @@ import { parseSize, parseSteps } from './steps';
 describe('parseSteps', () => {
   it('reads every kind of step', () => {
     expect(
-      parseSteps('wait:2500, click,key:Space,key:Left:300,down:Up,up:Up,shot:game,expectQuit')
+      parseSteps(
+        'wait:2500, click,key:Space,key:Left:300,down:Up,up:Up,shot:game,expectQuit,security,' +
+          'touch:320:230,touchDown:1:-48.5:426,touchUp:1,size:540x1170,reload'
+      )
     ).toEqual([
       { kind: 'wait', ms: 2500 },
       { kind: 'click' },
@@ -14,7 +17,13 @@ describe('parseSteps', () => {
       { kind: 'down', key: 'Up' },
       { kind: 'up', key: 'Up' },
       { kind: 'shot', name: 'game' },
-      { kind: 'expectQuit' }
+      { kind: 'expectQuit' },
+      { kind: 'security' },
+      { kind: 'touch', x: 320, y: 230 },
+      { kind: 'touchDown', id: 1, x: -48.5, y: 426 },
+      { kind: 'touchUp', id: 1 },
+      { kind: 'size', width: 540, height: 1170 },
+      { kind: 'reload' }
     ]);
   });
 

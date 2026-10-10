@@ -1,8 +1,12 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, type RenderTier } from '../config';
 import type { Localization } from '../i18n/Localization';
+import type { ActionReader } from '../input/actions';
 import { HudPanels } from '../view/hud/HudPanels';
+import { TouchControls } from '../view/hud/TouchControls';
 import { OverlayView } from '../view/hud/OverlayView';
+import type { InputModality } from '../view/input/InputModality';
+import type { TouchPad } from '../view/input/TouchPad';
 import { followBoardCamera } from '../view/layout/boardCamera';
 import { layoutForWidth } from '../view/layout/computeLayout';
 import { ArtFactory } from '../view/raster/ArtFactory';
@@ -10,19 +14,24 @@ import type { GameSession, SessionState } from '../view/session/GameSession';
 import type { ResolvedTheme } from '../view/theme/Theme';
 import type { ThemeRegistry } from '../view/theme/ThemeRegistry';
 import { MenuList } from '../view/ui/MenuList';
+import type { UiSounds } from '../view/ui/UiSounds';
 
 export interface HudSceneDependencies {
   readonly tier: RenderTier;
   readonly localization: Localization;
   readonly session: GameSession;
   readonly themes: ThemeRegistry;
+  readonly input: ActionReader;
+  readonly touchPad: TouchPad;
+  readonly modality: InputModality;
+  readonly sounds: UiSounds;
 }
 
 export interface HudSceneData {
   readonly themeId: string;
 }
 
-const DEPTH = { panels: 10, overlay: 20, menu: 21 };
+const DEPTH = { panels: 10, touch: 11, overlay: 20, menu: 21 };
 const SHADE = { ready: 0.25, levelClear: 0.5, gameOver: 0.72, pause: 0.6 };
 const PAUSE_TOP = 150;
 
@@ -44,14 +53,15 @@ export default class HudScene extends Phaser.Scene {
   }
 
   create(data: HudSceneData): void {
-    const { tier, localization, session, themes } = this.#deps;
+    const { tier, localization, session, themes, touchPad, modality } = this.#deps;
     this.#theme = themes.resolve(data.themeId);
     this.#shown = '';
     this.#pauseMenu = null;
     const { palette } = this.#theme;
+    const art = new ArtFactory(this, this.#theme.id, tier);
     this.#panels = new HudPanels(
       this,
-      new ArtFactory(this, this.#theme.id, tier),
+      art,
       palette,
       tier,
       {
@@ -62,27 +72,36 @@ export default class HudScene extends Phaser.Scene {
       () => session.request('pause')
     ).setDepth(DEPTH.panels);
     this.#overlay = new OverlayView(this, palette, tier, DEPTH.overlay);
-    followBoardCamera(this, tier, (width) => this.#panels.layout(layoutForWidth(width)));
-    this.input.keyboard?.on('keydown', this.#onKey);
+    const touch = new TouchControls(this, art, touchPad)
+      .setDepth(DEPTH.touch)
+      .setVisible(modality.touch);
+    const stopWatchingTouch = modality.onTouch(() => touch.setVisible(true));
+    followBoardCamera(this, tier, (width) => {
+      const layout = layoutForWidth(width);
+      this.#panels.layout(layout);
+      touch.layout(layout);
+    });
     this.input.on(Phaser.Input.Events.POINTER_UP, this.#onPointer);
     const unsubscribe = session.onState((state) => this.#render(state));
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       unsubscribe();
-      this.input.keyboard?.off('keydown', this.#onKey);
+      stopWatchingTouch();
+      touchPad.release();
       this.input.off(Phaser.Input.Events.POINTER_UP, this.#onPointer);
     });
     this.#render(session.state);
   }
 
-  readonly #onKey = (event: KeyboardEvent): void => {
-    const { session } = this.#deps;
+  override update(): void {
+    const { input, session } = this.#deps;
+    this.#pauseMenu?.update();
     const { paused, phase } = session.state;
-    if (event.code === 'Escape' || event.code === 'KeyP') {
+    if (input.justPressed('pause')) {
       session.request(paused ? 'resume' : 'pause');
-    } else if (phase === 'gameOver' && ['Enter', 'NumpadEnter', 'Space'].includes(event.code)) {
+    } else if (phase === 'gameOver' && input.justPressed('confirm')) {
       session.request('quit');
     }
-  };
+  }
 
   readonly #onPointer = (
     _pointer: Phaser.Input.Pointer,
@@ -157,7 +176,7 @@ export default class HudScene extends Phaser.Scene {
         accent: palette.hudAccent,
         depth: DEPTH.menu
       },
-      tier
+      { tier, input: this.#deps.input, sounds: this.#deps.sounds }
     );
   }
 }

@@ -97,17 +97,27 @@ npm run dev:desktop
 
 ```
 xantar/
+├── .github/workflows/           # Integración continua (ver 10.4)
+│   ├── ci.yml                   # Comprobaciones de cada PR y push, versión y prueba de humo
+│   └── desktop.yml              # Instaladores de Linux, Windows y macOS
 ├── electron/                    # Proceso principal de Electron (no va al renderer)
-│   ├── main.ts                  # Crea la ventana, carga dev server o dist/
-│   └── preload.ts               # Puente seguro renderer ↔ main (contextBridge)
+│   ├── main.ts                  # Ciclo de vida: instancia única, IPC, ventana (dev server o app://)
+│   ├── window.ts                # Ventana endurecida (sandbox, navegación, permisos, F11)
+│   ├── appProtocol.ts           # Protocolo app:// que sirve dist/
+│   ├── appPath.ts               # Rutas y sitios de app:// (puro, con pruebas)
+│   ├── channels.ts              # Nombres de los canales IPC
+│   └── preload.ts               # Puente mínimo renderer ↔ main (contextBridge)
+├── build/                       # Recursos de empaquetado: icon.svg (fuente) e icon.png (generado)
 ├── public/                      # Assets estáticos: se copian TAL CUAL a dist/
 │   └── music/
 │       └── tap-back.mp3
 ├── scripts/
 │   ├── build-electron.mjs       # Compila electron/*.ts -> dist-electron/ (CJS)
+│   ├── build-icon.mjs           # Rasteriza build/icon.svg a build/icon.png (npm run icon)
 │   └── smoke.mjs                # Lanzador de la prueba de humo (compila tools/smoke y abre Electron)
 ├── tools/                       # Herramientas de desarrollo (no van en la build publicada)
 │   ├── smoke/                   # Prueba de humo en Electron: pasos, escenarios y proceso principal
+│   ├── ci/                      # Comprobación de versión frente a la rama (CI)
 │   └── art-sheet.html           # Lámina de arte (se abre con npm run dev)
 ├── src/                         # Código del juego (renderer)
 │   ├── main.ts                  # Punto de entrada: config de Phaser + new Phaser.Game()
@@ -126,7 +136,8 @@ xantar/
 │   │   └── classic.level.json   # Nivel clásico en el formato de nivel v1
 │   ├── devtools/                # Código de la lámina de arte (ArtSheetScene)
 │   ├── i18n/                    # Textos por idioma: catálogos es/en, Translator, Localization
-│   ├── settings/                # Ajustes del jugador (idioma, tema, récord) y su almacenamiento
+│   ├── settings/                # Ajustes del jugador (idioma, tema, récord, sonido, teclas) y su almacenamiento
+│   ├── input/                   # Acciones, asignaciones de teclas, estado por fotograma y cruceta (puro)
 │   ├── objects/                 # Vistas Phaser (sin lógica): ChefView, EnemyView, IngredientView
 │   ├── view/                    # Pipeline visual (ver 8.7)
 │   │   ├── art/<tema>/*.svg     # Fuentes SVG de cada tema (se incluyen en el bundle como texto)
@@ -135,12 +146,14 @@ xantar/
 │   │   ├── raster/              # SvgRasterizer (SVG -> textura) y ArtFactory (imágenes a escala)
 │   │   ├── layout/              # computeLayout (tablero + paneles) y cámara del tablero
 │   │   ├── board/               # MazeView: fondo, escaleras, plataformas, cruces y platos
-│   │   ├── hud/                 # HudPanels (paneles laterales) y OverlayView (fin de nivel/partida)
+│   │   ├── hud/                 # HudPanels (paneles laterales), OverlayView (fin de nivel/partida) y TouchControls
 │   │   ├── fx/                  # EventEffects: adornos breves para eventos de la simulación
 │   │   ├── rigs/                # Personajes por partes: rigs, animador y estados de animación
 │   │   ├── session/             # GameSession: mediador entre la partida y el HUD
-│   │   ├── ui/                  # MenuList (menús con teclado y puntero) y pantalla completa
-│   │   └── audio/               # TitleMusic (música de título y menú)
+│   │   ├── ui/                  # MenuList, ControlsPage (menús por acciones y puntero) y pantalla completa
+│   │   ├── input/               # ActionInput y fuentes: teclado, mando, táctil; InputModality
+│   │   ├── platform/            # Platform (web o escritorio) y aviso de girar el dispositivo
+│   │   └── audio/               # GameAudio (buses, silencio), EventSounds, mezcla y synth/ (efectos sintetizados)
 │   └── scenes/
 │       ├── BootScene.ts         # Rasteriza el arte de todos los temas y pasa al título
 │       ├── TitleScene.ts        # Título: primer gesto -> pantalla completa, música y menú
@@ -197,6 +210,8 @@ xantar/
 | `npm run format` | Formatea todo el código con Prettier |
 | `npm run format:check` | Comprueba el formato sin modificar ficheros (ideal para CI) |
 | `npm run smoke` | Compila la web y Electron y ejecuta la prueba de humo (capturas y consola en `.smoke/`) |
+| `npm run icon` | Regenera `build/icon.png` a partir de `build/icon.svg` |
+| `npm run check:version` | Comprueba que la versión de `package.json` coincide con la rama o etiqueta de la CI (`GITHUB_REF_NAME`, `GITHUB_BASE_REF`) |
 
 ---
 
@@ -228,25 +243,30 @@ xantar/
   <script type="module" src="/src/main.ts"></script>
   ```
 
-- `src/main.ts` es la **raíz de composición**: crea el registro de temas, lee `?theme=` de la URL, carga los ajustes del jugador, crea la localización, la sesión de partida y la música, calcula el tamaño del área de juego con `computeLayout` y construye las escenas pasándoles sus dependencias por constructor (Phaser acepta instancias de escena en `config.scene`). Lo esencial:
+- `src/main.ts` es la **raíz de composición**: crea el registro de temas, lee `?theme=` de la URL, carga los ajustes del jugador, crea la localización, la plataforma (web o escritorio), la entrada (`ActionInput` con teclado, mando y táctil), el audio (`GameAudio`), la sesión de partida y el aviso de girar el dispositivo, calcula el tamaño del área de juego con `computeLayout` y construye las escenas pasándoles sus dependencias por constructor (Phaser acepta instancias de escena en `config.scene`). Lo esencial:
 
   ```ts
-  const settings = new Settings(new LocalStorageSettingsStore(browserStorage()), {
-    language: detectLanguage(navigator.languages),
-    theme: AUTO_THEME,
-    bestScore: 0
-  });
-  const localization = new Localization(settings.language);
-  const session = new GameSession();
-  const music = new TitleMusic('music/tap-back.mp3');
+  const settings = new Settings(
+    new LocalStorageSettingsStore(browserStorage()),
+    defaultSettings(detectLanguage(navigator.languages))
+  );
+  const audio = new GameAudio(settings.values, () => performance.now());
+  settings.subscribe((values) => audio.apply(values));
+  const keyboard = new KeyboardSource(window, document, settings.keyBindings);
+  const input = new ActionInput([keyboard, gamepad, touchPad]);
   // ...
   scene: [
-    new BootScene({ themes, tier, localization }),
-    new TitleScene({ tier, localization, music, themes }),
-    new MenuScene({ tier, localization, settings, themes, music }),
-    new GameScene({ themes, urlTheme, tier, session, settings }),
-    new HudScene({ tier, localization, session, themes })
-  ]
+    new BootScene({ themes, tier, localization, audio }),
+    new TitleScene({ tier, localization, audio, themes, platform, input }),
+    new MenuScene({ tier, localization, settings, themes, audio, platform, input, keyboard, keyLayout }),
+    new GameScene({ themes, urlTheme, tier, session, settings, input, sounds: audio, interruptions }),
+    new HudScene({ tier, localization, session, themes, input, touchPad, modality, sounds: audio.ui })
+  ];
+  // Una vez por fotograma, antes de las escenas: entrada y tecla de silencio.
+  game.events.on(Phaser.Core.Events.PRE_STEP, (time: number) => {
+    input.update(time);
+    if (input.justPressed('mute')) settings.setMuted(!settings.muted);
+  });
   ```
 
   Al cambiar el tamaño de la ventana (agrupado con `requestAnimationFrame`) vuelve a calcular el layout y llama a `game.scale.setGameSize`.
@@ -282,13 +302,13 @@ Para cambiar de escena: `this.scene.start('GameScene')`; para lanzar otra en par
 **Flujo actual** (detalle en 8.8):
 
 ```
-index.html -> src/main.ts -> BootScene (rasteriza los temas) -> TitleScene
-TitleScene --(clic, toque o tecla)--> pantalla completa + música -> MenuScene
+index.html -> src/main.ts -> BootScene (carga la música, sintetiza los efectos, rasteriza los temas) -> TitleScene
+TitleScene --(clic, toque, tecla o botón del mando)--> pantalla completa + música -> MenuScene
 MenuScene --Jugar--> GameScene ══launch══> HudScene
 GameScene --(salir desde la pausa o fin de partida)--> MenuScene   (sin recargar la página)
 ```
 
-La música de título y menú se reproduce con `new Audio(...)` (`TitleMusic`) en lugar del gestor de sonido de Phaser, para que funcione también bajo `file://` (Electron); arranca con el primer gesto del jugador en el título, que es lo que exige el navegador.
+La música de título y menú y los efectos suenan con el gestor de sonido de Phaser a través de `GameAudio` (ver 8.10); la música arranca con el primer gesto del jugador en el título, que es lo que exige el navegador.
 
 ### 8.3 Assets y la carpeta `public/`
 
@@ -304,31 +324,48 @@ Ventajas de `public/`:
 - No hace falta importarlos en el código.
 - Mantienen la misma ruta en desarrollo, en web de producción y en Electron.
 
-Configuración **imprescindible** para Electron: `loader.imageLoadType: 'HTMLImageElement'` (ya aplicada en `src/main.ts`). Sin ella, Phaser carga las imágenes por `XHR`, que está bloqueado bajo `file://`.
+La aplicación de escritorio sirve `dist/` por el protocolo propio `app://xantar/` (ver 8.4), así que el cargador de Phaser funciona igual que en la web, también por `XHR` (audio, JSON). `src/main.ts` mantiene `loader.imageLoadType: 'HTMLImageElement'`: es inofensivo y fue imprescindible mientras Electron cargaba el juego desde `file://`, donde `XHR` está bloqueado.
 
-**Excepción: el arte SVG no vive en `public/`.** Las fuentes SVG de los temas están en `src/view/art/<tema>/` y se importan como texto (`import.meta.glob` con `?raw`), de modo que viajan dentro del bundle. Así funcionan bajo `file://` (el cargador SVG de Phaser usa XHR) y el juego puede inyectarles la paleta del tema antes de rasterizarlas (ver 8.7).
+**Excepción: el arte SVG no vive en `public/`.** Las fuentes SVG de los temas están en `src/view/art/<tema>/` y se importan como texto (`import.meta.glob` con `?raw`), de modo que viajan dentro del bundle y el juego puede inyectarles la paleta del tema antes de rasterizarlas (ver 8.7).
 
 ### 8.4 Capa Electron
 
-**`electron/main.ts`** (proceso principal):
-- Añade `--autoplay-policy=no-user-gesture-required`, de modo que el audio puede sonar sin interacción previa (a diferencia del navegador).
-- Crea una `BrowserWindow` con `contextIsolation: true` y `nodeIntegration: false` (configuración segura).
-- En desarrollo carga `VITE_DEV_SERVER_URL`; en producción carga `dist/index.html`.
-- Atiende el mensaje IPC `app:quit` cerrando la aplicación (`app.quit()`).
+El proceso principal está repartido en módulos pequeños:
 
-**`electron/preload.ts`**: expone una API mínima al renderer mediante `contextBridge`:
+| Fichero | Qué hace |
+|---------|----------|
+| `electron/main.ts` | Ciclo de vida: instancia única, IPC, crea la ventana y la carga |
+| `electron/appPath.ts` | Puro (con pruebas): `APP_URL`, `resolveAppPath` (URL `app://` → fichero de `dist/`, o `null` si sale de él) y `siteOf` |
+| `electron/appProtocol.ts` | Registra `app://` como esquema estándar y seguro y lo sirve desde `dist/` con `net.fetch` (404 fuera de `dist/`) |
+| `electron/window.ts` | `createGameWindow`: la ventana endurecida, y `senderWindow` para validar el emisor de un IPC |
+| `electron/channels.ts` | Nombres de los canales IPC (`app:quit`, `window:set-fullscreen`) |
+| `electron/preload.ts` | Puente mínimo `window.xantar` hacia la página |
+
+**Protocolo `app://`.** En producción el juego se carga en `app://xantar/index.html`, no con `file://`. Así tiene un origen estable y estándar: el cargador de Phaser (XHR) funciona, la CSP puede usar `'self'` y `localStorage` tiene un origen propio. En desarrollo (`VITE_DEV_SERVER_URL`) se carga el servidor de Vite.
+
+**Ventana endurecida** (`createGameWindow`, que usan la aplicación y la prueba de humo):
+
+- `sandbox: true`, `contextIsolation: true`, `nodeIntegration: false`, `webSecurity: true`: la página no tiene `require` ni `process`.
+- `will-navigate` y `will-redirect` cancelan cualquier navegación fuera del sitio del juego (`app://xantar` o el servidor de Vite); `setWindowOpenHandler` deniega ventanas nuevas y `will-attach-webview` se cancela.
+- Todas las solicitudes y consultas de permisos de la página se deniegan.
+- F11 (en `before-input-event`) alterna la pantalla completa **nativa** de la ventana. Esc queda libre para el juego.
+
+**Proceso principal:** pide el bloqueo de instancia única (`requestSingleInstanceLock`; una segunda apertura enfoca la ventana existente y termina) y atiende dos mensajes IPC, solo si vienen de una página del sitio del juego: `app:quit` (`app.quit()`) y `window:set-fullscreen` (con un booleano). No hay excepción de autoplay: el audio arranca con el primer gesto, igual que en la web.
+
+**`electron/preload.ts`** expone una API mínima mediante `contextBridge` (en un preload con sandbox solo están `contextBridge`, `ipcRenderer` y un `process` reducido):
 
 ```ts
-import { contextBridge, ipcRenderer } from 'electron';
-
 contextBridge.exposeInMainWorld('xantar', {
   isDesktop: true,
   platform: process.platform,
-  quit: (): void => ipcRenderer.send('app:quit')
+  quit: (): void => ipcRenderer.send(CHANNELS.quit),
+  setFullScreen: (on: boolean): void => ipcRenderer.send(CHANNELS.setFullScreen, on === true)
 });
 ```
 
-En el juego no se lee `window.xantar` directamente: `desktopQuit(window)` (`src/view/platform/desktop.ts`) comprueba el puente de forma tipada y devuelve una función que cierra la aplicación, o `null` en el navegador. `main.ts` la inyecta en `MenuScene`, que solo muestra **Salir** cuando existe. Cualquier otra comunicación con el sistema operativo (guardar partida, abrir diálogos, etc.) debe pasar también por aquí vía IPC.
+**La plataforma en el juego.** El juego no lee `window.xantar` directamente: `createPlatform(window)` (`src/view/platform/Platform.ts`, patrón Strategy) devuelve una `Platform` con `quit` (o `null` en el navegador) y `enterFullscreen`. `WebPlatform` usa la API de pantalla completa del navegador (con bloqueo de Esc); `DesktopPlatform`, la pantalla completa nativa por el puente. `main.ts` la inyecta en `TitleScene` y `MenuScene`, que solo muestra **Salir** cuando `quit` existe. Cualquier otra comunicación con el sistema operativo (guardar partida, abrir diálogos, etc.) debe pasar también por un canal IPC validado.
+
+**Política de seguridad de contenidos (CSP).** El build web (y por tanto el de escritorio) lleva una etiqueta `<meta http-equiv="Content-Security-Policy">` que inserta un plugin de `vite.config.ts` solo al compilar: scripts, estilos y datos del propio origen, `data:` y `blob:` donde el juego los genera (rasterizado de SVG, audio) y nada de objetos incrustados ni `eval`. Por eso `index.html` no tiene estilos en línea (`src/styles.css`). En `npm run dev` no se aplica, porque Vite necesita scripts en línea; Electron muestra entonces el aviso *Insecure Content-Security-Policy*, que no aparece en el empaquetado. La prueba de humo falla ante cualquier violación (la detecta por el protocolo de DevTools).
 
 **Compilación**: `scripts/build-electron.mjs` usa esbuild para convertir `electron/*.ts` a CommonJS en `dist-electron/` y genera un `dist-electron/package.json` con `{"type":"commonjs"}`. Esto es necesario porque el `package.json` raíz es ESM (`"type": "module"`) y Electron carga `main.js` como CommonJS.
 
@@ -443,16 +480,48 @@ El juego tiene **dos máquinas de estados** separadas a propósito:
 
 2. **Flujo de la aplicación** (vista). Escenas `BootScene` → `TitleScene` → `MenuScene` → `GameScene` + `HudScene`, y la **pausa**, que no es una fase porque no cambia ninguna regla: la simulación simplemente deja de recibir ticks.
    - `GameScene` publica el estado en un `GameSession` (`src/view/session/`, patrón Observer y mediador) y ejecuta sus órdenes (`pause`, `resume`, `quit`). `HudScene` solo escucha a la sesión: dibuja los paneles, los mensajes de `ready` y `levelClear`, la pantalla de fin de partida y el menú de pausa. Ninguna escena conoce a la otra.
-   - Pausar llama a `this.scene.pause()` en `GameScene` (se congelan su `update` y sus tweens) y al reanudar `stepper.reset()` descarta el tiempo acumulado. La tecla de pausa (Esc o P) la atiende solo `HudScene`. Perder el foco de la ventana, ocultar la pestaña o salir de la pantalla completa también pausan.
+   - Pausar llama a `this.scene.pause()` en `GameScene` (se congelan su `update` y sus tweens) y al reanudar `stepper.reset()` descarta el tiempo acumulado. La acción de pausa (Esc, P o Start del mando) la atiende solo `HudScene`. Perder el foco de la ventana, ocultar la pestaña, salir de la pantalla completa, desconectar el mando o girar el móvil a vertical también pausan (`GameScene` recibe estas *interrupciones* inyectadas).
    - Volver al menú detiene `HudScene` y arranca `MenuScene`; nunca se recarga la página. La puntuación se envía a los ajustes al acabar la partida y al salir.
-   - Los menús usan `MenuList` (`src/view/ui/`): flechas o WASD para moverse, Enter o Espacio para elegir, izquierda y derecha para cambiar un valor, Esc para volver, y clic o toque sobre cada opción.
+   - Los menús usan `MenuList` (`src/view/ui/`), que lee acciones (ver 8.9): arriba y abajo para moverse, confirmar para elegir, izquierda y derecha para cambiar un valor, volver para volver, y clic o toque sobre cada opción. La escena llama a `menu.update()` en cada fotograma. Los sonidos del menú llegan como `UiSounds`.
    - En la aplicación de escritorio, el menú principal termina con **Salir**, que cierra la aplicación por IPC (ver 8.4); Esc en el menú principal solo selecciona Salir, para no cerrar por accidente. En el navegador no aparece.
 
 **Idioma** (`src/i18n/`): todos los textos visibles salen de los catálogos `catalogs/es.ts` (el de referencia) y `catalogs/en.ts` (declarado como `Catalog`, de modo que si le falta, le sobra o cambia de forma alguna clave, falla `npm run typecheck`). Un texto es una cadena o una función `(parámetros, format) => string`; `format.number` y `format.plural` usan `Intl.NumberFormat` e `Intl.PluralRules` del idioma. `Localization` guarda el idioma activo y avisa a sus suscriptores al cambiarlo; `main.ts` mantiene el atributo `lang` del documento. El idioma inicial sale de `detectLanguage(navigator.languages)`: español si la primera preferencia es cualquier español, si no inglés.
 
-**Ajustes** (`src/settings/`): `Settings` guarda idioma, tema (`auto` o un id) y mejor puntuación en un único registro versionado (`{ "version": 1, ... }`) bajo la clave `xantar.settings` de `localStorage`, que también funciona en Electron. `parseSettings` lo lee campo a campo: un campo no válido toma su valor por defecto sin perder los demás, y un registro roto o de otra versión se ignora entero. Si el almacenamiento está bloqueado, el juego funciona sin recordar nada.
+**Ajustes** (`src/settings/`): `Settings` guarda idioma, tema (`auto` o un id), mejor puntuación, volúmenes de música y efectos (0–10), silencio y teclas asignadas en un único registro versionado (`{ "version": 1, ... }`) bajo la clave `xantar.settings` de `localStorage`, que también funciona en Electron. `parseSettings` lo lee campo a campo: un campo no válido toma su valor por defecto sin perder los demás, y un registro roto o de otra versión se ignora entero. Las teclas se validan como conjunto (`validateBindings`): si algo no cuadra, todas vuelven a las de por defecto. Los campos añadidos después de escribir un registro simplemente toman su valor por defecto, así que no hace falta cambiar de versión para añadir uno. `Settings` avisa a sus suscriptores en cada cambio (el teclado y el audio se actualizan así). Si el almacenamiento está bloqueado, el juego funciona sin recordar nada.
 
 **Tema**: `chooseTheme` aplica la prioridad URL (`?theme=`) → opción del jugador (salvo `auto`) → tema del nivel → `classic`.
+
+### 8.10 Audio: buses, efectos sintetizados y eventos
+
+El audio pasa por el gestor de sonido de Phaser (Web Audio) envuelto en **`GameAudio`** (`src/view/audio/`), que es lo único que conocen las escenas:
+
+- **Buses**: Phaser solo tiene un volumen maestro, así que los canales de **música** y **efectos** son lógicos: cada sonido se crea con la ganancia de su bus (`busGain`, curva `(nivel/10)²`) y, al cambiar un volumen, `GameAudio.apply` actualiza también los sonidos que ya suenan. El **silencio** usa el `mute` de Phaser y no toca los volúmenes. Los niveles salen de los ajustes (`musicVolume`, `sfxVolume`, `muted`) y `main.ts` los aplica en cada cambio. La acción `mute` (M) alterna el silencio en cualquier pantalla.
+- **Música**: `BootScene` la carga con `this.load.audio(TITLE_MUSIC, 'music/tap-back.mp3')`; `TitleScene` llama a `playMusic` dentro del primer gesto (Phaser la retiene hasta que el contexto de audio se desbloquea) y Jugar la para.
+- **Efectos sintetizados** (`synth/`, puro y con pruebas): cada efecto es una receta de datos (`SfxRecipe`: tonos con onda, barrido de frecuencia, envolvente y vibrato) que `renderRecipe` convierte en muestras deterministas (el ruido usa un generador con semilla, no `Math.random`). `BootScene` las renderiza a la frecuencia del contexto (unos 30 ms en total), crea un `AudioBuffer` por efecto y lo registra en `game.cache.audio`; desde ahí son sonidos normales de Phaser. No hay ficheros de efectos ni licencias que gestionar. Sin Web Audio no hay efectos y el juego sigue.
+- **Eventos → efectos**: `EventSounds` recibe los eventos de cada fotograma en `GameScene`, junto a `EventEffects`, y `eventCue` (una tabla por tipo de evento) dice qué efecto suena. `CueThrottle` descarta la repetición del mismo efecto dentro de un intervalo mínimo (pisadas, aterrizajes), para que una cascada no se amontone. Los menús suenan a través de `UiSounds`.
+- **Foco**: `pauseOnBlur` de Phaser (activo por defecto) pausa todo el sonido al perder el foco o al ocultar la pestaña, y lo reanuda al volver. Mientras el audio está bloqueado (antes del primer gesto) no se encolan efectos.
+
+### 8.9 Entrada: acciones, teclado, mando y táctil
+
+Ninguna escena lee teclas. Todo pasa por **acciones** (`src/input/actions.ts`): `up`, `down`, `left`, `right`, `pepper`, `confirm`, `back`, `pause` y `mute`.
+
+```
+ KeyboardSource ─┐
+ GamepadSource  ─┼─► ActionInput.update() (PRE_STEP de Phaser, una vez por fotograma)
+ TouchPad       ─┘        │ isDown / justPressed / repeated
+                          ├─► GameScene → toSimInput() → Simulation.step
+                          ├─► HudScene (pausa, fin de partida, menú de pausa)
+                          └─► MenuList, ControlsPage, TitleScene
+```
+
+- **Fuentes** (`InputSource`, patrón Strategy): cada una devuelve en `poll()` las acciones mantenidas y las **pulsadas desde la lectura anterior** (así no se pierde una pulsación que empieza y acaba entre dos fotogramas, ni dos pulsaciones seguidas de la misma tecla). `pollAll` las combina: una acción está activa si cualquier dispositivo la activa.
+- **`ActionState`** (puro, con pruebas) calcula por fotograma `isDown`, `justPressed` y `repeated` (la pulsación y luego, mantenida, cada 120 ms tras 400 ms: para moverse por los menús). **`ActionInput`** (vista) es el único objeto que leen las escenas; `main.ts` lo crea y lo actualiza en `Phaser.Core.Events.PRE_STEP`, antes de los `update` de las escenas. Así todas ven el mismo estado y una escena en pausa no deja teclas "pegadas".
+- **Partida**: `GameScene` acumula `pepper` y `confirm` como pendientes hasta el siguiente tick (un fotograma puede no ejecutar ninguno) y `toSimInput` compone el `SimInput`. La simulación no cambia: sigue recibiendo direcciones, pimienta y confirmar.
+- **Teclado** (`KeyboardSource`): escucha `keydown`/`keyup` en `window` con `KeyboardEvent.code` (la tecla física, independiente de la distribución) y las traduce con las **asignaciones** vigentes (`src/input/bindings.ts`): de una a dos teclas por acción reasignable (`up`, `down`, `left`, `right`, `pepper`, `pause`, `mute`), nunca compartidas. Fijas: Esc → `back` y `pause`; Enter → `confirm`; las teclas de la pimienta → también `confirm`. Reservadas (no asignables): Esc, Enter, Intro del teclado numérico y F11. Solo llama a `preventDefault` en las teclas que entiende y suelta todo al perder el foco o al ocultarse la página. Ignora las combinaciones con Ctrl, Alt o Meta (atajos del navegador).
+- **Página Controles** (`ControlsPage`, en Opciones): filas por acción con dos huecos; confirmar captura la siguiente tecla (`KeyboardSource.capture`), Esc cancela y Retroceso vacía el hueco. `assign` intercambia la tecla si ya era de otra acción, de modo que ninguna se queda sin tecla y los menús siempre se pueden manejar. Las etiquetas salen de `keyLabel`: el carácter de la distribución del jugador (`navigator.keyboard.getLayoutMap()`, en Chrome, Edge y Electron) o el de una distribución US; las teclas con nombre (Espacio, Mayús…) salen de los catálogos (`key.*`).
+- **Mando** (`GamepadSource`): sondea `navigator.getGamepads()` en cada fotograma; solo mandos con mapeo `standard`. Mapeo fijo: cruceta o stick izquierdo (zona muerta 0,5) → direcciones; A → `pepper` y `confirm`; X → `pepper`; B → `back`; Start → `pause`. Avisa de la desconexión de un mando en uso y `GameScene` pausa. Los navegadores solo muestran el mando tras pulsar un botón con la página delante, y solo en contextos seguros (`https`, `localhost` o la aplicación de escritorio).
+- **Táctil**: `InputModality` detecta el primer toque (`pointerdown` con `pointerType === 'touch'`); desde entonces `HudScene` muestra `TouchControls`: cruceta (`hud.dpad`) abajo en el panel izquierdo y botón de pimienta (`hud.pepperButton`, que también confirma) abajo en el derecho, de hasta 160 unidades según el ancho del panel. Cada dedo se sigue por separado (Phaser con `input.activePointers: 3`) y se escribe en el `TouchPad` compartido; `dpadDirection` (pura) elige la dirección por el eje dominante con una zona muerta central, y deslizar el dedo cambia de dirección.
+- **Vertical**: `RotateNotice` (`src/view/platform/`) muestra un aviso HTML a pantalla completa con la media query `(orientation: portrait) and (pointer: coarse)` y su texto del catálogo; al aparecer, la partida se pausa.
 
 ---
 
@@ -509,28 +578,24 @@ Para gráficos del juego (piezas, ingredientes, personajes, efectos, iconos del 
 
 Si en el futuro necesitas guardar datos en disco, mostrar diálogos nativos, etc.:
 
-**`electron/main.ts`**
+1. Añade el nombre del canal a `CHANNELS` (`electron/channels.ts`).
+2. En `electron/main.ts`, atiéndelo **validando el emisor y los argumentos**: la página se trata como no fiable.
 
-```ts
-import { app, BrowserWindow, ipcMain } from 'electron';
+   ```ts
+   ipcMain.handle(CHANNELS.saveGame, async (event, data: unknown) => {
+     if (!senderWindow(event.sender, site) || typeof data !== 'string') return { ok: false };
+     // aquí escribirías en disco
+     return { ok: true };
+   });
+   ```
 
-ipcMain.handle('guardar-partida', async (_event, datos: string) => {
-  // aquí escribirías en disco
-  return { ok: true };
-});
-```
+3. En `electron/preload.ts`, expón solo una función con argumentos concretos (nunca `ipcRenderer` entero):
 
-**`electron/preload.ts`**
+   ```ts
+   saveGame: (data: string) => ipcRenderer.invoke(CHANNELS.saveGame, data)
+   ```
 
-```ts
-import { contextBridge, ipcRenderer } from 'electron';
-
-contextBridge.exposeInMainWorld('xantar', {
-  isDesktop: true,
-  platform: process.platform,
-  guardarPartida: (datos: string) => ipcRenderer.invoke('guardar-partida', datos)
-});
-```
+4. En el juego, amplía la interfaz `Platform` (`src/view/platform/Platform.ts`) con la operación y dale una implementación en `DesktopPlatform` y otra (o `null`) en `WebPlatform`, con su prueba en `Platform.test.ts`.
 
 ### 9.4 Publicar en web (GitHub Pages)
 
@@ -616,6 +681,24 @@ Opción recomendada (CI): un workflow de GitHub Actions que ejecute `npm ci && n
 2. Añade el método para cambiarlo en `Settings` (guarda en cada cambio) y su valor por defecto en `main.ts`.
 3. Añade la entrada al menú de opciones en `MenuScene.#optionItems` con `label`, `value` y `change`, y sus textos a los catálogos.
 
+### 9.16 Añadir un efecto de sonido
+
+1. Añade el nombre a `SOUND_CUES` y su receta a `CUE_RECIPES` (`src/view/audio/synth/soundCues.ts`). Una receta es una lista de tonos (forma de onda, frecuencia inicial y final, ataque, sostén y caída, vibrato, inicio); los jingles son varios tonos con distinto `start`. Afínala de oído: `npm run dev`, ajusta y recarga.
+2. Si llega en ráfagas, dale un intervalo mínimo en `CUE_INTERVALS_MS` (`src/view/audio/mixing.ts`).
+3. `npm run test` comprueba que suena, que no satura, que dura como mucho 3 s y que acaba en silencio.
+
+### 9.17 Asociar un sonido a un evento
+
+- **Evento de la simulación**: cambia su entrada en `EVENT_CUES` (`src/view/audio/mixing.ts`); el tipo obliga a tener una entrada por cada tipo de evento, así que un evento nuevo no compila hasta decidir su sonido (o `null`). Añade el caso a la prueba de `eventCue`.
+- **Interfaz**: los menús llaman a `UiSounds` (`move`, `select`, `back`); otros componentes pueden recibir `GameAudio` (o la interfaz `CuePlayer`) y llamar a `cue(...)`.
+
+### 9.15 Añadir una acción
+
+1. Añádela a `ACTIONS` (`src/input/actions.ts`) y, si el jugador debe poder cambiar su tecla, a `REMAPPABLE_ACTIONS` con su tecla por defecto en `DEFAULT_BINDINGS` (`src/input/bindings.ts`). Las asignaciones guardadas sin la acción nueva dejan de validar y vuelven a las de por defecto: avísalo en el PR.
+2. Si un botón del mando la produce, añádelo a `BUTTONS` en `GamepadSource`; si tiene control táctil, a `TouchControls`.
+3. Añade su nombre a los catálogos (`action.<nombre>`) para la página Controles.
+4. Léela en la escena que corresponda con `input.justPressed(...)` o `input.isDown(...)`, y añade las pruebas de `bindings`, de la fuente y, si toca, un escenario de humo.
+
 ## 10. Build y empaquetado
 
 ### 10.1 Web
@@ -642,7 +725,13 @@ Objetivos configurados en `package.json` (campo `build`):
 | Windows | NSIS (`.exe`) |
 | macOS | DMG |
 
-**Limitación importante:** electron-builder solo puede generar el instalador de la plataforma en la que ejecutas el build. Para publicar en las tres hay que usar CI (GitHub Actions con una matriz Linux/Windows/macOS). Además, para distribuir de verdad se necesitan **iconos** propios y **firma de código** (obligatoria en macOS y recomendable en Windows).
+**Limitación importante:** electron-builder solo puede generar el instalador de la plataforma en la que ejecutas el build. Los tres instaladores los genera la CI con una matriz Linux/Windows/macOS (ver 10.4).
+
+**Iconos.** La fuente es `build/icon.svg`: la cabeza, los ojos y el gorro del chef copiados de `src/view/art/classic/` y colocados como en su rig, con la paleta clásica (al ser un recurso de empaquetado, lleva los colores escritos en un `<style>`). `npm run icon` la rasteriza a `build/icon.png` (1024×1024) con una ventana oculta de Electron (`scripts/build-icon.mjs`); el PNG se versiona y electron-builder deriva de él el `.ico` y el `.icns`. Si cambias el SVG, vuelve a ejecutar `npm run icon` (en Linux sin pantalla: `xvfb-run -a npm run icon`).
+
+**Fusibles de Electron** (`build.electronFuses`): el ejecutable empaquetado no se puede usar como Node (`ELECTRON_RUN_AS_NODE`), ignora `NODE_OPTIONS` y `--inspect`, solo carga la aplicación desde `app.asar` (con validación de integridad donde Electron la admite), cifra las cookies y no da privilegios extra a `file://`. No afectan a `npm run dev:desktop` ni a la prueba de humo, que usan el Electron de `node_modules`.
+
+**Firma.** Los instaladores de la v1.0.0 se generan **sin firma de código ni notarización** (`mac.identity: null`; en CI, `CSC_IDENTITY_AUTO_DISCOVERY=false`). Windows (SmartScreen) y macOS (Gatekeeper) avisan al abrirlos; el README explica cómo continuar. Firmar exige certificados de pago (Apple Developer, certificado de Windows) y queda para cuando se distribuya públicamente.
 
 ### 10.3 Qué se incluye en el paquete
 
@@ -650,11 +739,35 @@ Gracias a la configuración de `build.files`, el `app.asar` solo contiene:
 
 ```
 /dist/**            (juego compilado)
-/dist-electron/**   (main.js + preload.js)
+/dist-electron/**   (main.js + preload.js; el proceso principal incluye sus módulos)
 /package.json
 ```
 
 Phaser va dentro del bundle de Vite, por lo que **no** se incluye `node_modules/phaser` (evita ~140 MB extra). Por eso `phaser` figura en `devDependencies`.
+
+### 10.4 Integración continua (GitHub Actions)
+
+Dos workflows en `.github/workflows/`, solo con acciones oficiales de GitHub (`actions/*`) y la versión de Node de `.nvmrc`:
+
+| Workflow | Cuándo | Jobs |
+|----------|--------|------|
+| `ci.yml` | PR hacia `develop/**` o `release/**`; push a esas ramas y a etiquetas `v*` | `check`: lint, formato, tipos, pruebas y build web. `version`: `npm run check:version`. `smoke`: prueba de humo en Linux con `xvfb` (tras `check`), capturas como artefacto `smoke` |
+| `desktop.yml` | Push a `release/**`, etiquetas `v*` y ejecución manual (*Run workflow*) | Matriz `ubuntu-latest`, `windows-latest`, `macos-latest`: `npm run build:desktop -- --publish never`; instaladores como artefactos `xantar-<os>` (14 días) |
+
+**Versión frente a la rama.** `tools/ci/branchVersion.ts` (`expectedVersion`, con pruebas) deduce la versión esperada: `develop/vX.Y.Z`, `release/vX.Y.Z` y la etiqueta `vX.Y.Z` exigen `X.Y.Z`; en un PR manda la rama destino; las demás ramas no se comprueban. `tools/ci/checkVersion.ts` la compara con `package.json`; Node 24 lo ejecuta directamente, sin compilar (elimina los tipos al cargarlo). Para probarlo en local:
+
+```bash
+GITHUB_REF_NAME=develop/v1.0.0 npm run check:version
+```
+
+**Detalles del entorno de Actions:**
+
+- `check` instala sin el binario de Electron (`ELECTRON_SKIP_BINARY_DOWNLOAD=1`), que no necesita.
+- `smoke` desactiva la restricción de AppArmor sobre los espacios de nombres de usuario (`kernel.apparmor_restrict_unprivileged_userns=0`); sin eso, el sandbox de Chromium no arranca en Ubuntu 24.04.
+- `desktop.yml` fija `CSC_IDENTITY_AUTO_DISCOVERY=false`: los instaladores se generan **sin firmar** (ver 10.2). No se publican como versión de GitHub; se descargan desde la ejecución del workflow (*Artifacts*).
+- La ejecución manual de `desktop.yml` solo aparece cuando el workflow está en la rama por defecto del repositorio.
+
+**Protección de ramas.** Tras el primer merge, marcar `Lint, format, types, tests and build`, `Version matches the branch` y `Desktop smoke test` como comprobaciones obligatorias en la regla de protección de `develop/**` (Settings → Rules) para que un PR no se pueda fusionar con la CI en rojo.
 
 ---
 
@@ -674,16 +787,16 @@ Phaser va dentro del bundle de Vite, por lo que **no** se incluye `node_modules/
 ## 12. Solución de problemas
 
 ### La música no suena la primera vez en el navegador
-Es la **política de autoplay** del navegador: `audio.play()` se rechaza si no ha habido interacción del usuario. Por eso `TitleScene` espera al primer clic, toque o tecla para arrancar la música. En Electron no ocurre porque `electron/main.ts` desactiva esa política.
+Es la **política de autoplay** del navegador: el audio no puede empezar sin una interacción del usuario. Por eso `TitleScene` espera al primer clic, toque o tecla para arrancar la música. La aplicación de escritorio se comporta igual: ya no desactiva esa política.
 
 ### Esc no pausa o no vuelve atrás en pantalla completa
-El navegador usa Esc para salir de la pantalla completa y normalmente no la entrega a la página. Al entrar en pantalla completa el juego pide `navigator.keyboard.lock(['Escape'])` (Chrome, Edge y Electron), de modo que Esc llega al juego y mantenerla pulsada sigue saliendo. En navegadores sin esa API, salir de la pantalla completa pausa la partida; usa `P` para pausar.
+En la aplicación de escritorio no ocurre: la pantalla completa es nativa (F11) y Esc siempre llega al juego. En el navegador, Esc sirve para salir de la pantalla completa y normalmente no se entrega a la página. Al entrar en pantalla completa el juego pide `navigator.keyboard.lock(['Escape'])` (Chrome, Edge y Electron), de modo que Esc llega al juego y mantenerla pulsada sigue saliendo. En navegadores sin esa API, salir de la pantalla completa pausa la partida; usa `P` para pausar.
 
 ### Pantalla negra al abrir el juego desde el fichero
-Ocurre al abrir con `file://` (doble clic). Usa `npm run dev` o `npm run preview`. La causa histórica era el loader de audio de Phaser; ya se sustituyó por `new Audio()`.
+Ocurre al abrir `index.html` o `dist/index.html` con `file://` (doble clic): el navegador bloquea los módulos y la carga de ficheros. Usa `npm run dev` o `npm run preview`. La aplicación de escritorio no tiene este problema porque sirve `dist/` por `app://`.
 
-### Los assets (imágenes) no cargan en la app de escritorio
-Asegúrate de que `src/main.ts` tiene `loader: { imageLoadType: 'HTMLImageElement' }`. Si en el futuro usas JSON/atlas, esos sí van por `XHR` y necesitarán un protocolo local propio en Electron.
+### Un asset no carga en la app de escritorio
+El protocolo `app://` solo sirve ficheros de `dist/` y responde 404 a lo demás. Comprueba que el asset está en `public/` (o importado desde `src/`) y que se referencia con una ruta relativa (`music/foo.mp3`, no `/music/foo.mp3`). Si la consola muestra *Refused to load … Content Security Policy*, el tipo de recurso u origen no está permitido por la CSP de `vite.config.ts`.
 
 ### Errores `vaInitialize failed ... libva` al abrir Electron en Linux
 Son avisos de aceleración de vídeo por hardware; no impiden jugar. Ignóralos o ejecuta en un entorno con soporte VAAPI.
@@ -769,7 +882,7 @@ Ficheros de configuración:
 Reglas destacadas de `.oxlintrc.json`:
 
 - Categoría `correctness` en error, más reglas con tipos: `no-floating-promises`, `no-misused-promises`, `await-thenable`, `unbound-method` y `switch-exhaustiveness-check`.
-- `no-empty` con `allowEmptyCatch: true`: permite `catch {}` vacíos (se usan en `TitleMusic` y en el almacenamiento de ajustes para que un fallo de audio o de `localStorage` no rompa el juego).
+- `no-empty` con `allowEmptyCatch: true`: permite `catch {}` vacíos (se usan, por ejemplo, en el almacenamiento de ajustes para que un fallo de `localStorage` no rompa el juego).
 - `no-unused-vars` (aviso) ignora parámetros y capturas con prefijo `_`.
 - Entorno de navegador por defecto y Node solo en `electron/`, `scripts/` y `tools/smoke/`.
 - **Fronteras de `src/sim/`**: no puede importar Phaser, Node, `scenes/`, `objects/` ni `config`, ni usar globales de navegador, `Date` o `Math.random` (se inyecta un `Rng`). Garantiza que el núcleo sea puro y determinista.
@@ -797,4 +910,3 @@ Notas:
 La hoja de ruta vigente está en el README (tabla *Roadmap*) y se gestiona con issues de GitHub y milestones por versión. Pendientes para después de la v1.0.0: alimentos de bonus (#13) y publicación de la web (#14). Ideas sin issue propia:
 
 - Más tipos de enemigos.
-- Valorar el protocolo local para Electron si se usan atlas JSON de sprites.

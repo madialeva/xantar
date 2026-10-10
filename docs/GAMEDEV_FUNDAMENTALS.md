@@ -665,15 +665,35 @@ por tipo de enemigo están previstos en #17.
   puntuales.
 - **Pulsación mantenida y pulsación puntual**: andar es "mientras esté
   pulsada"; lanzar pimienta es "en el momento de pulsar" (*just pressed*).
-- **Acciones en lugar de teclas**: el juego debería pensar en "izquierda" o
-  "pimienta", no en "flecha izquierda" o "espacio". Una capa de **acciones**
-  traduce teclado, mando o pantalla táctil a esas acciones y permite
-  **reasignar** controles (#6). Xantar ya da un paso en esa dirección: la
-  simulación solo recibe un `SimInput` con acciones.
+- **Acciones en lugar de teclas** (*input mapping*): el juego piensa en
+  "izquierda" o "pimienta", no en "flecha izquierda" o "espacio". Una capa de
+  **acciones** traduce teclado, mando o pantalla táctil a esas acciones, de
+  modo que añadir un dispositivo o **reasignar** una tecla no toca la lógica.
+  En Xantar las escenas solo preguntan por acciones (`ActionInput`) y la
+  simulación recibe un `SimInput`; el jugador cambia sus teclas en Opciones →
+  Controles.
+- **Tecla física y carácter**: `KeyboardEvent.code` nombra la tecla por su
+  posición (la de la W en un teclado QWERTY es `KeyW` aunque en AZERTY ponga Z),
+  así que unas asignaciones siguen en su sitio con cualquier distribución;
+  para mostrarla se pide al navegador el carácter de la distribución del
+  jugador.
+- **Repetición en menús**: mantener una dirección mueve la selección una vez,
+  espera un poco y luego repite a ritmo fijo, como en un sistema operativo.
+- **Mando**: la *Gamepad API* no avisa de las pulsaciones; hay que leer el
+  mando en cada fotograma. El mapeo *standard* fija qué botón es cada número
+  (0 = A, 1 = B, 9 = Start, 12–15 = cruceta). Los sticks nunca vuelven
+  exactamente a 0, así que se usa una **zona muerta**.
+- **Que no se pierda nada**: si una tecla se suelta y se vuelve a pulsar entre
+  dos fotogramas, o la ventana pierde el foco con una tecla pulsada, sondear sin
+  más fallaría (pulsación perdida o tecla "pegada"). Xantar recuerda las
+  pulsaciones desde la última lectura y suelta todo al perder el foco.
 - **Búfer de entrada**: recordar una pulsación unos instantes para que no se
   pierda (lo que hacemos con la pimienta entre ticks).
 - **Táctil**: en móvil hacen falta controles en pantalla (cruceta y botones
-  virtuales) o gestos. Pendiente en #6; los menús de Xantar ya aceptan toques.
+  virtuales) o gestos. Xantar muestra una cruceta y un botón de pimienta en los
+  paneles en cuanto se usa la pantalla táctil; cada dedo se sigue por separado
+  (*multitáctil*) para poder andar y lanzar pimienta a la vez, y en vertical
+  pide girar el dispositivo.
 - **Teclas que se queda el navegador**: en pantalla completa, Esc sirve para
   salir de ella y normalmente no llega a la página. La API *Keyboard Lock*
   (`navigator.keyboard.lock`) permite recibirla; Xantar la usa y, donde no
@@ -684,16 +704,32 @@ por tipo de enemigo están previstos en #17.
 ## 16. Audio
 
 - **Música** y **efectos de sonido** (*SFX*) se gestionan por separado, con
-  volúmenes independientes (**buses** o canales) y opción de silenciar.
+  volúmenes independientes (**buses** o canales) y opción de silenciar. En
+  Xantar, Opciones tiene Música, Efectos y Sonido, y M silencia en cualquier
+  momento.
+- **El oído no es lineal**: un volumen al 50 % de amplitud suena más fuerte que
+  "la mitad". Por eso el nivel de 0 a 10 se convierte en ganancia con una curva
+  (`(nivel/10)²`), para que cada paso se perciba parecido.
 - **Sonido a partir de eventos**: el mismo sistema de eventos de la simulación
-  sirve para disparar sonidos (`segmentStomped` → "plof").
+  sirve para disparar sonidos (`segmentStomped` → "plof"). Si llegan muchos
+  iguales a la vez (varios ingredientes aterrizando), se limita su repetición
+  para que no suene amontonado.
+- **Síntesis procedural**: en lugar de grabaciones, un efecto puede describirse
+  con números (forma de onda, tono que sube o baja, cuánto tarda en sonar y en
+  apagarse) y generarse al arrancar, como hacían las máquinas recreativas y
+  herramientas como *sfxr*. Xantar genera así todos sus efectos: no hay ficheros
+  que cargar ni licencias, y cambiar un sonido es cambiar unos números.
+  Formas de onda típicas: **cuadrada** (sonido "chiptune"), **triangular**
+  (más suave), **diente de sierra** (más áspera), **senoidal** (pura) y
+  **ruido** (golpes, explosiones, la pimienta). La **envolvente**
+  (*ataque, sostén, caída*) da la forma al volumen en el tiempo.
 - **Política de reproducción automática** (*autoplay*): los navegadores no
   dejan sonar audio hasta que el usuario interactúa con la página. Por eso la
   pantalla de título de Xantar espera un clic, un toque o una tecla: ese gesto
   desbloquea la música (y la pantalla completa, que tiene la misma regla).
 - **Pausa al perder el foco**: si el jugador cambia de pestaña, el juego y el
-  sonido deberían pausarse. Xantar ya pausa la partida; el sonido llega con
-  #6.
+  sonido se pausan (el gestor de sonido de Phaser lo hace solo) y vuelven al
+  regresar.
 
 ---
 
@@ -773,8 +809,13 @@ sensación.
   muestra todos los gráficos y animaciones con el código real.
 - **Lint, formato y tipos**: herramientas automáticas que detectan errores y
   mantienen el estilo (`npm run lint`, `format:check`, `typecheck`).
-- **Integración continua** (*CI*): que todo lo anterior se ejecute solo en
-  cada cambio (#6).
+- **Integración continua** (*CI*): un servidor ejecuta todo lo anterior, solo,
+  en cada propuesta de cambio, en una máquina limpia. Así un error no depende de
+  acordarse de pasar las pruebas, y "en mi equipo funciona" deja de valer: si la
+  CI está en rojo, el cambio no entra. En Xantar, GitHub Actions comprueba cada
+  pull request (lint, formato, tipos, pruebas, build y prueba de humo) y genera
+  los instaladores de los tres sistemas operativos, cada uno en su sistema, algo
+  que un solo ordenador no puede hacer.
 - **Pruebas de juego** (*playtesting*): jugar y observar a otros jugar. Es la
   única forma de saber si algo es divertido, difícil o confuso.
 
@@ -787,9 +828,22 @@ sensación.
 - **Web**: un juego HTML5 es una página estática; se puede publicar en
   cualquier alojamiento de ficheros (#14).
 - **Escritorio**: **Electron** empaqueta el juego con un navegador Chromium
-  dentro, como aplicación instalable (`npm run build:desktop`). Peculiaridad:
-  abre los ficheros con `file://`, que tiene restricciones distintas a un
-  servidor web.
+  dentro, como aplicación instalable (`npm run build:desktop`). Por defecto
+  abriría los ficheros con `file://`, que tiene restricciones distintas a un
+  servidor web; Xantar los sirve con un protocolo propio (`app://`) para que el
+  juego se cargue igual que en la web.
+- **Seguridad en el escritorio**: una aplicación Electron mezcla una página web
+  con un proceso que puede tocar el sistema, así que se separan: la página va
+  en un *sandbox* sin acceso a Node, solo ve un puente mínimo (cerrar, pantalla
+  completa) y no puede navegar a otros sitios ni abrir ventanas. Una **CSP**
+  (*Content Security Policy*) le dice al navegador de dónde puede cargar
+  código y datos la página; así, aunque algo intentara inyectar un script, no
+  se ejecutaría. Los **fusibles** de Electron desactivan, en el ejecutable
+  final, funciones de depuración que un atacante podría aprovechar.
+- **Firma de código**: Windows y macOS confían en los programas firmados con un
+  certificado de un desarrollador identificado; sin firma avisan al abrirlos.
+  Firmar cuesta dinero y trámites, así que muchos juegos pequeños empiezan sin
+  firmar y lo explican al jugador.
 - **Móvil**: se puede jugar en el navegador del móvil o empaquetar como
   aplicación (con herramientas como Capacitor). Implica controles táctiles,
   orientación, tamaños de pantalla muy variados y hardware más limitado.

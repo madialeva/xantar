@@ -31,9 +31,14 @@ roadmap lives in the GitHub issues and in the README.
   root-relative paths (`assets/foo.png`). Exception: the SVG art of the themes
   lives in `src/view/art/<theme>/` and is bundled as text (`?raw` imports), so
   it works under `file://` and can take the palette of each theme; follow
-  `docs/STYLE_GUIDE.md` when editing it. Keep
-  `loader.imageLoadType: 'HTMLImageElement'` in `src/main.ts`: Phaser defaults
-  to XHR, which is blocked under `file://` inside Electron.
+  `docs/STYLE_GUIDE.md` when editing it. The desktop app serves `dist/`
+  through its own `app://xantar/` protocol (not `file://`), so the Phaser loader
+  (XHR) works there as on the web; `loader.imageLoadType: 'HTMLImageElement'` in
+  `src/main.ts` is a leftover of the `file://` days and harmless.
+- The built page carries a Content Security Policy (`vite.config.ts`): no
+  inline scripts or styles, no `eval`, no third-party origins. The Electron
+  window is sandboxed and confined (`electron/window.ts`); any new IPC channel
+  validates its sender and arguments.
 - Do not add new runtime dependencies without an approved OpenSpec change.
 
 ## Commands
@@ -185,9 +190,15 @@ English inside the Spanish text.
 
 - Conversation with the user in Spanish; durable context in repo files (this
   `AGENTS.md`) rather than internal memory.
-- The agent does **not** commit on its own: work stays uncommitted until the
-  user validates it, including visual verification. Push only when the user
-  asks.
+- While implementing an OpenSpec change, the agent commits **each task group
+  (block) of `tasks.md` as soon as it is finished**, as its own commit, instead
+  of one big commit at the end: only when the group's automated checks pass
+  (the hand-off checks listed under "Commands", plus `npm run smoke` for visual
+  or desktop work), with the group's tasks ticked in `tasks.md` and without
+  unrelated work in progress (stage only the block's files or hunks). Checks
+  that need the user (visual review, a real device, a push to GitHub) stay
+  unticked and are listed when handing off. Outside such blocks the agent does
+  not commit on its own. Push only when the user asks.
 - Commits, pull request descriptions, issues and comments carry no
   `Co-Authored-By` trailer, "Generated with ..." line or any other AI
   attribution: the author is the only author. This overrides the default
@@ -205,9 +216,9 @@ currently under development. Releasing cuts `release/vX.Y.Z` from it and tags
 `vX.Y.Z`; hotfixes bump the patch digit. When a new cycle starts,
 `develop/vX.Y.Z` is created from the released tag and becomes the default
 branch. The program version lives as the single source of truth in
-`package.json` (`version`) and must match the branch suffix. Until the CI
-workflow exists, check it by hand when cutting a branch; the CI change adds the
-automatic check on `develop/**` and `release/**` pushes.
+`package.json` (`version`) and must match the branch suffix. The CI checks it
+on every push to `develop/**`, `release/**` and `v*` tags and on every pull
+request toward those branches (`npm run check:version`).
 
 Each OpenSpec change is tracked on GitHub with this cycle:
 
@@ -223,12 +234,11 @@ Each OpenSpec change is tracked on GitHub with this cycle:
    only when the change is archived.
 4. Branch created from the issue (Development panel → "Create a branch"; name
    like `change/is<n>-<slug>`) starting from `develop/vX.Y.Z`.
-5. Implementation on the branch + push (pushes are done by the user). The agent
-   never commits on its own: work stays uncommitted on the branch until the
-   user validates it (including running the game); commit only after the user
-   explicitly confirms.
+5. Implementation on the branch, one commit per finished task group (see
+   "Working preferences"), and push (pushes are done by the user). The user
+   validates the result (including running the game) before the PR.
 6. PR toward `develop/vX.Y.Z` with `Closes #<n>` in the description → the CI
-   (once it exists) validates the PR → the user reviews the diff.
+   validates the PR → the user reviews the diff.
 7. Squash merge as the norm (one change = one clean commit on the development
    branch). Exception: PRs whose intermediate commits have standalone value
    (e.g. massive deletions separated from new code) → normal merge.

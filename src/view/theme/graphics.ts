@@ -58,7 +58,9 @@ export const GRAPHICS = {
   'fx.sparkle': size(24, 24),
   'hud.life': size(20, 20),
   'hud.pepper': size(20, 20),
-  'hud.pause': size(32, 32)
+  'hud.pause': size(32, 32),
+  'hud.dpad': size(128, 128),
+  'hud.pepperButton': size(128, 128)
 } as const satisfies Record<string, GraphicSize>;
 
 export type GraphicId = keyof typeof GRAPHICS;

@@ -8,7 +8,8 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "allowImportingTsExtensions": true
   },
-  "include": ["electron", "tools/smoke"]
+  "include": ["electron", "tools/smoke", "tools/ci"]
 }

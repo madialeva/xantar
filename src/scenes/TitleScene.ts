@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, type RenderTier } from '../config';
 import type { Localization } from '../i18n/Localization';
-import type { TitleMusic } from '../view/audio/TitleMusic';
+import type { ActionReader } from '../input/actions';
+import { type GameAudio, TITLE_MUSIC } from '../view/audio/GameAudio';
 import { hudText } from '../view/hud/textStyle';
 import { followBoardCamera } from '../view/layout/boardCamera';
 import { ArtFactory } from '../view/raster/ArtFactory';
@@ -10,14 +11,16 @@ import { RigAnimator } from '../view/rigs/RigAnimator';
 import { RigMotion } from '../view/rigs/RigMotion';
 import { chefRig } from '../view/rigs/rigs';
 import { chefStates } from '../view/rigs/states';
-import { enterFullscreen } from '../view/ui/fullscreen';
+import type { Platform } from '../view/platform/Platform';
 import type { ThemeRegistry } from '../view/theme/ThemeRegistry';
 
 export interface TitleSceneDependencies {
   readonly tier: RenderTier;
   readonly localization: Localization;
-  readonly music: TitleMusic;
+  readonly audio: GameAudio;
   readonly themes: ThemeRegistry;
+  readonly platform: Platform;
+  readonly input: ActionReader;
 }
 
 const CHEF_ZOOM = 3;
@@ -67,10 +70,17 @@ export default class TitleScene extends Phaser.Scene {
     this.input.keyboard?.once('keydown', () => this.#start(isMobile));
   }
 
+  override update(): void {
+    const { input } = this.#deps;
+    if (input.justPressed('confirm') || input.justPressed('pepper')) {
+      this.#start(this.sys.game.device.os.android || this.sys.game.device.os.iOS);
+    }
+  }
+
   #start(isMobile: boolean): void {
     if (this.#leaving) return;
     this.#leaving = true;
-    this.#deps.music.play();
-    void enterFullscreen(isMobile).finally(() => this.scene.start('MenuScene'));
+    this.#deps.audio.playMusic(TITLE_MUSIC);
+    void this.#deps.platform.enterFullscreen(isMobile).finally(() => this.scene.start('MenuScene'));
   }
 }

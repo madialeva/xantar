@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, type RenderTier } from '../config';
 import type { Localization } from '../i18n/Localization';
+import { type GameAudio, TITLE_MUSIC } from '../view/audio/GameAudio';
+import { phaserSoundSystem, registerSoundEffects } from '../view/audio/phaserSound';
 import { hudText } from '../view/hud/textStyle';
 import { followBoardCamera } from '../view/layout/boardCamera';
 import { SvgRasterizer } from '../view/raster/SvgRasterizer';
@@ -10,22 +12,29 @@ export interface BootSceneDependencies {
   readonly themes: ThemeRegistry;
   readonly tier: RenderTier;
   readonly localization: Localization;
+  readonly audio: GameAudio;
 }
 
 /**
- * First scene: rasterizes the art of every registered theme for the render tier and then
- * hands over to the title scene.
+ * First scene: loads the music, synthesizes the sound effects, rasterizes the art of every
+ * registered theme for the render tier and then hands over to the title scene.
  */
 export default class BootScene extends Phaser.Scene {
   readonly #themes: ThemeRegistry;
   readonly #tier: RenderTier;
   readonly #localization: Localization;
+  readonly #audio: GameAudio;
 
-  constructor({ themes, tier, localization }: BootSceneDependencies) {
+  constructor({ themes, tier, localization, audio }: BootSceneDependencies) {
     super({ key: 'BootScene' });
     this.#themes = themes;
     this.#tier = tier;
     this.#localization = localization;
+    this.#audio = audio;
+  }
+
+  preload(): void {
+    this.load.audio(TITLE_MUSIC, 'music/tap-back.mp3');
   }
 
   create(): void {
@@ -38,6 +47,7 @@ export default class BootScene extends Phaser.Scene {
         hudText(16, '#ffffff', this.#tier)
       )
       .setOrigin(0.5);
+    this.#audio.attach(phaserSoundSystem(this.sound), registerSoundEffects(this));
     void this.#rasterize().then(() => this.scene.start('TitleScene'));
   }
 
