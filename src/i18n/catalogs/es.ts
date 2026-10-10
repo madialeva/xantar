@@ -65,7 +65,6 @@ export const es = {
   'gameOver.score': (p: { score: number }, f: Format) => `PUNTOS  ${f.number(p.score)}`,
   'gameOver.newRecord': '¡NUEVO RÉCORD!',
   'gameOver.continue': 'ENTER O TOCA PARA VOLVER AL MENÚ',
-  'rotate.notice': 'GIRA EL DISPOSITIVO PARA JUGAR',
   'pause.title': 'PAUSA',
   'pause.resume': 'CONTINUAR',
   'pause.quit': 'SALIR AL MENÚ'

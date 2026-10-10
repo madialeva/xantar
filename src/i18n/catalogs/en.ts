@@ -66,7 +66,6 @@ export const en: Catalog = {
   'gameOver.score': (p: { score: number }, f: Format) => `SCORE  ${f.number(p.score)}`,
   'gameOver.newRecord': 'NEW HIGH SCORE!',
   'gameOver.continue': 'PRESS ENTER OR TAP FOR THE MENU',
-  'rotate.notice': 'TURN YOUR DEVICE SIDEWAYS TO PLAY',
   'pause.title': 'PAUSED',
   'pause.resume': 'RESUME',
   'pause.quit': 'QUIT TO MENU'

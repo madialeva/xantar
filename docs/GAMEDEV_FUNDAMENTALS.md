@@ -692,8 +692,12 @@ por tipo de enemigo están previstos en #17.
 - **Táctil**: en móvil hacen falta controles en pantalla (cruceta y botones
   virtuales) o gestos. Xantar muestra una cruceta y un botón de pimienta en los
   paneles en cuanto se usa la pantalla táctil; cada dedo se sigue por separado
-  (*multitáctil*) para poder andar y lanzar pimienta a la vez, y en vertical
-  pide girar el dispositivo.
+  (*multitáctil*) para poder andar y lanzar pimienta a la vez.
+- **Orientación**: un juego apaisado en un móvil sujeto en vertical puede pedir
+  al jugador que lo gire, pero si tiene la rotación de pantalla bloqueada el
+  sistema no girará nada. Xantar gira el propio juego un cuarto de vuelta en
+  ese caso (con CSS) y traduce los toques a ese marco girado, así que siempre se
+  juega en horizontal sin tocar los ajustes del teléfono.
 - **Teclas que se queda el navegador**: en pantalla completa, Esc sirve para
   salir de ella y normalmente no llega a la página. La API *Keyboard Lock*
   (`navigator.keyboard.lock`) permite recibirla; Xantar la usa y, donde no

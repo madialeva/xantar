@@ -217,8 +217,9 @@ currently under development. Releasing cuts `release/vX.Y.Z` from it and tags
 `develop/vX.Y.Z` is created from the released tag and becomes the default
 branch. The program version lives as the single source of truth in
 `package.json` (`version`) and must match the branch suffix. The CI checks it
-on every push to `develop/**`, `release/**` and `v*` tags and on every pull
-request toward those branches (`npm run check:version`).
+on every pull request toward `develop/**` and `release/**`
+(`npm run check:version`); the CI runs on pull requests only, never on
+pushes.
 
 Each OpenSpec change is tracked on GitHub with this cycle:
 

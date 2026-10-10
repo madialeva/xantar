@@ -9,21 +9,14 @@ body {
   background: #000;
 }
 
-.rotate-notice {
+#game {
   position: fixed;
-  inset: 0;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: #14181f;
-  color: #ffc857;
-  font-weight: bold;
-  font-size: 22px;
-  text-align: center;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
-.rotate-notice[hidden] {
-  display: none;
+#game.turned {
+  transform-origin: top left;
 }

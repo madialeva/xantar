@@ -37,7 +37,7 @@ export interface GameSceneDependencies {
   readonly settings: Settings;
   readonly input: ActionReader;
   readonly sounds: CuePlayer;
-  /** Events that pause the game (a gamepad lost, the phone turned upright); each returns a way to stop listening. */
+  /** Events that pause the game (a gamepad lost); each returns a way to stop listening. */
   readonly interruptions: readonly ((listener: () => void) => () => void)[];
 }
 

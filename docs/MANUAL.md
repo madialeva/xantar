@@ -98,7 +98,7 @@ npm run dev:desktop
 ```
 xantar/
 ├── .github/workflows/           # Integración continua (ver 10.4)
-│   ├── ci.yml                   # Comprobaciones de cada PR y push, versión y prueba de humo
+│   ├── ci.yml                   # Comprobaciones de cada PR (versión y prueba de humo incluidas)
 │   └── desktop.yml              # Instaladores de Linux, Windows y macOS
 ├── electron/                    # Proceso principal de Electron (no va al renderer)
 │   ├── main.ts                  # Ciclo de vida: instancia única, IPC, ventana (dev server o app://)
@@ -152,7 +152,7 @@ xantar/
 │   │   ├── session/             # GameSession: mediador entre la partida y el HUD
 │   │   ├── ui/                  # MenuList, ControlsPage (menús por acciones y puntero) y pantalla completa
 │   │   ├── input/               # ActionInput y fuentes: teclado, mando, táctil; InputModality
-│   │   ├── platform/            # Platform (web o escritorio) y aviso de girar el dispositivo
+│   │   ├── platform/            # Platform (web o escritorio) y ForcedLandscape (horizontal en móvil)
 │   │   └── audio/               # GameAudio (buses, silencio), EventSounds, mezcla y synth/ (efectos sintetizados)
 │   └── scenes/
 │       ├── BootScene.ts         # Rasteriza el arte de todos los temas y pasa al título
@@ -243,7 +243,7 @@ xantar/
   <script type="module" src="/src/main.ts"></script>
   ```
 
-- `src/main.ts` es la **raíz de composición**: crea el registro de temas, lee `?theme=` de la URL, carga los ajustes del jugador, crea la localización, la plataforma (web o escritorio), la entrada (`ActionInput` con teclado, mando y táctil), el audio (`GameAudio`), la sesión de partida y el aviso de girar el dispositivo, calcula el tamaño del área de juego con `computeLayout` y construye las escenas pasándoles sus dependencias por constructor (Phaser acepta instancias de escena en `config.scene`). Lo esencial:
+- `src/main.ts` es la **raíz de composición**: crea el registro de temas, lee `?theme=` de la URL, carga los ajustes del jugador, crea la localización, la plataforma (web o escritorio), la entrada (`ActionInput` con teclado, mando y táctil), el audio (`GameAudio`), la sesión de partida y `ForcedLandscape` (que gira el juego en un móvil en vertical), calcula el tamaño del área de juego con `computeLayout` y construye las escenas pasándoles sus dependencias por constructor (Phaser acepta instancias de escena en `config.scene`). Lo esencial:
 
   ```ts
   const settings = new Settings(
@@ -480,7 +480,7 @@ El juego tiene **dos máquinas de estados** separadas a propósito:
 
 2. **Flujo de la aplicación** (vista). Escenas `BootScene` → `TitleScene` → `MenuScene` → `GameScene` + `HudScene`, y la **pausa**, que no es una fase porque no cambia ninguna regla: la simulación simplemente deja de recibir ticks.
    - `GameScene` publica el estado en un `GameSession` (`src/view/session/`, patrón Observer y mediador) y ejecuta sus órdenes (`pause`, `resume`, `quit`). `HudScene` solo escucha a la sesión: dibuja los paneles, los mensajes de `ready` y `levelClear`, la pantalla de fin de partida y el menú de pausa. Ninguna escena conoce a la otra.
-   - Pausar llama a `this.scene.pause()` en `GameScene` (se congelan su `update` y sus tweens) y al reanudar `stepper.reset()` descarta el tiempo acumulado. La acción de pausa (Esc, P o Start del mando) la atiende solo `HudScene`. Perder el foco de la ventana, ocultar la pestaña, salir de la pantalla completa, desconectar el mando o girar el móvil a vertical también pausan (`GameScene` recibe estas *interrupciones* inyectadas).
+   - Pausar llama a `this.scene.pause()` en `GameScene` (se congelan su `update` y sus tweens) y al reanudar `stepper.reset()` descarta el tiempo acumulado. La acción de pausa (Esc, P o Start del mando) la atiende solo `HudScene`. Perder el foco de la ventana, ocultar la pestaña, salir de la pantalla completa, o desconectar el mando también pausan (`GameScene` recibe estas *interrupciones* inyectadas).
    - Volver al menú detiene `HudScene` y arranca `MenuScene`; nunca se recarga la página. La puntuación se envía a los ajustes al acabar la partida y al salir.
    - Los menús usan `MenuList` (`src/view/ui/`), que lee acciones (ver 8.9): arriba y abajo para moverse, confirmar para elegir, izquierda y derecha para cambiar un valor, volver para volver, y clic o toque sobre cada opción. La escena llama a `menu.update()` en cada fotograma. Los sonidos del menú llegan como `UiSounds`.
    - En la aplicación de escritorio, el menú principal termina con **Salir**, que cierra la aplicación por IPC (ver 8.4); Esc en el menú principal solo selecciona Salir, para no cerrar por accidente. En el navegador no aparece.
@@ -521,7 +521,7 @@ Ninguna escena lee teclas. Todo pasa por **acciones** (`src/input/actions.ts`): 
 - **Página Controles** (`ControlsPage`, en Opciones): filas por acción con dos huecos; confirmar captura la siguiente tecla (`KeyboardSource.capture`), Esc cancela y Retroceso vacía el hueco. `assign` intercambia la tecla si ya era de otra acción, de modo que ninguna se queda sin tecla y los menús siempre se pueden manejar. Las etiquetas salen de `keyLabel`: el carácter de la distribución del jugador (`navigator.keyboard.getLayoutMap()`, en Chrome, Edge y Electron) o el de una distribución US; las teclas con nombre (Espacio, Mayús…) salen de los catálogos (`key.*`).
 - **Mando** (`GamepadSource`): sondea `navigator.getGamepads()` en cada fotograma; solo mandos con mapeo `standard`. Mapeo fijo: cruceta o stick izquierdo (zona muerta 0,5) → direcciones; A → `pepper` y `confirm`; X → `pepper`; B → `back`; Start → `pause`. Avisa de la desconexión de un mando en uso y `GameScene` pausa. Los navegadores solo muestran el mando tras pulsar un botón con la página delante, y solo en contextos seguros (`https`, `localhost` o la aplicación de escritorio).
 - **Táctil**: `InputModality` detecta el primer toque (`pointerdown` con `pointerType === 'touch'`); desde entonces `HudScene` muestra `TouchControls`: cruceta (`hud.dpad`) abajo en el panel izquierdo y botón de pimienta (`hud.pepperButton`, que también confirma) abajo en el derecho, de hasta 160 unidades según el ancho del panel. Cada dedo se sigue por separado (Phaser con `input.activePointers: 3`) y se escribe en el `TouchPad` compartido; `dpadDirection` (pura) elige la dirección por el eje dominante con una zona muerta central, y deslizar el dedo cambia de dirección.
-- **Vertical**: `RotateNotice` (`src/view/platform/`) muestra un aviso HTML a pantalla completa con la media query `(orientation: portrait) and (pointer: coarse)` y su texto del catálogo; al aparecer, la partida se pausa.
+- **Siempre en horizontal** (`ForcedLandscape`, `src/view/platform/`): con una pantalla táctil en vertical (media query `(orientation: portrait) and (pointer: coarse)`), el contenedor `#game` de `index.html` se gira un cuarto de vuelta en sentido horario (`translateX(anchoWindow) rotate(90deg)`) y toma el tamaño de la ventana intercambiado, así que el juego se ve y se juega en horizontal aunque el teléfono tenga la rotación bloqueada; no hay aviso ni pausa al girar. Phaser mide con `getBoundingClientRect`, que ve la caja girada desde fuera, así que `ForcedLandscape.attach` sustituye, solo mientras está girado, cuatro pasos de sus gestores de escala y entrada (patrón Adapter): el tamaño del padre, los límites y el centrado del lienzo (medidos en el marco girado) y la transformación del puntero (`toTurnedFrame`, pura y con pruebas). `main.ts` llama a `apply()` al cambiar el tamaño de la ventana y calcula el layout con `viewport()`. En Android, al entrar en pantalla completa también se pide `screen.orientation.lock('landscape')`; si el sistema gira de verdad, el juego deja de girarse solo. La prueba de humo `portrait` lo cubre (arranque en vertical, menú y partida táctiles, y paso a horizontal).
 
 ---
 
@@ -751,10 +751,10 @@ Dos workflows en `.github/workflows/`, solo con acciones oficiales de GitHub (`a
 
 | Workflow | Cuándo | Jobs |
 |----------|--------|------|
-| `ci.yml` | PR hacia `develop/**` o `release/**`; push a esas ramas y a etiquetas `v*` | `check`: lint, formato, tipos, pruebas y build web. `version`: `npm run check:version`. `smoke`: prueba de humo en Linux con `xvfb` (tras `check`), capturas como artefacto `smoke` |
+| `ci.yml` | Solo PR hacia `develop/**` o `release/**` (un push nunca la dispara: lo que llega a esas ramas ya pasó por su PR) | `check`: lint, formato, tipos, pruebas y build web. `version`: `npm run check:version`. `smoke`: prueba de humo en Linux con `xvfb` (tras `check`), capturas como artefacto `smoke` |
 | `desktop.yml` | Push a `release/**`, etiquetas `v*` y ejecución manual (*Run workflow*) | Matriz `ubuntu-latest`, `windows-latest`, `macos-latest`: `npm run build:desktop -- --publish never`; instaladores como artefactos `xantar-<os>` (14 días) |
 
-**Versión frente a la rama.** `tools/ci/branchVersion.ts` (`expectedVersion`, con pruebas) deduce la versión esperada: `develop/vX.Y.Z`, `release/vX.Y.Z` y la etiqueta `vX.Y.Z` exigen `X.Y.Z`; en un PR manda la rama destino; las demás ramas no se comprueban. `tools/ci/checkVersion.ts` la compara con `package.json`; Node 24 lo ejecuta directamente, sin compilar (elimina los tipos al cargarlo). Para probarlo en local:
+**Versión frente a la rama.** `tools/ci/branchVersion.ts` (`expectedVersion`, con pruebas) deduce la versión esperada a partir de la rama destino del PR: `develop/vX.Y.Z` y `release/vX.Y.Z` exigen `X.Y.Z`; las demás no se comprueban. (También entiende una rama o etiqueta sin PR, `GITHUB_REF_NAME`, para probarlo en local.) `tools/ci/checkVersion.ts` la compara con `package.json`; Node 24 lo ejecuta directamente, sin compilar (elimina los tipos al cargarlo). Para probarlo en local:
 
 ```bash
 GITHUB_REF_NAME=develop/v1.0.0 npm run check:version

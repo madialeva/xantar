@@ -71,15 +71,19 @@ export const SCENARIOS: Readonly<Record<string, readonly SmokeRun[]>> = {
       `touchUp:2,touchDown:1:${pad.x}:${pad.y - pad.reach},wait:400,touchUp:1,wait:300,shot:released`
     ].join(',')
   })),
-  rotate: [
+  portrait: [
     {
-      name: 'rotate',
-      size: '1170x540',
+      // An upright phone: the game turns a quarter and keeps its landscape layout (pad at
+      // -100,382 as at 19.5:9); turning the phone sideways keeps playing, without a pause.
+      name: 'portrait',
+      size: '540x1170',
       query: '',
       touch: true,
-      steps:
-        'wait:2500,touch:320:240,wait:1500,touch:320:230,wait:2500,shot:landscape,' +
-        'size:540x1170,wait:800,shot:portrait,size:1170x540,wait:800,shot:back-to-landscape'
+      steps: [
+        'wait:2500,shot:title,touch:320:240,wait:1500,shot:menu,touch:320:230,wait:2500',
+        'touchDown:1:-50:382,wait:900,touchDown:2:740:382,wait:300,shot:walking-and-pepper',
+        'touchUp:2,touchUp:1,size:1170x540,wait:800,shot:sideways'
+      ].join(',')
     }
   ],
   audio: [

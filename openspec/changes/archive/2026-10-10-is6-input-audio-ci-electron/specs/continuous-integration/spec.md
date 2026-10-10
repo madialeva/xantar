@@ -2,38 +2,38 @@
 
 ## Purpose
 
-Comprobar de forma automática en GitHub cada cambio propuesto y cada rama de
-desarrollo o versión, y generar los instaladores de escritorio de los tres
+Comprobar de forma automática en GitHub cada cambio propuesto a una rama de
+desarrollo o de versión, y generar los instaladores de escritorio de los tres
 sistemas operativos sin depender del equipo del autor.
 
 ## ADDED Requirements
 
 ### Requirement: Comprobaciones en cada pull request
-Cada pull request hacia una rama `develop/**` o `release/**`, y cada push a esas
-ramas, SHALL ejecutar en GitHub Actions el lint, la comprobación de formato, la
-comprobación de tipos (renderer y Electron), las pruebas y el build web, con la
-versión de Node del proyecto. Si cualquiera falla, la comprobación SHALL
-fallar.
+Cada pull request hacia una rama `develop/**` o `release/**` SHALL ejecutar en
+GitHub Actions el lint, la comprobación de formato, la comprobación de tipos
+(renderer y Electron), las pruebas y el build web, con la versión de Node del
+proyecto. Si cualquiera falla, la comprobación SHALL fallar. Un push a una rama,
+incluidas las de desarrollo y versión, SHALL NOT disparar estas comprobaciones:
+lo que llega a esas ramas ya pasó por su pull request.
 
 #### Scenario: Formato roto
 - **WHEN** un pull request incluye un fichero sin formatear con Prettier
 - **THEN** la comprobación del pull request falla e indica el paso de formato
 
+#### Scenario: Push a la rama de desarrollo
+- **WHEN** se fusiona un pull request y su commit llega por push a
+  `develop/v1.0.0`
+- **THEN** no se ejecuta la CI
+
 ### Requirement: Versión coherente con la rama
-Un push a `develop/vX.Y.Z` o `release/vX.Y.Z`, o una etiqueta `vX.Y.Z`, SHALL
-fallar si la versión de `package.json` no es `X.Y.Z`. Un pull request hacia
-`develop/vX.Y.Z` o `release/vX.Y.Z` SHALL fallar si la versión de
-`package.json` de la rama del pull request no es `X.Y.Z`. Las demás ramas SHALL
-NOT comprobarse.
+Un pull request hacia `develop/vX.Y.Z` o `release/vX.Y.Z` SHALL fallar si la
+versión de `package.json` de la rama del pull request no es `X.Y.Z`. Los pull
+requests hacia otras ramas SHALL NOT comprobarse.
 
 #### Scenario: Versión desalineada
-- **WHEN** se hace push a `develop/v1.1.0` con la versión `1.0.0` en
+- **WHEN** un pull request hacia `develop/v1.1.0` trae la versión `1.0.0` en
   `package.json`
 - **THEN** la comprobación falla indicando ambas versiones
-
-#### Scenario: Rama de cambio
-- **WHEN** se hace push a `change/is6-input-audio-ci-electron`
-- **THEN** no se comprueba la versión
 
 ### Requirement: Prueba de humo automática
 Cada pull request SHALL ejecutar en Linux la prueba de humo de la aplicación de
