@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 12" width="32" height="12">
+  <g transform="matrix(-1 0 0 1 32 0)">
+    <path class="f-lettuce" d="M4 3.5 Q6 0 8 3.5 Q12 0 16 3.5 Q20 0 24 3.5 Q28 0 32 3.5 V9 Q28 11.5 24 9 Q20 11.5 16 9 Q12 11.5 8 9 Q6 10.5 4 9 Q1.5 9 1.5 6.25 Q1.5 3.5 4 3.5 Z"/>
+    <path class="f-lettuceShade" d="M2 7 H32 V9 Q28 11.5 24 9 Q20 11.5 16 9 Q12 11.5 8 9 Q6 10.5 4 9 Q2 9 2 7 Z" opacity="0.7"/>
+    <path class="s-lettuceShade" stroke-width="1" stroke-linecap="round" fill="none" d="M11 4.5 Q13 6 12 8"/>
+    <path class="s-lettuceShade" stroke-width="1" stroke-linecap="round" fill="none" d="M19 4.5 Q21 6 20 8"/>
+    <path class="s-lettuceShade" stroke-width="1" stroke-linecap="round" fill="none" d="M27 4.5 Q29 6 28 8"/>
+    <path class="s-outline" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" fill="none" d="M4 3.5 Q6 0 8 3.5 Q12 0 16 3.5 Q20 0 24 3.5 Q28 0 32 3.5 M32 9 Q28 11.5 24 9 Q20 11.5 16 9 Q12 11.5 8 9 Q6 10.5 4 9 Q1.5 9 1.5 6.25 Q1.5 3.5 4 3.5"/>
+  </g>
+</svg>

@@ -86,6 +86,19 @@ describe('parseLevelDocument', () => {
     expect(() => parseLevelDocument({ ...base(), layers })).toThrow(/ingredients/);
   });
 
+  it('reads an optional theme and leaves it undefined when absent', () => {
+    expect(parseLevelDocument({ ...base(), theme: 'midnight' }).theme).toBe('midnight');
+    expect(parseLevelDocument(base())).not.toHaveProperty('theme');
+  });
+
+  it('rejects a malformed theme, naming the field', () => {
+    for (const theme of ['Mid Night', 42, '', '9lives', 'night_mode']) {
+      expect(capture(() => parseLevelDocument({ ...base(), theme })).message).toMatch(
+        /"theme" must be an id/
+      );
+    }
+  });
+
   it('rejects a row that is not a string', () => {
     const layers = { ...(base().layers as object), structure: ['....', 7] };
     expect(() => parseLevelDocument({ ...base(), layers })).toThrow(/string/);
@@ -123,5 +136,16 @@ describe('serializeLevel', () => {
 
   it('always writes the segments', () => {
     expect(serializeLevel(document)).toContain('"segments": 4');
+  });
+
+  it('omits the theme when the document has none', () => {
+    expect(serializeLevel(document)).not.toContain('"theme"');
+  });
+
+  it('writes the theme after the segments and reads it back', () => {
+    const themed = parseLevelDocument({ ...base(), theme: 'midnight' });
+    const lines = serializeLevel(themed).split('\n');
+    expect(lines.indexOf('  "theme": "midnight",')).toBe(lines.indexOf('  "segments": 4,') + 1);
+    expect(parseLevelJson(serializeLevel(themed))).toEqual(themed);
   });
 });

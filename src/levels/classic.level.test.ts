@@ -55,6 +55,10 @@ describe('classic level', () => {
     ]);
   });
 
+  it('declares the classic theme', () => {
+    expect(document.theme).toBe('classic');
+  });
+
   it('survives a round trip through text with the same result', () => {
     const copy = assembleLevel(parseLevelJson(serializeLevel(document)));
     expect(copy).toEqual(level);

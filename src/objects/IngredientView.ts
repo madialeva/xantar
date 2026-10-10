@@ -1,95 +1,95 @@
 import Phaser from 'phaser';
-import {
-  INGREDIENT_COLORS,
-  INGREDIENT_HEIGHTS,
-  LANE_STACK_HEIGHT,
-  TILE,
-  platformY
-} from '../config';
-import { FALL_TICKS, type IngredientKind, type IngredientSnapshot } from '../sim';
+import { TILE, platformY } from '../config';
+import { FALL_TICKS, type IngredientSnapshot } from '../sim';
+import type { ArtFactory } from '../view/raster/ArtFactory';
+import { INGREDIENT_HEIGHTS, segmentParts } from '../view/theme/graphics';
 
-const PLATFORM_CLEARANCE = 6;
-const SEGMENT_GAP = 2;
+const PLATFORM_TOP = 6;
+const PLATE_TOP = 5;
+const STACK_STEP = 11;
 const STOMP_DEPTH = 3;
+const LANDING_SQUASH = { scaleX: 1.06, scaleY: 0.7, ms: 220 };
 
 /**
- * Phaser view of an ingredient: draws its segments (lowered when stomped) and places it
- * on its platform, in the air while it falls or on the plate once stacked.
+ * Phaser view of an ingredient: draws its segments with the theme graphics (lowered when
+ * stomped) and places it on its platform, in the air while it falls or on the plate once
+ * stacked. Its origin is the bottom centre, so landing squashes it against the floor.
  */
 export default class IngredientView extends Phaser.GameObjects.Container {
   readonly #height: number;
-  readonly #segments: Phaser.GameObjects.Container[] = [];
+  readonly #body: Phaser.GameObjects.Container;
+  readonly #segments: Phaser.GameObjects.Image[] = [];
 
-  constructor(scene: Phaser.Scene, ingredient: IngredientSnapshot) {
+  constructor(scene: Phaser.Scene, art: ArtFactory, ingredient: IngredientSnapshot) {
     super(scene, ((ingredient.left + ingredient.right) / 2) * TILE, 0);
     this.#height = INGREDIENT_HEIGHTS[ingredient.kind];
-    this.#buildSegments(ingredient);
+    this.#body = scene.add.container(0, 0);
+    segmentParts(ingredient.width).forEach((part, index) => {
+      const offset = (index + 0.5 - ingredient.width / 2) * TILE;
+      const segment = art
+        .image(`${ingredient.kind}.${part}`, offset, -this.#height / 2)
+        .setOrigin(0.5, 0.5);
+      this.#segments.push(segment);
+      this.#body.add(segment);
+    });
+    this.add(this.#body);
     scene.add.existing(this);
-    this.setY(this.#restY(ingredient.row));
+    this.setY(this.#restBottom(ingredient.row));
   }
 
   sync(ingredient: IngredientSnapshot, alpha: number): void {
-    this.setY(this.#yFor(ingredient, alpha));
+    this.setY(this.#bottomFor(ingredient, alpha));
     this.#segments.forEach((segment, index) => {
-      segment.setY(ingredient.stomped[index] ? STOMP_DEPTH : 0);
+      segment.setY(-this.#height / 2 + (ingredient.stomped[index] ? STOMP_DEPTH : 0));
     });
   }
 
-  #yFor(ingredient: IngredientSnapshot, alpha: number): number {
+  segmentTop(index: number): { readonly x: number; readonly y: number } {
+    const segment = this.#segments[index];
+    return { x: this.x + (segment?.x ?? 0), y: this.y - this.#height };
+  }
+
+  land(): void {
+    this.scene.tweens.killTweensOf(this.#body);
+    this.#body.setScale(LANDING_SQUASH.scaleX, LANDING_SQUASH.scaleY);
+    this.scene.tweens.add({
+      targets: this.#body,
+      scaleX: 1,
+      scaleY: 1,
+      duration: LANDING_SQUASH.ms,
+      ease: 'Back.easeOut'
+    });
+  }
+
+  override destroy(fromScene?: boolean): void {
+    this.scene?.tweens.killTweensOf(this.#body);
+    super.destroy(fromScene);
+  }
+
+  #bottomFor(ingredient: IngredientSnapshot, alpha: number): number {
     switch (ingredient.phase) {
       case 'idle':
       case 'waiting':
-        return this.#restY(ingredient.row);
+        return this.#restBottom(ingredient.row);
       case 'stacked':
-        return this.#stackY(ingredient.fallToRow, ingredient.stackSlot ?? 0);
+        return this.#stackBottom(ingredient.fallToRow, ingredient.stackSlot ?? 0);
       case 'falling': {
         const progress = Math.min(1, ingredient.fallProgress + alpha / FALL_TICKS);
         const eased = Phaser.Math.Easing.Quadratic.In(progress);
-        const from = this.#restY(ingredient.fallFromRow);
+        const from = this.#restBottom(ingredient.fallFromRow);
         const to = ingredient.landsOnPlate
-          ? this.#stackY(ingredient.fallToRow, ingredient.stackSlot ?? 0)
-          : this.#restY(ingredient.fallToRow);
+          ? this.#stackBottom(ingredient.fallToRow, ingredient.stackSlot ?? 0)
+          : this.#restBottom(ingredient.fallToRow);
         return Phaser.Math.Linear(from, to, eased);
       }
     }
   }
 
-  #restY(row: number): number {
-    return platformY(row) - this.#height / 2 - PLATFORM_CLEARANCE;
+  #restBottom(row: number): number {
+    return platformY(row) - PLATFORM_TOP;
   }
 
-  #stackY(plateRow: number, slot: number): number {
-    return platformY(plateRow) - PLATFORM_CLEARANCE - slot * LANE_STACK_HEIGHT;
-  }
-
-  #buildSegments(ingredient: IngredientSnapshot): void {
-    const segmentWidth = TILE - SEGMENT_GAP;
-    for (let index = 0; index < ingredient.width; index++) {
-      const offset = (index + 0.5 - ingredient.width / 2) * TILE;
-      const body = this.scene.add.rectangle(
-        0,
-        0,
-        segmentWidth,
-        this.#height,
-        INGREDIENT_COLORS[ingredient.kind]
-      );
-      body.setStrokeStyle(2, 0x000000, 0.25);
-      const segment = this.scene.add.container(offset, 0, [
-        body,
-        ...this.#decoration(ingredient.kind, segmentWidth)
-      ]);
-      this.#segments.push(segment);
-      this.add(segment);
-    }
-  }
-
-  #decoration(kind: IngredientKind, width: number): Phaser.GameObjects.GameObject[] {
-    if (kind === 'bunTop' || kind === 'bunBottom') {
-      return [-0.25, 0.25].map((place) => this.scene.add.circle(place * width, -1, 1.6, 0xfff3d0));
-    }
-    if (kind === 'lettuce') {
-      return [-0.3, 0, 0.3].map((place) => this.scene.add.circle(place * width, -3, 2.5, 0x8fe07a));
-    }
-    return [this.scene.add.rectangle(0, 0, 8, 2, 0x4a2408)];
+  #stackBottom(plateRow: number, slot: number): number {
+    return platformY(plateRow) - PLATE_TOP - slot * STACK_STEP;
   }
 }

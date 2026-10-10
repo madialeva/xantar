@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 12" width="32" height="12">
+  <g transform="matrix(-1 0 0 1 32 0)">
+    <path class="f-platform" d="M4 0 H32 V12 H4 Q0 12 0 8 V4 Q0 0 4 0 Z"/>
+    <path class="f-platformEdge" d="M0 8 Q0 12 4 12 H32 V8 Z"/>
+    <rect class="f-highlight" x="3" y="1" width="29" height="1.5" opacity="0.3"/>
+    <rect class="f-platformEdge" x="15.5" y="3.5" width="1" height="3" opacity="0.6"/>
+  </g>
+</svg>

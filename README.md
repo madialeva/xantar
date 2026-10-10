@@ -42,8 +42,8 @@ comes next.
 |   ✅   | Deterministic simulation core at a fixed 60 Hz step, independent of the renderer and the frame rate       |   —    |  #2   |
 |   ✅   | Levels described as data, validated on load, and automated tests of the game rules                        |   —    |  #2   |
 |   ✅   | Level model: tile pieces, ingredient segments, navigation graph and validator; turn around mid-ladder     |   —    |  #3   |
+|   ✅   | Modern vector visuals: SVG art, themes and side panels                                                    |   —    |  #4   |
 |   ⬜   | Enemies riding ingredients (an extra level per rider)                                                     | v1.0.0 |  #9   |
-|   ⬜   | Modern vector visuals: SVG art, themes and side panels                                                    | v1.0.0 |  #4   |
 |   ⬜   | Game state machine, pause, high score, Spanish and English                                                | v1.0.0 |  #5   |
 |   ⬜   | Gamepad and touch controls, music and sound effects, CI and a hardened desktop app                        | v1.0.0 |  #6   |
 |   ⬜   | Replay recording and debug tooling                                                                        | v1.0.0 |  #8   |
@@ -63,13 +63,13 @@ must bring them all the way down to the plate.
 
 ### Controls
 
-| Action                            | Key                     |
-| --------------------------------- | ----------------------- |
-| Move                              | Left/right arrows       |
-| Climb up and down ladders         | Up/down arrows          |
-| Throw pepper                      | `Space`                 |
-| Confirm (level clear / game over) | `Enter`                 |
-| Back to the title                 | `Esc` or the `✕` button |
+| Action                            | Key                                        |
+| --------------------------------- | ------------------------------------------ |
+| Move                              | Left/right arrows                          |
+| Climb up and down ladders         | Up/down arrows                             |
+| Throw pepper                      | `Space`                                    |
+| Confirm (level clear / game over) | `Enter`                                    |
+| Back to the title                 | `Esc` or the `✕` button in the right panel |
 
 You can also play with the `W`, `A`, `S`, `D` keys. On a ladder you only move
 while you hold up or down, so you can stop and turn around anywhere on it. When
@@ -120,6 +120,19 @@ you reach the height of a platform, press left or right to step onto it.
   and your score, lives and pepper carry over (every level uses the same layout
   for now).
 - When you lose every life, **GAME OVER** appears; press `Enter` to restart.
+
+### Screen and looks
+
+- The 20×15 board sits in the middle of the screen, and the score, level, lives
+  and pepper shots are shown in **side panels**. On widescreen monitors and on
+  phones held sideways the game fills the whole screen; narrower screens show
+  bars above and below.
+- Everything is drawn from **vector art**, so it stays sharp at any size. The
+  characters are made of separate parts that bounce, swing and squash as they
+  move.
+- The game comes with two **themes**: `classic` and `midnight` (a night-blue,
+  neon look). Each level says which theme it uses; in the browser version you
+  can try another one by adding `?theme=midnight` to the address.
 
 ---
 
@@ -194,6 +207,7 @@ The project supports web and desktop development from the same code:
 | `npm run typecheck`         | Type checking                  |
 | `npm run lint` / `format`   | Oxlint and Prettier            |
 | `npm run test`              | Unit tests (Vitest)            |
+| `npm run smoke`             | Screenshots of the desktop app |
 
 The full technical documentation (architecture, internal mechanics and
 workflow) lives in [`docs/MANUAL.md`](docs/MANUAL.md).

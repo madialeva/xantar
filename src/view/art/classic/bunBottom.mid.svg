@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 14" width="32" height="14">
+  <rect class="f-shadow" x="0" y="12" width="32" height="1.5" opacity="0.25"/>
+  <rect class="f-bun" x="0" y="1.5" width="32" height="10.5"/>
+  <rect class="f-bunShade" x="0" y="8" width="32" height="4"/>
+  <rect class="f-seed" x="0" y="2.5" width="32" height="1.6" opacity="0.6"/>
+  <path class="s-outline" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" fill="none" d="M0 1.5 H32 M0 12 H32"/>
+  <rect class="f-shadow" x="31.25" y="2" width="0.75" height="10" opacity="0.18"/>
+</svg>

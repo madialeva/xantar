@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { COLORS, GAME_HEIGHT, GAME_WIDTH, TILE, platformY } from '../config';
+import { type RenderTier, TILE } from '../config';
 import classicDocument from '../levels/classic.level.json';
 import ChefView from '../objects/ChefView';
 import EnemyView from '../objects/EnemyView';
@@ -14,16 +14,37 @@ import {
   loadLevel,
   parseLevelDocument
 } from '../sim';
+import { MazeView } from '../view/board/MazeView';
+import { EventEffects } from '../view/fx/EventEffects';
+import { applyBloom } from '../view/fx/bloom';
+import { HudPanels } from '../view/hud/HudPanels';
+import { OverlayView } from '../view/hud/OverlayView';
+import { followBoardCamera } from '../view/layout/boardCamera';
+import { layoutForWidth } from '../view/layout/computeLayout';
+import { ArtFactory } from '../view/raster/ArtFactory';
+import { chooseTheme } from '../view/theme/chooseTheme';
+import type { ResolvedTheme } from '../view/theme/Theme';
+import type { ThemeRegistry } from '../view/theme/ThemeRegistry';
 
-const PEPPER_CLOUD_RADIUS = 13;
-const PEPPER_CLOUD_MS = 400;
 const CAMERA_FLASH_MS = 180;
+const DEPTH = { maze: 0, ingredients: 5, enemies: 6, chef: 7, effects: 8, hud: 10, overlay: 20 };
+
+export interface GameSceneDependencies {
+  readonly themes: ThemeRegistry;
+  readonly urlTheme: string | null;
+  readonly tier: RenderTier;
+}
 
 /**
  * Phaser scene that runs the simulation at a fixed step, draws it with interpolation and
  * turns its events into effects. It contains no game rules.
  */
 export default class GameScene extends Phaser.Scene {
+  readonly #themes: ThemeRegistry;
+  readonly #urlTheme: string | null;
+  readonly #tier: RenderTier;
+  #theme!: ResolvedTheme;
+  #art!: ArtFactory;
   #sim!: Simulation;
   readonly #stepper = new FixedStepper();
   #pepperPending = false;
@@ -37,26 +58,38 @@ export default class GameScene extends Phaser.Scene {
   #pepperKey!: Phaser.Input.Keyboard.Key;
   #enterKey!: Phaser.Input.Keyboard.Key;
 
-  #scoreText!: Phaser.GameObjects.Text;
-  #pepperText!: Phaser.GameObjects.Text;
-  #livesText!: Phaser.GameObjects.Text;
-  #overlay: Phaser.GameObjects.Container | null = null;
+  #effects!: EventEffects;
+  #hud!: HudPanels;
+  #overlay!: OverlayView;
 
-  constructor() {
+  constructor({ themes, urlTheme, tier }: GameSceneDependencies) {
     super({ key: 'GameScene' });
+    this.#themes = themes;
+    this.#urlTheme = urlTheme;
+    this.#tier = tier;
   }
 
   create(): void {
-    this.cameras.main.setBackgroundColor(COLORS.background);
+    const levelDocument = parseLevelDocument(classicDocument);
+    this.#theme = this.#chooseTheme(levelDocument.theme);
+    this.#art = new ArtFactory(this, this.#theme.id, this.#tier);
+    this.cameras.main.setBackgroundColor(this.#theme.palette.background);
+    if (this.#theme.bloom) applyBloom(this);
     this.#sim = new Simulation({
-      level: loadLevel(parseLevelDocument(classicDocument)),
+      level: loadLevel(levelDocument),
       rng: new SeededRng(Date.now())
     });
     this.#stepper.reset();
     this.#pepperPending = false;
-    this.#drawMaze();
+    new MazeView(this, this.#art, this.#sim.level).setDepth(DEPTH.maze);
     this.#createViews();
-    this.#createHud();
+    this.#hud = new HudPanels(this, this.#art, this.#theme.palette, this.#tier, () =>
+      this.#exitGame()
+    ).setDepth(DEPTH.hud);
+    this.#hud.update(this.#sim.stats);
+    this.#overlay = new OverlayView(this, this.#theme.palette, this.#tier);
+    this.#effects = new EventEffects(this, this.#art, DEPTH.effects);
+    followBoardCamera(this, this.#tier, (width) => this.#hud.layout(layoutForWidth(width)));
     this.#createInput();
     this.#rebuildIngredients();
     this.#syncViews(0);
@@ -81,6 +114,12 @@ export default class GameScene extends Phaser.Scene {
     if (events.length > 0) this.#handleEvents(events);
   }
 
+  #chooseTheme(levelTheme: string | undefined): ResolvedTheme {
+    const choice = chooseTheme({ urlTheme: this.#urlTheme, levelTheme }, this.#themes);
+    for (const warning of choice.warnings) console.warn(warning);
+    return this.#themes.resolve(choice.id);
+  }
+
   #readInput(): SimInput {
     return {
       ...NO_INPUT,
@@ -92,50 +131,10 @@ export default class GameScene extends Phaser.Scene {
     };
   }
 
-  #drawMaze(): void {
-    const level = this.#sim.level;
-    const ladders = this.add.graphics().setDepth(1);
-    ladders.fillStyle(COLORS.ladder, 1);
-    for (const ladder of level.graph.ladders) {
-      const x = (ladder.col + 0.5) * TILE;
-      const top = platformY(ladder.topRow);
-      const bottom = platformY(ladder.bottomRow);
-      ladders.fillRect(x - 8, top, 3, bottom - top);
-      ladders.fillRect(x + 5, top, 3, bottom - top);
-      for (let y = top + 10; y < bottom; y += 12) {
-        ladders.fillRect(x - 8, y, 16, 3);
-      }
-    }
-
-    for (const run of level.graph.platforms) {
-      this.add
-        .rectangle(
-          ((run.left + run.right) / 2) * TILE,
-          platformY(run.row),
-          (run.right - run.left) * TILE,
-          10,
-          COLORS.platform
-        )
-        .setDepth(2);
-    }
-
-    for (const plate of level.plates) {
-      this.add
-        .rectangle(
-          (plate.col + plate.width / 2) * TILE,
-          platformY(plate.row),
-          plate.width * TILE * 0.92,
-          8,
-          COLORS.plate
-        )
-        .setDepth(2);
-    }
-  }
-
   #createViews(): void {
-    this.#chefView = new ChefView(this).setDepth(7);
+    this.#chefView = new ChefView(this, this.#art).setDepth(DEPTH.chef);
     this.#enemyViews = this.#sim.enemies.map((enemy) =>
-      new EnemyView(this, enemy.kind).setDepth(6)
+      new EnemyView(this, this.#art, enemy.kind).setDepth(DEPTH.enemies)
     );
   }
 
@@ -143,7 +142,8 @@ export default class GameScene extends Phaser.Scene {
     for (const view of this.#ingredientViews.values()) view.destroy();
     this.#ingredientViews.clear();
     for (const ingredient of this.#sim.ingredients) {
-      this.#ingredientViews.set(ingredient.id, new IngredientView(this, ingredient).setDepth(5));
+      const view = new IngredientView(this, this.#art, ingredient).setDepth(DEPTH.ingredients);
+      this.#ingredientViews.set(ingredient.id, view);
     }
   }
 
@@ -159,79 +159,52 @@ export default class GameScene extends Phaser.Scene {
     for (const event of events) {
       switch (event.type) {
         case 'boardStarted':
-          this.#hideOverlay();
+          this.#overlay.hide();
+          this.#chefView.recover();
+          this.#effects.clear();
           this.#rebuildIngredients();
           break;
         case 'pepperThrown':
-          this.#showPepperCloud(event.x * TILE, event.y * TILE);
+          this.#effects.pepper(event.x * TILE, event.y * TILE, event.direction);
           break;
         case 'chefHit':
           this.cameras.main.flash(CAMERA_FLASH_MS, 255, 60, 60);
+          this.#chefView.hit();
           break;
         case 'levelCleared':
-          this.#showOverlay('NIVEL COMPLETADO', 'Pulsa ENTER para el siguiente nivel');
+          this.#overlay.show(
+            'NIVEL COMPLETADO',
+            'Pulsa ENTER para el siguiente nivel',
+            DEPTH.overlay
+          );
           break;
         case 'gameOver':
-          this.#showOverlay('GAME OVER', 'Pulsa ENTER para reiniciar');
+          this.#overlay.show('GAME OVER', 'Pulsa ENTER para reiniciar', DEPTH.overlay);
           break;
-        case 'segmentStomped':
-        case 'ingredientsTriggered':
         case 'ingredientLanded':
+          this.#ingredientViews.get(event.ingredientId)?.land();
+          break;
+        case 'segmentStomped': {
+          const top = this.#ingredientViews.get(event.ingredientId)?.segmentTop(event.segment);
+          if (top) this.#effects.dust(top.x, top.y);
+          break;
+        }
         case 'enemySquashed':
+          this.#effects.squash(event.x * TILE, event.y * TILE);
+          break;
+        case 'burgerDone': {
+          const plate = this.#sim.level.plates.find((candidate) => candidate.id === event.plateId);
+          if (plate) this.#effects.burgerDone(plate);
+          break;
+        }
+        case 'ingredientsTriggered':
         case 'enemyRespawned':
         case 'enemyStunned':
-        case 'burgerDone':
         case 'scoreChanged':
           break;
       }
     }
-    this.#updateHud();
-  }
-
-  #showPepperCloud(x: number, y: number): void {
-    const cloud = this.add.circle(x, y, PEPPER_CLOUD_RADIUS, 0xffffff, 0.85).setDepth(8);
-    this.tweens.add({
-      targets: cloud,
-      alpha: 0,
-      scale: 2,
-      duration: PEPPER_CLOUD_MS,
-      onComplete: () => cloud.destroy()
-    });
-  }
-
-  #createHud(): void {
-    this.#scoreText = this.add
-      .text(16, 12, '', { fontSize: '18px', color: COLORS.hud, fontFamily: 'monospace' })
-      .setDepth(10);
-    this.#pepperText = this.add
-      .text(16, 38, '', { fontSize: '16px', color: '#ffd166', fontFamily: 'monospace' })
-      .setDepth(10);
-    this.#livesText = this.add
-      .text(GAME_WIDTH / 2, 20, '', {
-        fontSize: '18px',
-        color: COLORS.hud,
-        fontFamily: 'monospace'
-      })
-      .setOrigin(0.5)
-      .setDepth(10);
-
-    const btnX = GAME_WIDTH - 26;
-    const btnY = 26;
-    const bg = this.add.circle(btnX, btnY, 17, 0x222222, 0.85).setDepth(10);
-    const label = this.add
-      .text(btnX, btnY, '✕', {
-        fontSize: '17px',
-        color: '#ffffff',
-        fontFamily: 'Arial, sans-serif'
-      })
-      .setOrigin(0.5)
-      .setDepth(11)
-      .setInteractive({ useHandCursor: true });
-    label.on('pointerover', () => bg.setFillStyle(0x555555, 0.9));
-    label.on('pointerout', () => bg.setFillStyle(0x222222, 0.85));
-    label.on('pointerup', () => this.#exitGame());
-
-    this.#updateHud();
+    this.#hud.update(this.#sim.stats);
   }
 
   #createInput(): void {
@@ -246,50 +219,11 @@ export default class GameScene extends Phaser.Scene {
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', () => this.#exitGame());
   }
 
-  #updateHud(): void {
-    const { score, peppers, lives, level } = this.#sim.stats;
-    this.#scoreText.setText(`PUNTOS ${score.toString().padStart(6, '0')}`);
-    this.#pepperText.setText(`PIMIENTA ${peppers}`);
-    this.#livesText.setText(`VIDAS ${Math.max(0, lives)}   NIVEL ${level}`);
-  }
-
   #confirm(): void {
-    this.#hideOverlay();
+    this.#overlay.hide();
     if (this.#sim.status === 'gameOver') this.#sim.newGame();
     else this.#sim.nextLevel();
     this.#stepper.reset();
-  }
-
-  #showOverlay(title: string, subtitle: string): void {
-    this.#hideOverlay();
-    const shade = this.add.rectangle(
-      GAME_WIDTH / 2,
-      GAME_HEIGHT / 2,
-      GAME_WIDTH,
-      GAME_HEIGHT,
-      0x000000,
-      0.72
-    );
-    const titleText = this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20, title, {
-        fontSize: '34px',
-        color: '#ffffff',
-        fontFamily: 'monospace'
-      })
-      .setOrigin(0.5);
-    const subtitleText = this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 24, subtitle, {
-        fontSize: '16px',
-        color: '#ffd166',
-        fontFamily: 'monospace'
-      })
-      .setOrigin(0.5);
-    this.#overlay = this.add.container(0, 0, [shade, titleText, subtitleText]).setDepth(20);
-  }
-
-  #hideOverlay(): void {
-    this.#overlay?.destroy();
-    this.#overlay = null;
   }
 
   #exitGame(): void {

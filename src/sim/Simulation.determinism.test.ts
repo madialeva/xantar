@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import classicDocument from '../levels/classic.level.json';
 import type { SimEvent } from './events';
+import { type Level } from './level/Level';
 import { parseLevelDocument } from './level/levelJson';
 import { loadLevel } from './level/loadLevel';
 import { SeededRng } from './rng';
 import { NO_INPUT, type SimInput } from './SimInput';
 import { Simulation } from './Simulation';
 
-const level = loadLevel(parseLevelDocument(classicDocument));
+const classic = parseLevelDocument(classicDocument);
+const level = loadLevel(classic);
 const TICKS = 3600;
 
 const scriptedInputs = (ticks: number): SimInput[] => {
@@ -49,8 +51,8 @@ const stateOf = (sim: Simulation): string =>
     plates: sim.plates.map((p) => [p.landed, p.isComplete])
   });
 
-const play = (seed: number): { states: string[]; events: SimEvent[] } => {
-  const sim = new Simulation({ level, rng: new SeededRng(seed) });
+const play = (seed: number, board: Level = level): { states: string[]; events: SimEvent[] } => {
+  const sim = new Simulation({ level: board, rng: new SeededRng(seed) });
   const states: string[] = [];
   const events: SimEvent[] = [];
   for (const input of scriptedInputs(TICKS)) {
@@ -76,6 +78,14 @@ describe('Simulation determinism', () => {
     expect(types.has('chefHit')).toBe(true);
     expect(types.has('scoreChanged')).toBe(true);
     expect(types.has('pepperThrown')).toBe(true);
+  });
+
+  it('ignores the visual theme of the level', () => {
+    expect(classic.theme).toBe('classic');
+    const withoutTheme = play(7, loadLevel({ ...classic, theme: undefined }));
+    const withOtherTheme = play(7, loadLevel({ ...classic, theme: 'midnight' }));
+    expect(withoutTheme).toEqual(play(7));
+    expect(withOtherTheme).toEqual(play(7));
   });
 
   it('diverges for a different seed', () => {

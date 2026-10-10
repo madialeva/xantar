@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="20" height="20">
+  <circle class="s-outline" cx="5.5" cy="8" r="4" fill="none" stroke-width="3"/>
+  <circle class="s-outline" cx="10" cy="6" r="4.75" fill="none" stroke-width="3"/>
+  <circle class="s-outline" cx="14.5" cy="8" r="4" fill="none" stroke-width="3"/>
+  <circle class="f-chef" cx="5.5" cy="8" r="4"/>
+  <circle class="f-chef" cx="10" cy="6" r="4.75"/>
+  <circle class="f-chef" cx="14.5" cy="8" r="4"/>
+  <circle class="f-highlight" cx="9" cy="4.5" r="1.5" opacity="0.8"/>
+  <rect class="f-chef s-outline" x="4" y="10" width="12" height="6.5" rx="2" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <rect class="f-chefShade" x="4.75" y="13.25" width="10.5" height="2.5" rx="1"/>
+</svg>

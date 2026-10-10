@@ -29,7 +29,7 @@
   },
   "overrides": [
     {
-      "files": ["electron/**/*.ts", "scripts/**/*.mjs", "*.config.ts"],
+      "files": ["electron/**/*.ts", "scripts/**/*.mjs", "tools/smoke/**/*.ts", "*.config.ts"],
       "env": {
         "browser": false,
         "node": true
