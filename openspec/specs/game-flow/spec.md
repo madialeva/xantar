@@ -62,12 +62,16 @@ mando, y con clic o toque sobre cada opción.
   baja hasta Música y pulsa la cruceta a la izquierda
 - **THEN** el volumen de la música baja un punto y se guarda
 
-### Requirement: Salir del juego en la versión de escritorio
-En la aplicación de escritorio, el menú principal SHALL ofrecer Salir como
-última opción, que cierra la aplicación. En el navegador, Salir SHALL NOT
+### Requirement: Salir del juego
+El menú principal SHALL ofrecer Salir como última opción cuando el juego tiene
+adónde salir. En la aplicación de escritorio, Salir SHALL mostrarse siempre y
+SHALL cerrar la aplicación. En el navegador, Salir SHALL mostrarse solo si el
+juego se abrió desde otra página del mismo origen (por ejemplo, la portada de la
+web personal), y elegirlo SHALL devolver al jugador a esa página. Si el juego se
+abrió sin página de origen, desde otro origen o desde sí mismo, Salir SHALL NOT
 mostrarse, porque una página no puede cerrar su pestaña. En el menú principal,
-Esc SHALL llevar la selección a Salir sin cerrar la aplicación; cerrarla SHALL
-requerir elegir Salir.
+cuando Salir está disponible, Esc SHALL llevar la selección a Salir sin salir
+del juego; salir SHALL requerir elegir Salir.
 
 #### Scenario: Salir en el escritorio
 - **WHEN** el jugador elige Salir en el menú principal de la aplicación de
@@ -79,9 +83,24 @@ requerir elegir Salir.
   escritorio
 - **THEN** la selección pasa a Salir y la aplicación sigue abierta
 
+#### Scenario: Salir hacia la portada
+- **WHEN** el jugador abre el juego con el botón de la portada de la web
+  personal y elige Salir en el menú principal
+- **THEN** el navegador vuelve a la portada, sin pantalla completa
+
+#### Scenario: Esc en el navegador con página de origen
+- **WHEN** el jugador, tras abrir el juego desde la portada, pulsa Esc en el
+  menú principal
+- **THEN** la selección pasa a Salir y el juego sigue abierto
+
 #### Scenario: Navegador
-- **WHEN** se abre el menú principal en el navegador
+- **WHEN** se abre el menú principal en el navegador con el juego abierto
+  directamente (dirección escrita o servidor de desarrollo)
 - **THEN** no aparece la opción Salir
+
+#### Scenario: Juego abierto desde otro sitio
+- **WHEN** el jugador llega al juego desde un enlace de otro origen
+- **THEN** el menú principal no muestra Salir
 
 ### Requirement: HUD en una escena paralela
 Durante la partida, los paneles laterales, los mensajes de fase, la pantalla de

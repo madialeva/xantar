@@ -28,7 +28,7 @@ Los cambios de este grupo viven en el otro repositorio y los confirma el autor j
 
 - [x] 5.1 Servir la web en local (`python3 -m http.server -d docs` en la web) y recorrer portada → GAME → título → menú con Salir → partida → pausa → Salir al menú → Salir → portada, en escritorio y con la emulación de móvil del navegador; verificar que no hay errores de CSP ni 404 en la consola y que tras Salir no queda pantalla completa
 - [x] 5.2 Añadir en `README.md` ("Where to play" → Browser) el enlace a `https://madialeva.github.io/js/xantar/`, manteniendo las instrucciones locales; verificar con `npm run format:check` y las comprobaciones de entrega (`lint`, `typecheck`, `test`, `build`)
-- [ ] 5.3 Tras el commit y el push de la web por parte del autor, verificar en `https://madialeva.github.io/` el recorrido de 5.1 en un navegador de escritorio y en un móvil real (orientación horizontal, música tras el primer toque, Salir vuelve a la portada) (lo verifica el autor)
+- [x] 5.3 Tras el commit y el push de la web por parte del autor, verificar en `https://madialeva.github.io/` el recorrido de 5.1 en un navegador de escritorio y en un móvil real (orientación horizontal, música tras el primer toque, Salir vuelve a la portada) (lo verifica el autor)
 
 ## 6. Volumen que da la vuelta al elegirlo
 
