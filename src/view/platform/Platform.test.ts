@@ -1,28 +1,12 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { createPlatform, returnUrl } from './Platform';
 
 const GAME = 'https://madialeva.github.io/js/xantar/index.html';
 
-const HOME = 'https://madialeva.github.io/';
-
-interface BrowserOptions {
-  readonly historyLength?: number;
-  readonly fullscreen?: boolean;
-  readonly exit?: () => Promise<void>;
-}
-
-const browser = (referrer: string, calls: string[], options: BrowserOptions = {}): object => ({
-  document: {
-    referrer,
-    fullscreenElement: options.fullscreen ? {} : null,
-    exitFullscreen: () => {
-      calls.push('exitFullscreen');
-      return options.exit?.() ?? Promise.resolve();
-    }
-  },
+const browser = (referrer: string, historyLength: number, calls: string[]): object => ({
+  document: { referrer },
   location: { href: GAME, assign: (url: string) => calls.push(`assign:${url}`) },
-  history: { length: options.historyLength ?? 2, back: () => calls.push('back') },
-  screen: { orientation: { unlock: () => calls.push('unlock') } }
+  history: { length: historyLength, back: () => calls.push('back') }
 });
 
 describe('returnUrl', () => {
@@ -56,39 +40,16 @@ describe('createPlatform', () => {
     }
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it('goes back to the page of the same site that opened the game in a browser', async () => {
+  it('goes back to the page of the same site that opened the game in a browser', () => {
     const calls: string[] = [];
-    createPlatform(browser(HOME, calls)).quit?.();
-    await vi.waitFor(() => expect(calls).toEqual(['unlock', 'back']));
-    calls.length = 0;
-    createPlatform(browser(HOME, calls, { historyLength: 1 })).quit?.();
-    await vi.waitFor(() => expect(calls).toEqual(['unlock', `assign:${HOME}`]));
-  });
-
-  it('leaves fullscreen and its orientation before going back', async () => {
-    const calls: string[] = [];
-    createPlatform(browser(HOME, calls, { fullscreen: true })).quit?.();
-    await vi.waitFor(() => expect(calls).toEqual(['unlock', 'exitFullscreen', 'back']));
-  });
-
-  it('goes back after a second when leaving fullscreen never settles', async () => {
-    vi.useFakeTimers();
-    const calls: string[] = [];
-    const exit = (): Promise<void> => new Promise<void>(() => undefined);
-    createPlatform(browser(HOME, calls, { fullscreen: true, exit })).quit?.();
-    await vi.advanceTimersByTimeAsync(999);
-    expect(calls).toEqual(['unlock', 'exitFullscreen']);
-    await vi.advanceTimersByTimeAsync(1);
-    expect(calls).toEqual(['unlock', 'exitFullscreen', 'back']);
+    createPlatform(browser('https://madialeva.github.io/', 2, calls)).quit?.();
+    createPlatform(browser('https://madialeva.github.io/', 1, calls)).quit?.();
+    expect(calls).toEqual(['back', 'assign:https://madialeva.github.io/']);
   });
 
   it('has nowhere to quit to in a browser opened directly or from another site', () => {
     for (const referrer of ['', 'https://example.com/']) {
-      expect(createPlatform(browser(referrer, [])).quit).toBeNull();
+      expect(createPlatform(browser(referrer, 2, [])).quit).toBeNull();
     }
   });
 

@@ -1,4 +1,4 @@
-import { enterFullscreen, exitFullscreen, type FullscreenHost } from '../ui/fullscreen';
+import { enterFullscreen } from '../ui/fullscreen';
 
 /**
  * What the game can ask of the place it runs in, a browser tab or the desktop app
@@ -23,8 +23,8 @@ interface DesktopBridge {
 }
 
 /** The parts of the browser `window` a web platform needs to leave the game. */
-interface BrowserHost extends FullscreenHost {
-  readonly document?: FullscreenHost['document'] & { readonly referrer: string };
+interface BrowserHost {
+  readonly document?: { readonly referrer: string };
   readonly location?: { readonly href: string; assign(url: string): void };
   readonly history?: { readonly length: number; back(): void };
 }
@@ -59,28 +59,23 @@ export function returnUrl(referrer: string, current: string): string | null {
   return from.href;
 }
 
-const settleWithin = (task: Promise<void>): Promise<void> =>
-  Promise.race([task, new Promise<void>((resolve) => setTimeout(resolve, FULLSCREEN_WAIT_MS))]);
-
 /**
- * Leaving a browser tab: out of fullscreen and its orientation, then back in the history when
- * there is one, or loading the page that opened the game (a tab opened from a link has none).
+ * Leaving a browser tab: back in the history when there is one, or loading the page that opened
+ * the game (a tab opened from a link has no history).
  */
-const webQuit = (host: BrowserHost): (() => void) | null => {
-  const { document, location, history } = host;
+const webQuit = ({ document, location, history }: BrowserHost): (() => void) | null => {
   if (!document || !location || !history) return null;
   const url = returnUrl(document.referrer, location.href);
   if (!url) return null;
-  const goBack = (): void => {
+  return () => {
     if (history.length > 1) history.back();
     else location.assign(url);
   };
-  return () => void settleWithin(exitFullscreen(host)).then(goBack);
 };
 
 /**
  * A browser tab: the Fullscreen API, and leaving to the page that opened the game when there is
- * one. Some browsers never settle fullscreen requests, so they are not awaited for more than a
+ * one. Some browsers never settle the fullscreen request, so it is not awaited for more than a
  * second.
  */
 class WebPlatform implements Platform {
@@ -92,7 +87,8 @@ class WebPlatform implements Platform {
   }
 
   enterFullscreen(isMobile: boolean): Promise<void> {
-    return settleWithin(enterFullscreen(isMobile));
+    const timeout = new Promise<void>((resolve) => setTimeout(resolve, FULLSCREEN_WAIT_MS));
+    return Promise.race([enterFullscreen(isMobile), timeout]);
   }
 }
 
