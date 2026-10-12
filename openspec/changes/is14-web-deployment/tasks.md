@@ -14,9 +14,9 @@
 
 Los cambios de este grupo viven en el otro repositorio y los confirma el autor junto con su trabajo pendiente. En Xantar solo se marcan las tareas.
 
-- [ ] 3.1 En `deploy.sh`, excluir `*/js/xantar/*` del quitacomentarios (junto a `js/3rd/`) con un comentario que explique por qué; verificar leyendo el `find` resultante y con `bash -n deploy.sh`
-- [ ] 3.2 Cambiar el botón GAME de `src/index.html` a `href="js/xantar/index.html"` y borrar el juego antiguo de `src/` (`game.html`, `js/game/`, `js/3rd/phaser-arcade-physics.min.js`, `music/tap-back.mp3`); verificar con `grep -rn "game.html\|phaser\|tap-back" src` sin resultados
-- [ ] 3.3 Actualizar el `README.md` y el `AGENTS.md` de la web (estructura sin el juego antiguo, Xantar en `js/xantar/` generado desde el repositorio de Xantar con `npm run publish:site`, que no se edita a mano, exclusión en `deploy.sh`, nombre `madialeva.github.io` en lugar de `angazo.github.io`); verificar releyendo que no queda ninguna referencia a `game.html`, `TapScene` ni `StartScene`
+- [x] 3.1 En `deploy.sh`, excluir `*/js/xantar/*` del quitacomentarios (junto a `js/3rd/`) con un comentario que explique por qué; verificar leyendo el `find` resultante y con `bash -n deploy.sh`
+- [x] 3.2 Cambiar el botón GAME de `src/index.html` a `href="js/xantar/index.html"` y borrar el juego antiguo de `src/` (`game.html`, `js/game/`, `js/3rd/phaser-arcade-physics.min.js`, `music/tap-back.mp3`); verificar con `grep -rn "game.html\|phaser\|tap-back" src` sin resultados
+- [x] 3.3 Actualizar el `README.md` y el `AGENTS.md` de la web (estructura sin el juego antiguo, Xantar en `js/xantar/` generado desde el repositorio de Xantar con `npm run publish:site`, que no se edita a mano, exclusión en `deploy.sh`, nombre `madialeva.github.io` en lugar de `angazo.github.io`); verificar releyendo que no queda ninguna referencia a `game.html`, `TapScene` ni `StartScene`
 
 ## 4. Script de publicación
 
