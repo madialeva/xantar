@@ -46,10 +46,10 @@ comes next.
 |   ✅   | Game state machine, pause, high score, Spanish and English                                                |   —    |  #5   |
 |   ⬜   | Enemies riding ingredients (an extra level per rider)                                                     | v1.0.0 |  #9   |
 |   ✅   | Gamepad and touch controls, music and sound effects, CI and a hardened desktop app                        |   —    |  #6   |
+|   ✅   | Public web version at madialeva.github.io                                                                 |   —    |  #14  |
 |   ⬜   | Replay recording and debug tooling                                                                        | v1.0.0 |  #8   |
 |   ⬜   | In-game level editor with JSON import/export                                                              | later  |  #7   |
 |   ⬜   | Bonus food (ice cream, coffee, fries)                                                                     | later  |  #13  |
-|   ⬜   | Public web deployment                                                                                     | later  |  #14  |
 
 ---
 
@@ -185,7 +185,11 @@ while the game is in the background.
 
 ### Browser
 
-The game is a static web application. For now it runs locally:
+Play it online at **https://madialeva.github.io/js/xantar/** (it also opens
+from the **GAME** button of https://madialeva.github.io/). Nothing to install:
+it works in current desktop and mobile browsers.
+
+The game is a static web application, so it also runs locally:
 
 ```sh
 npm install
