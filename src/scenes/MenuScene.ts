@@ -3,7 +3,7 @@ import { GAME_HEIGHT, GAME_WIDTH, type RenderTier } from '../config';
 import { LANGUAGES } from '../i18n/language';
 import type { ActionReader } from '../input/actions';
 import type { Localization } from '../i18n/Localization';
-import { AUTO_THEME, type AudioBus } from '../settings/PlayerSettings';
+import { AUTO_THEME, type AudioBus, nextVolume } from '../settings/PlayerSettings';
 import type { Settings } from '../settings/Settings';
 import type { GameAudio } from '../view/audio/GameAudio';
 import type { Platform } from '../view/platform/Platform';
@@ -159,7 +159,8 @@ export default class MenuScene extends Phaser.Scene {
     const volume = (bus: AudioBus, label: 'options.music' | 'options.effects'): MenuItem => ({
       label: () => localization.t(label),
       value: () => String(settings.volume(bus)),
-      change: (direction) => settings.setVolume(bus, settings.volume(bus) + direction)
+      change: (direction) => settings.setVolume(bus, settings.volume(bus) + direction),
+      cycle: () => settings.setVolume(bus, nextVolume(settings.volume(bus)))
     });
     const themeIds = [AUTO_THEME, ...themes.ids];
     const currentTheme = (): string =>

@@ -18,6 +18,7 @@
     "build:desktop": "npm run typecheck && npm run build && npm run build:electron && electron-builder",
     "build:desktop:dir": "npm run typecheck && npm run build && npm run build:electron && electron-builder --dir",
     "preview": "vite preview",
+    "publish:site": "node scripts/publish-site.mjs",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.electron.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

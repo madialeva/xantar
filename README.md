@@ -46,10 +46,10 @@ comes next.
 |   ✅   | Game state machine, pause, high score, Spanish and English                                                |   —    |  #5   |
 |   ⬜   | Enemies riding ingredients (an extra level per rider)                                                     | v1.0.0 |  #9   |
 |   ✅   | Gamepad and touch controls, music and sound effects, CI and a hardened desktop app                        |   —    |  #6   |
+|   ✅   | Public web version at madialeva.github.io                                                                 |   —    |  #14  |
 |   ⬜   | Replay recording and debug tooling                                                                        | v1.0.0 |  #8   |
 |   ⬜   | In-game level editor with JSON import/export                                                              | later  |  #7   |
 |   ⬜   | Bonus food (ice cream, coffee, fries)                                                                     | later  |  #13  |
-|   ⬜   | Public web deployment                                                                                     | later  |  #14  |
 
 ---
 
@@ -67,11 +67,15 @@ The title screen waits for a click, a tap or any key, then opens the **main
 menu**: **Play** starts a game and **Options** lets you choose the **language**
 (Spanish or English; the first time it follows your browser), the **theme**
 (**Automatic** uses the one of each level), the **music** and **effects**
-volumes, whether the **sound** is on, and the keyboard **controls**. Your choices and your **best
+volumes (left and right change them; tapping, clicking or confirming one turns
+it up and, from the top, back to zero), whether the **sound** is on, and the
+keyboard **controls**. Your choices and your **best
 score** are remembered between sessions. In the desktop app the menu also has
-**Quit**, which closes the game. Menus work with the arrow keys and `Enter`, or
-by clicking or tapping an entry, or with a gamepad; `Esc` goes back (in the
-main menu of the desktop app it selects **Quit**).
+**Quit**, which closes the game; in the browser it has **Quit** when you opened
+the game from another page of the same site (such as the home page of the
+published game), and it takes you back to that page. Menus work with the arrow
+keys and `Enter`, or by clicking or tapping an entry, or with a gamepad; `Esc`
+goes back (in the main menu, when there is **Quit**, it selects it).
 
 ### Controls
 
@@ -183,7 +187,11 @@ while the game is in the background.
 
 ### Browser
 
-The game is a static web application. For now it runs locally:
+Play it online at **https://madialeva.github.io/js/xantar/** (it also opens
+from the **GAME** button of https://madialeva.github.io/). Nothing to install:
+it works in current desktop and mobile browsers.
+
+The game is a static web application, so it also runs locally:
 
 ```sh
 npm install

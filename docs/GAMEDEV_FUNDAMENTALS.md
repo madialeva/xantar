@@ -830,7 +830,14 @@ sensación.
 - **Build**: el proceso que convierte el código fuente en algo ejecutable y
   optimizado (`npm run build` genera la web en `dist/`).
 - **Web**: un juego HTML5 es una página estática; se puede publicar en
-  cualquier alojamiento de ficheros (#14).
+  cualquier alojamiento de ficheros. Xantar se publica en una subcarpeta de la
+  web personal del autor (`madialeva.github.io/js/xantar/`, con GitHub Pages).
+  Funciona en cualquier carpeta porque el build usa **rutas relativas**
+  (`./assets/...`): el navegador las resuelve desde la dirección de la página,
+  sea cual sea. Con rutas absolutas (`/assets/...`) solo funcionaría en la raíz
+  del dominio. Los nombres de los ficheros llevan un **hash** de su contenido
+  (`index-CQjzCgwC.js`): si el código cambia, cambia el nombre, y el navegador
+  no puede quedarse con una versión vieja en caché.
 - **Escritorio**: **Electron** empaqueta el juego con un navegador Chromium
   dentro, como aplicación instalable (`npm run build:desktop`). Por defecto
   abriría los ficheros con `file://`, que tiene restricciones distintas a un

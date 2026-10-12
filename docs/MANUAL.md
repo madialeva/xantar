@@ -114,6 +114,7 @@ xantar/
 ├── scripts/
 │   ├── build-electron.mjs       # Compila electron/*.ts -> dist-electron/ (CJS)
 │   ├── build-icon.mjs           # Rasteriza build/icon.svg a build/icon.png (npm run icon)
+│   ├── publish-site.mjs         # Publica el build web en la web personal (npm run publish:site)
 │   └── smoke.mjs                # Lanzador de la prueba de humo (compila tools/smoke y abre Electron)
 ├── tools/                       # Herramientas de desarrollo (no van en la build publicada)
 │   ├── smoke/                   # Prueba de humo en Electron: pasos, escenarios y proceso principal
@@ -199,6 +200,7 @@ xantar/
 | `npm run dev:desktop` | Compila Electron y lanza Vite + ventana Electron con recarga |
 | `npm run build` | Comprueba tipos (renderer) y genera la web en `dist/` |
 | `npm run preview` | Sirve `dist/` para probar el build de producción web |
+| `npm run publish:site` | Compila la web y la publica en la web personal (`src/js/xantar/` y `deploy.sh` del repositorio `madialeva.github.io`; ver 9.4) |
 | `npm run build:electron` | Compila `electron/*.ts` -> `dist-electron/` |
 | `npm run build:desktop` | Typecheck + build web + Electron + instaladores en `release/` |
 | `npm run build:desktop:dir` | Igual, pero sin instalador (app desempaquetada, más rápido) |
@@ -363,7 +365,7 @@ contextBridge.exposeInMainWorld('xantar', {
 });
 ```
 
-**La plataforma en el juego.** El juego no lee `window.xantar` directamente: `createPlatform(window)` (`src/view/platform/Platform.ts`, patrón Strategy) devuelve una `Platform` con `quit` (o `null` en el navegador) y `enterFullscreen`. `WebPlatform` usa la API de pantalla completa del navegador (con bloqueo de Esc); `DesktopPlatform`, la pantalla completa nativa por el puente. `main.ts` la inyecta en `TitleScene` y `MenuScene`, que solo muestra **Salir** cuando `quit` existe. Cualquier otra comunicación con el sistema operativo (guardar partida, abrir diálogos, etc.) debe pasar también por un canal IPC validado.
+**La plataforma en el juego.** El juego no lee `window.xantar` directamente: `createPlatform(window)` (`src/view/platform/Platform.ts`, patrón Strategy) devuelve una `Platform` con `quit` (o `null` si no hay adónde salir) y `enterFullscreen`. `WebPlatform` usa la API de pantalla completa del navegador (con bloqueo de Esc) y, como `quit`, vuelve a la página de origen: la función pura `returnUrl(document.referrer, location.href)` solo la acepta si es de la misma origin y no es el propio juego, y salir hace `history.back()` (o `location.assign` si la pestaña no tiene historial). Sin página de origen (dirección escrita, servidor de desarrollo, enlace de otro sitio) `quit` es `null`. `DesktopPlatform` usa la pantalla completa nativa y cierra la aplicación por el puente. `main.ts` la inyecta en `TitleScene` y `MenuScene`, que solo muestra **Salir** cuando `quit` existe. Cualquier otra comunicación con el sistema operativo (guardar partida, abrir diálogos, etc.) debe pasar también por un canal IPC validado.
 
 **Política de seguridad de contenidos (CSP).** El build web (y por tanto el de escritorio) lleva una etiqueta `<meta http-equiv="Content-Security-Policy">` que inserta un plugin de `vite.config.ts` solo al compilar: scripts, estilos y datos del propio origen, `data:` y `blob:` donde el juego los genera (rasterizado de SVG, audio) y nada de objetos incrustados ni `eval`. Por eso `index.html` no tiene estilos en línea (`src/styles.css`). En `npm run dev` no se aplica, porque Vite necesita scripts en línea; Electron muestra entonces el aviso *Insecure Content-Security-Policy*, que no aparece en el empaquetado. La prueba de humo falla ante cualquier violación (la detecta por el protocolo de DevTools).
 
@@ -482,8 +484,8 @@ El juego tiene **dos máquinas de estados** separadas a propósito:
    - `GameScene` publica el estado en un `GameSession` (`src/view/session/`, patrón Observer y mediador) y ejecuta sus órdenes (`pause`, `resume`, `quit`). `HudScene` solo escucha a la sesión: dibuja los paneles, los mensajes de `ready` y `levelClear`, la pantalla de fin de partida y el menú de pausa. Ninguna escena conoce a la otra.
    - Pausar llama a `this.scene.pause()` en `GameScene` (se congelan su `update` y sus tweens) y al reanudar `stepper.reset()` descarta el tiempo acumulado. La acción de pausa (Esc, P o Start del mando) la atiende solo `HudScene`. Perder el foco de la ventana, ocultar la pestaña, salir de la pantalla completa, o desconectar el mando también pausan (`GameScene` recibe estas *interrupciones* inyectadas).
    - Volver al menú detiene `HudScene` y arranca `MenuScene`; nunca se recarga la página. La puntuación se envía a los ajustes al acabar la partida y al salir.
-   - Los menús usan `MenuList` (`src/view/ui/`), que lee acciones (ver 8.9): arriba y abajo para moverse, confirmar para elegir, izquierda y derecha para cambiar un valor, volver para volver, y clic o toque sobre cada opción. La escena llama a `menu.update()` en cada fotograma. Los sonidos del menú llegan como `UiSounds`.
-   - En la aplicación de escritorio, el menú principal termina con **Salir**, que cierra la aplicación por IPC (ver 8.4); Esc en el menú principal solo selecciona Salir, para no cerrar por accidente. En el navegador no aparece.
+   - Los menús usan `MenuList` (`src/view/ui/`), que lee acciones (ver 8.9): arriba y abajo para moverse, confirmar para elegir, izquierda y derecha para cambiar un valor, volver para volver, y clic o toque sobre cada opción. Elegir una opción con valor (clic, toque o confirmar) llama a su `cycle()` si lo tiene y, si no, a `change(1)`: los volúmenes usan `cycle` con `nextVolume` (de 10 vuelve a 0, para poder bajarlos con el dedo), mientras que la derecha se queda en 10. La escena llama a `menu.update()` en cada fotograma. Los sonidos del menú llegan como `UiSounds`.
+   - El menú principal termina con **Salir** cuando la plataforma tiene `quit` (ver 8.4): en la aplicación de escritorio cierra la aplicación por IPC; en el navegador vuelve a la página del mismo sitio que abrió el juego (la portada de la web personal) y no aparece si el juego se abrió directamente. Esc en el menú principal solo selecciona Salir, para no salir por accidente.
 
 **Idioma** (`src/i18n/`): todos los textos visibles salen de los catálogos `catalogs/es.ts` (el de referencia) y `catalogs/en.ts` (declarado como `Catalog`, de modo que si le falta, le sobra o cambia de forma alguna clave, falla `npm run typecheck`). Un texto es una cadena o una función `(parámetros, format) => string`; `format.number` y `format.plural` usan `Intl.NumberFormat` e `Intl.PluralRules` del idioma. `Localization` guarda el idioma activo y avisa a sus suscriptores al cambiarlo; `main.ts` mantiene el atributo `lang` del documento. El idioma inicial sale de `detectLanguage(navigator.languages)`: español si la primera preferencia es cualquier español, si no inglés.
 
@@ -599,11 +601,14 @@ Si en el futuro necesitas guardar datos en disco, mostrar diálogos nativos, etc
 
 ### 9.4 Publicar en web (GitHub Pages)
 
-Como `vite.config.ts` usa `base: './'`, las rutas son relativas y el build funciona tanto en la raíz de un dominio como en un subdirectorio (`usuario.github.io/repo/`).
+La versión web se publica en la web personal del autor, en https://madialeva.github.io/js/xantar/. Esa web es otro repositorio (`madialeva/madialeva.github.io`): GitHub Pages sirve su carpeta `docs/`, que su `deploy.sh` genera a partir de `src/`. Como `vite.config.ts` usa `base: './'`, las rutas son relativas y el build funciona en esa subruta sin configuración.
 
-Opción sencilla: mover el contenido de `dist/` a la rama/carpeta que sirva GitHub Pages tras `npm run build`.
+1. Clona la web junto a Xantar (`../madialeva.github.io`) o indica su ruta con `XANTAR_SITE_DIR`.
+2. Ejecuta `npm run publish:site`. El script (`scripts/publish-site.mjs`) comprueba que la ruta es la web (tiene `deploy.sh` y `src/index.html`) antes de tocar nada. Después compila (`npm run build`; si falla, no cambia la web), sustituye entero `src/js/xantar/` por `dist/` (sin dejar bundles de builds anteriores) y ejecuta `deploy.sh` de la web. `deploy.sh` copia el juego tal cual: su quitacomentarios excluye `js/xantar/` porque estropearía el código minificado.
+3. Revisa en local desde la web: `python3 -m http.server -d docs` → http://localhost:8000 → GAME → partida → Salir vuelve a la portada.
+4. En la web, haz commit (`src/` y `docs/`) y push a `main`. GitHub Pages publica en uno o dos minutos.
 
-Opción recomendada (CI): un workflow de GitHub Actions que ejecute `npm ci && npm run build` y publique `dist/` con `actions/upload-pages-artifact` + `actions/deploy-pages`.
+El script no hace commit ni push. Un workflow de GitHub Actions que publicara automáticamente necesitaría un token con escritura en el repositorio de la web; queda pendiente.
 
 ---
 
