@@ -34,3 +34,30 @@ export async function enterFullscreen(isMobile: boolean): Promise<void> {
     // Orientation lock is optional.
   }
 }
+
+/** The parts of the browser `window` a page needs to leave fullscreen. */
+export interface FullscreenHost {
+  readonly document?: {
+    readonly fullscreenElement?: unknown;
+    exitFullscreen?(): Promise<void>;
+  };
+  readonly screen?: { readonly orientation?: { unlock?(): void } };
+}
+
+/**
+ * Releases the orientation lock and leaves fullscreen, before leaving the page: some browsers
+ * (Firefox for Android) keep the locked orientation on the next page otherwise. Always resolves.
+ */
+export async function exitFullscreen({ document, screen }: FullscreenHost): Promise<void> {
+  try {
+    screen?.orientation?.unlock?.();
+  } catch {
+    // Without a lock there is nothing to release.
+  }
+  if (!document?.fullscreenElement) return;
+  try {
+    await document.exitFullscreen?.();
+  } catch {
+    // Navigating away leaves fullscreen anyway.
+  }
+}

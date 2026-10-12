@@ -41,6 +41,12 @@ Motivación en `proposal.md`. Estado actual de las dos partes:
 - Retocar la portada `vagalume` o `js/starfield.js` (fuera del juego antiguo;
   es trabajo del autor en curso).
 - Mostrar la versión del juego en la portada.
+- Que el toque en GAME de la portada deje ya el juego en pantalla completa. El
+  navegador sale de la pantalla completa al cambiar de página y solo deja
+  entrar con un gesto dentro de la propia página, así que la pantalla de título
+  se ve con la barra del navegador hasta el primer toque. Evitarlo exigiría
+  abrir el juego dentro de la portada (un `iframe` a pantalla completa) o
+  instalarlo como PWA.
 
 ## Decisions
 
@@ -102,8 +108,13 @@ calcula así:
 - Sin URL de origen, `quit` es `null` y todo sigue como hoy. El servidor de
   desarrollo y la prueba de humo no cambian.
 
-Al navegar, el navegador sale solo de la pantalla completa y libera el bloqueo
-de Esc, así que no hace falta código para eso. `MenuScene` no cambia: ya añade
+Antes de navegar, `quit` libera el bloqueo de orientación
+(`screen.orientation.unlock()`) y sale de la pantalla completa
+(`document.exitFullscreen()`, esperado como mucho un segundo, como al entrar).
+Navegar estando aún en pantalla completa y con la orientación bloqueada en
+horizontal hacía que Firefox para Android mostrara la portada en horizontal
+aunque la rotación automática estuviera apagada. Al salir de la pantalla
+completa se libera también el bloqueo de Esc. `MenuScene` no cambia: ya añade
 Salir y el atajo de Esc cuando `platform.quit` existe. Se reutiliza la etiqueta
 `menu.quit` (SALIR / QUIT), así que no hay textos nuevos.
 
