@@ -6,9 +6,9 @@
 
 ## 2. Salir en el navegador
 
-- [ ] 2.1 Implementar en `src/view/platform/Platform.ts` la función pura `returnUrl(referrer, current)` (misma origin, distinta ruta que la del juego, sin tener en cuenta query ni hash; si no, `null`) y el `quit` de `WebPlatform` inyectado por `createPlatform` (`history.back()` con historial, `location.assign` sin él, `null` sin URL de origen); actualizar el comentario de `Platform.quit`; verificar con pruebas de `returnUrl` (referrer vacío, otro origin, otro puerto, la propia página con query o hash, portada `/` e `/index.html` → URL) y de `createPlatform` con un `host` falso (sin referrer → `quit` nulo; con referrer y `history.length` 2 → `back`; con `history.length` 1 → `assign` con la URL)
-- [ ] 2.2 Verificar en `npm run dev` que, abierto directamente, el menú principal no muestra Salir y Esc no cambia la selección, y con `npm run smoke` en verde que el escritorio sigue mostrando Salir
-- [ ] 2.3 Documentar Salir en el navegador en `README.md` ("How to play": en la web, Salir vuelve a la página desde la que se abrió el juego) y en `docs/MANUAL.md` (§8.4/§8.8, plataforma web y página de origen); verificar con `npm run format:check` y que los nombres citados existen en el código
+- [x] 2.1 Implementar en `src/view/platform/Platform.ts` la función pura `returnUrl(referrer, current)` (misma origin, distinta ruta que la del juego, sin tener en cuenta query ni hash; si no, `null`) y el `quit` de `WebPlatform` inyectado por `createPlatform` (`history.back()` con historial, `location.assign` sin él, `null` sin URL de origen); actualizar el comentario de `Platform.quit`; verificar con pruebas de `returnUrl` (referrer vacío, otro origin, otro puerto, la propia página con query o hash, portada `/` e `/index.html` → URL) y de `createPlatform` con un `host` falso (sin referrer → `quit` nulo; con referrer y `history.length` 2 → `back`; con `history.length` 1 → `assign` con la URL)
+- [x] 2.2 Verificar en `npm run dev` que, abierto directamente, el menú principal no muestra Salir y Esc no cambia la selección, y con `npm run smoke` en verde que el escritorio sigue mostrando Salir
+- [x] 2.3 Documentar Salir en el navegador en `README.md` ("How to play": en la web, Salir vuelve a la página desde la que se abrió el juego) y en `docs/MANUAL.md` (§8.4/§8.8, plataforma web y página de origen); verificar con `npm run format:check` y que los nombres citados existen en el código
 
 ## 3. Web personal (repositorio `madialeva.github.io`)
 

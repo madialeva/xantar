@@ -69,9 +69,11 @@ menu**: **Play** starts a game and **Options** lets you choose the **language**
 (**Automatic** uses the one of each level), the **music** and **effects**
 volumes, whether the **sound** is on, and the keyboard **controls**. Your choices and your **best
 score** are remembered between sessions. In the desktop app the menu also has
-**Quit**, which closes the game. Menus work with the arrow keys and `Enter`, or
-by clicking or tapping an entry, or with a gamepad; `Esc` goes back (in the
-main menu of the desktop app it selects **Quit**).
+**Quit**, which closes the game; in the browser it has **Quit** when you opened
+the game from another page of the same site (such as the home page of the
+published game), and it takes you back to that page. Menus work with the arrow
+keys and `Enter`, or by clicking or tapping an entry, or with a gamepad; `Esc`
+goes back (in the main menu, when there is **Quit**, it selects it).
 
 ### Controls
 

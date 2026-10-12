@@ -6,7 +6,10 @@ import { enterFullscreen } from '../ui/fullscreen';
  */
 export interface Platform {
   readonly isDesktop: boolean;
-  /** Closes the app, or `null` in a browser, where a page cannot close its tab. */
+  /**
+   * Leaves the game: closes the desktop app, or in a browser goes back to the page of the same
+   * site that opened the game. `null` when there is nowhere to go (a page cannot close its tab).
+   */
   readonly quit: (() => void) | null;
   /** Asks for fullscreen; always resolves, also when it is refused or unavailable. */
   enterFullscreen(isMobile: boolean): Promise<void>;
@@ -19,6 +22,13 @@ interface DesktopBridge {
   setFullScreen(on: boolean): void;
 }
 
+/** The parts of the browser `window` a web platform needs to leave the game. */
+interface BrowserHost {
+  readonly document?: { readonly referrer: string };
+  readonly location?: { readonly href: string; assign(url: string): void };
+  readonly history?: { readonly length: number; back(): void };
+}
+
 const FULLSCREEN_WAIT_MS = 1000;
 
 const isDesktopBridge = (value: unknown): value is DesktopBridge =>
@@ -28,13 +38,53 @@ const isDesktopBridge = (value: unknown): value is DesktopBridge =>
   typeof (value as Partial<DesktopBridge>).quit === 'function' &&
   typeof (value as Partial<DesktopBridge>).setFullScreen === 'function';
 
+const parseUrl = (value: string): URL | null => {
+  try {
+    return new URL(value);
+  } catch {
+    return null;
+  }
+};
+
 /**
- * A browser tab: the Fullscreen API. Some browsers never settle the request, so it is not
- * awaited for more than a second.
+ * The page the game can go back to: `referrer` when it is another page of the same origin as
+ * `current` (query and hash aside), otherwise `null`.
+ */
+export function returnUrl(referrer: string, current: string): string | null {
+  const from = parseUrl(referrer);
+  const here = parseUrl(current);
+  if (!from || !here || from.origin !== here.origin || from.pathname === here.pathname) {
+    return null;
+  }
+  return from.href;
+}
+
+/**
+ * Leaving a browser tab: back in the history when there is one, or loading the page that opened
+ * the game (a tab opened from a link has no history).
+ */
+const webQuit = ({ document, location, history }: BrowserHost): (() => void) | null => {
+  if (!document || !location || !history) return null;
+  const url = returnUrl(document.referrer, location.href);
+  if (!url) return null;
+  return () => {
+    if (history.length > 1) history.back();
+    else location.assign(url);
+  };
+};
+
+/**
+ * A browser tab: the Fullscreen API, and leaving to the page that opened the game when there is
+ * one. Some browsers never settle the fullscreen request, so it is not awaited for more than a
+ * second.
  */
 class WebPlatform implements Platform {
   readonly isDesktop = false;
-  readonly quit = null;
+  readonly quit: (() => void) | null;
+
+  constructor(quit: (() => void) | null) {
+    this.quit = quit;
+  }
 
   enterFullscreen(isMobile: boolean): Promise<void> {
     const timeout = new Promise<void>((resolve) => setTimeout(resolve, FULLSCREEN_WAIT_MS));
@@ -62,5 +112,7 @@ class DesktopPlatform implements Platform {
 /** The platform of `host` (the `window`): the desktop app when its preload bridge is present. */
 export function createPlatform(host: object): Platform {
   const bridge = (host as { xantar?: unknown }).xantar;
-  return isDesktopBridge(bridge) ? new DesktopPlatform(bridge) : new WebPlatform();
+  return isDesktopBridge(bridge)
+    ? new DesktopPlatform(bridge)
+    : new WebPlatform(webQuit(host as BrowserHost));
 }
