@@ -4,6 +4,7 @@ import {
   type PlayerSettings,
   SETTINGS_VERSION,
   defaultSettings,
+  nextVolume,
   parseSettings
 } from './PlayerSettings';
 import { Settings } from './Settings';
@@ -64,6 +65,12 @@ describe('parseSettings', () => {
     expect(
       parseSettings({ version: 1, keyBindings: result.bindings }, defaults).keyBindings
     ).toEqual(result.bindings);
+  });
+});
+
+describe('nextVolume', () => {
+  it('steps up one point and goes back to silence from the top', () => {
+    expect([0, 9, 10].map(nextVolume)).toEqual([1, 10, 0]);
   });
 });
 

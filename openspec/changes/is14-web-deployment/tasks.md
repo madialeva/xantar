@@ -29,3 +29,8 @@ Los cambios de este grupo viven en el otro repositorio y los confirma el autor j
 - [x] 5.1 Servir la web en local (`python3 -m http.server -d docs` en la web) y recorrer portada → GAME → título → menú con Salir → partida → pausa → Salir al menú → Salir → portada, en escritorio y con la emulación de móvil del navegador; verificar que no hay errores de CSP ni 404 en la consola y que tras Salir no queda pantalla completa
 - [x] 5.2 Añadir en `README.md` ("Where to play" → Browser) el enlace a `https://madialeva.github.io/js/xantar/`, manteniendo las instrucciones locales; verificar con `npm run format:check` y las comprobaciones de entrega (`lint`, `typecheck`, `test`, `build`)
 - [ ] 5.3 Tras el commit y el push de la web por parte del autor, verificar en `https://madialeva.github.io/` el recorrido de 5.1 en un navegador de escritorio y en un móvil real (orientación horizontal, música tras el primer toque, Salir vuelve a la portada) (lo verifica el autor)
+
+## 6. Volumen que da la vuelta al elegirlo
+
+- [x] 6.1 Añadir `nextVolume(level)` en `src/settings/PlayerSettings.ts`, `cycle?()` en `MenuItem` (elegir la entrada lo usa en lugar de `change(1)` cuando existe) e implementarlo en los volúmenes de `MenuScene`; verificar con pruebas de `nextVolume` (0 → 1, 9 → 10, 10 → 0), con `npm run smoke -- menu` en verde y en `npm run dev` que tocar o pulsar Enter en Música al 10 lo deja en 0 y que la derecha no pasa de 10
+- [x] 6.2 Documentar el comportamiento en `README.md` (opciones de volumen en el móvil) y en `docs/MANUAL.md` §8.8 (`cycle` de `MenuItem`), volver a publicar con `npm run publish:site`; verificar con las comprobaciones de entrega y `diff -r dist <web>/docs/js/xantar` sin diferencias

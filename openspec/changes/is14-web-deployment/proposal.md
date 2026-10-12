@@ -30,6 +30,10 @@ portada: hoy solo se sale con el botón "atrás" del navegador.
   a esa página. Si el juego se abrió directamente (URL escrita, servidor de
   desarrollo), Salir sigue sin aparecer, como hasta ahora. En la aplicación de
   escritorio no cambia nada.
+- Usabilidad en el móvil: en Opciones, tocar el volumen de la música o de los
+  efectos lo sube un punto y, desde el máximo, vuelve al mínimo, porque con el
+  dedo no hay forma de bajarlo. Las flechas (teclado, mando) siguen subiendo y
+  bajando sin dar la vuelta.
 - Documentación de Xantar: enlace al juego publicado en `README.md` ("Where to
   play"), flujo de publicación en `docs/MANUAL.md` y en la tabla de comandos de
   `AGENTS.md`, y el concepto de despliegue estático en
@@ -48,10 +52,14 @@ portada: hoy solo se sale con el botón "atrás" del navegador.
 - `game-flow`: el requisito "Salir del juego en la versión de escritorio" pasa a
   "Salir del juego". En el navegador, Salir se muestra y vuelve a la página de
   origen cuando el juego se abrió desde el mismo sitio.
+- `audio`: el requisito "Volumen y silencio configurables" añade que elegir un
+  volumen (tocarlo, hacer clic o confirmar) lo sube y da la vuelta al mínimo
+  desde el máximo.
 
 ## Impact
 
-- Código de Xantar: `src/view/platform/Platform.ts` (la plataforma web obtiene
+- Código de Xantar: `src/view/ui/MenuList.ts` y `src/scenes/MenuScene.ts`
+  (volumen que da la vuelta al elegirlo), `src/view/platform/Platform.ts` (la plataforma web obtiene
   un `quit` según la página de origen) y su prueba. Nuevo
   `scripts/publish-site.mjs` y su entrada en `package.json`. No hay
   dependencias nuevas.

@@ -7,6 +7,9 @@ export const SETTINGS_VERSION = 1;
 export const AUTO_THEME = 'auto';
 
 export const MAX_VOLUME = 10;
+
+/** The volume after `level` when stepping up and round: from `MAX_VOLUME` back to silence. */
+export const nextVolume = (level: number): number => (level >= MAX_VOLUME ? 0 : level + 1);
 export const DEFAULT_MUSIC_VOLUME = 7;
 export const DEFAULT_SFX_VOLUME = 8;
 

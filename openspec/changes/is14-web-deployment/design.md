@@ -41,6 +41,13 @@ Motivación en `proposal.md`. Estado actual de las dos partes:
 - Retocar la portada `vagalume` o `js/starfield.js` (fuera del juego antiguo;
   es trabajo del autor en curso).
 - Mostrar la versión del juego en la portada.
+- Pulir el arranque y la salida en el móvil (queda para otro change). Por un
+  lado, la pantalla de título se ve con la barra del navegador hasta el primer
+  toque: el navegador sale de la pantalla completa al cambiar de página y solo
+  deja entrar con un gesto dentro de la propia página. Por otro, al elegir
+  Salir en un Android con la rotación fija en vertical, la portada vuelve en
+  horizontal, en Firefox y en Chrome. Liberar el bloqueo de orientación y salir
+  de la pantalla completa antes de navegar se probó y no lo resolvió.
 
 ## Decisions
 
@@ -120,6 +127,20 @@ Alternativas descartadas:
 `createPlatform` sigue recibiendo `host: object` y lee `document`, `location`
 e `history` con tipos estrechos. Así se prueba con objetos falsos, como ya se
 hace con el puente de escritorio.
+
+### Volumen que da la vuelta al elegirlo
+
+En `MenuList`, elegir una entrada sin `select` (tocarla, hacer clic, Enter o A)
+hace `change(1)`. Idioma y tema ya dan la vuelta, pero el volumen se recorta a
+10, así que en el móvil, donde no hay flechas, no se puede bajar. `MenuItem`
+gana un `cycle?()` opcional: lo que hace elegir la entrada con su valor. Sin
+él, sigue siendo `change(1)`. Los dos volúmenes lo implementan con la función
+pura `nextVolume(level)` (`PlayerSettings.ts`: sube un punto y desde
+`MAX_VOLUME` vuelve a 0). Las flechas siguen recortando: con el teclado, pasar
+de 10 a 0 por pulsar una vez la derecha sería una sorpresa.
+
+Alternativa descartada: que `change(1)` dé la vuelta en el volumen. También lo
+haría la flecha derecha, y no hay razón para cambiar el teclado y el mando.
 
 ### Retirada del juego antiguo
 

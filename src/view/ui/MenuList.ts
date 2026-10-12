@@ -10,6 +10,8 @@ export interface MenuItem {
   value?(): string;
   select?(): void;
   change?(direction: 1 | -1): void;
+  /** What choosing the entry does to its value (tap, click or confirm); `change(1)` without it. */
+  cycle?(): void;
 }
 
 export interface MenuListStyle {
@@ -142,6 +144,10 @@ export class MenuList {
     if (item?.select) {
       this.#sounds.select();
       item.select();
+    } else if (item?.cycle) {
+      this.#sounds.move();
+      item.cycle();
+      this.refresh();
     } else if (item?.change) this.#change(1);
   }
 }

@@ -67,7 +67,9 @@ The title screen waits for a click, a tap or any key, then opens the **main
 menu**: **Play** starts a game and **Options** lets you choose the **language**
 (Spanish or English; the first time it follows your browser), the **theme**
 (**Automatic** uses the one of each level), the **music** and **effects**
-volumes, whether the **sound** is on, and the keyboard **controls**. Your choices and your **best
+volumes (left and right change them; tapping, clicking or confirming one turns
+it up and, from the top, back to zero), whether the **sound** is on, and the
+keyboard **controls**. Your choices and your **best
 score** are remembered between sessions. In the desktop app the menu also has
 **Quit**, which closes the game; in the browser it has **Quit** when you opened
 the game from another page of the same site (such as the home page of the
