@@ -114,6 +114,7 @@ xantar/
 ├── scripts/
 │   ├── build-electron.mjs       # Compila electron/*.ts -> dist-electron/ (CJS)
 │   ├── build-icon.mjs           # Rasteriza build/icon.svg a build/icon.png (npm run icon)
+│   ├── publish-site.mjs         # Publica el build web en la web personal (npm run publish:site)
 │   └── smoke.mjs                # Lanzador de la prueba de humo (compila tools/smoke y abre Electron)
 ├── tools/                       # Herramientas de desarrollo (no van en la build publicada)
 │   ├── smoke/                   # Prueba de humo en Electron: pasos, escenarios y proceso principal
@@ -199,6 +200,7 @@ xantar/
 | `npm run dev:desktop` | Compila Electron y lanza Vite + ventana Electron con recarga |
 | `npm run build` | Comprueba tipos (renderer) y genera la web en `dist/` |
 | `npm run preview` | Sirve `dist/` para probar el build de producción web |
+| `npm run publish:site` | Compila la web y la publica en la web personal (`src/js/xantar/` y `deploy.sh` del repositorio `madialeva.github.io`; ver 9.4) |
 | `npm run build:electron` | Compila `electron/*.ts` -> `dist-electron/` |
 | `npm run build:desktop` | Typecheck + build web + Electron + instaladores en `release/` |
 | `npm run build:desktop:dir` | Igual, pero sin instalador (app desempaquetada, más rápido) |
@@ -599,11 +601,14 @@ Si en el futuro necesitas guardar datos en disco, mostrar diálogos nativos, etc
 
 ### 9.4 Publicar en web (GitHub Pages)
 
-Como `vite.config.ts` usa `base: './'`, las rutas son relativas y el build funciona tanto en la raíz de un dominio como en un subdirectorio (`usuario.github.io/repo/`).
+La versión web se publica en la web personal del autor, en https://madialeva.github.io/js/xantar/. Esa web es otro repositorio (`madialeva/madialeva.github.io`): GitHub Pages sirve su carpeta `docs/`, que su `deploy.sh` genera a partir de `src/`. Como `vite.config.ts` usa `base: './'`, las rutas son relativas y el build funciona en esa subruta sin configuración.
 
-Opción sencilla: mover el contenido de `dist/` a la rama/carpeta que sirva GitHub Pages tras `npm run build`.
+1. Clona la web junto a Xantar (`../madialeva.github.io`) o indica su ruta con `XANTAR_SITE_DIR`.
+2. Ejecuta `npm run publish:site`. El script (`scripts/publish-site.mjs`) comprueba que la ruta es la web (tiene `deploy.sh` y `src/index.html`) antes de tocar nada. Después compila (`npm run build`; si falla, no cambia la web), sustituye entero `src/js/xantar/` por `dist/` (sin dejar bundles de builds anteriores) y ejecuta `deploy.sh` de la web. `deploy.sh` copia el juego tal cual: su quitacomentarios excluye `js/xantar/` porque estropearía el código minificado.
+3. Revisa en local desde la web: `python3 -m http.server -d docs` → http://localhost:8000 → GAME → partida → Salir vuelve a la portada.
+4. En la web, haz commit (`src/` y `docs/`) y push a `main`. GitHub Pages publica en uno o dos minutos.
 
-Opción recomendada (CI): un workflow de GitHub Actions que ejecute `npm ci && npm run build` y publique `dist/` con `actions/upload-pages-artifact` + `actions/deploy-pages`.
+El script no hace commit ni push. Un workflow de GitHub Actions que publicara automáticamente necesitaría un token con escritura en el repositorio de la web; queda pendiente.
 
 ---
 
