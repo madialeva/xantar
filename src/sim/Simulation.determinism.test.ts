@@ -81,14 +81,6 @@ describe('Simulation determinism', () => {
     expect(types.has('phaseChanged')).toBe(true);
   });
 
-  it('ignores the visual theme of the level', () => {
-    expect(classic.theme).toBe('classic');
-    const withoutTheme = play(7, loadLevel({ ...classic, theme: undefined }));
-    const withOtherTheme = play(7, loadLevel({ ...classic, theme: 'midnight' }));
-    expect(withoutTheme).toEqual(play(7));
-    expect(withOtherTheme).toEqual(play(7));
-  });
-
   it('diverges for a different seed', () => {
     expect(play(8).states).not.toEqual(play(7).states);
   });

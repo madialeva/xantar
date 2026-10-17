@@ -4,7 +4,6 @@ import {
   type AudioBus,
   MAX_VOLUME,
   type PlayerSettings,
-  type ThemePreference,
   parseSettings,
   serializeSettings
 } from './PlayerSettings';
@@ -34,10 +33,6 @@ export class Settings {
     return this.#values.language;
   }
 
-  get theme(): ThemePreference {
-    return this.#values.theme;
-  }
-
   get bestScore(): number {
     return this.#values.bestScore;
   }
@@ -56,10 +51,6 @@ export class Settings {
 
   setLanguage(language: Language): void {
     this.#update({ language });
-  }
-
-  setTheme(theme: ThemePreference): void {
-    this.#update({ theme });
   }
 
   /** Sets a volume, kept within 0 and `MAX_VOLUME`. */

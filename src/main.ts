@@ -22,7 +22,6 @@ import { loadKeyboardLayout } from './view/input/keyboardLayout';
 import { createPlatform } from './view/platform/Platform';
 import { ForcedLandscape, PORTRAIT_TOUCH_QUERY } from './view/platform/ForcedLandscape';
 import { GameSession } from './view/session/GameSession';
-import { createThemeRegistry } from './view/themes';
 
 const browserStorage = (): Storage | undefined => {
   try {
@@ -33,8 +32,6 @@ const browserStorage = (): Storage | undefined => {
 };
 
 const tier = RENDER_TIER;
-const themes = createThemeRegistry();
-const urlTheme = new URLSearchParams(window.location.search).get('theme');
 const settings = new Settings(
   new LocalStorageSettingsStore(browserStorage()),
   defaultSettings(detectLanguage(navigator.languages))
@@ -80,13 +77,12 @@ const config: Phaser.Types.Core.GameConfig = {
     activePointers: 3
   },
   scene: [
-    new BootScene({ themes, tier, localization, audio }),
-    new TitleScene({ tier, localization, audio, themes, platform, input }),
+    new BootScene({ tier, localization, audio }),
+    new TitleScene({ tier, localization, audio, platform, input }),
     new MenuScene({
       tier,
       localization,
       settings,
-      themes,
       audio,
       platform,
       input,
@@ -94,8 +90,6 @@ const config: Phaser.Types.Core.GameConfig = {
       keyLayout: () => keyLayout
     }),
     new GameScene({
-      themes,
-      urlTheme,
       tier,
       session,
       settings,
@@ -107,7 +101,6 @@ const config: Phaser.Types.Core.GameConfig = {
       tier,
       localization,
       session,
-      themes,
       input,
       touchPad,
       modality,

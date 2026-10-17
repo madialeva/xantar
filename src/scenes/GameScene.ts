@@ -18,22 +18,17 @@ import {
 import { type CuePlayer, EventSounds } from '../view/audio/EventSounds';
 import { MazeView } from '../view/board/MazeView';
 import { EventEffects } from '../view/fx/EventEffects';
-import { applyBloom } from '../view/fx/bloom';
 import type { Settings } from '../settings/Settings';
 import { followBoardCamera } from '../view/layout/boardCamera';
 import { ArtFactory } from '../view/raster/ArtFactory';
 import type { GameSession, SessionRequest } from '../view/session/GameSession';
-import { chooseTheme } from '../view/theme/chooseTheme';
-import type { ResolvedTheme } from '../view/theme/Theme';
-import type { ThemeRegistry } from '../view/theme/ThemeRegistry';
+import { PALETTE } from '../view/theme/palette';
 
 const CAMERA_FLASH_MS = 180;
 const DEPTH = { maze: 0, ingredients: 5, enemies: 6, chef: 7, effects: 8 };
 const STACK_DEPTH_STEP = 0.01;
 
 export interface GameSceneDependencies {
-  readonly themes: ThemeRegistry;
-  readonly urlTheme: string | null;
   readonly tier: RenderTier;
   readonly session: GameSession;
   readonly settings: Settings;
@@ -50,7 +45,6 @@ export interface GameSceneDependencies {
  */
 export default class GameScene extends Phaser.Scene {
   readonly #deps: GameSceneDependencies;
-  #theme!: ResolvedTheme;
   #art!: ArtFactory;
   #sim!: Simulation;
   readonly #stepper = new FixedStepper();
@@ -72,13 +66,10 @@ export default class GameScene extends Phaser.Scene {
 
   create(): void {
     const { session, settings, tier } = this.#deps;
-    const levelDocument = parseLevelDocument(classicDocument);
-    this.#theme = this.#chooseTheme(levelDocument.theme);
-    this.#art = new ArtFactory(this, this.#theme.id, tier);
-    this.cameras.main.setBackgroundColor(this.#theme.palette.background);
-    if (this.#theme.bloom) applyBloom(this);
+    this.#art = new ArtFactory(this, tier);
+    this.cameras.main.setBackgroundColor(PALETTE.background);
     this.#sim = new Simulation({
-      level: loadLevel(levelDocument),
+      level: loadLevel(parseLevelDocument(classicDocument)),
       rng: new SeededRng(Date.now())
     });
     this.#stepper.reset();
@@ -96,7 +87,7 @@ export default class GameScene extends Phaser.Scene {
     session.start(settings.bestScore);
     session.update(this.#sim.stats, this.#sim.phase);
     this.#listen();
-    this.scene.launch('HudScene', { themeId: this.#theme.id });
+    this.scene.launch('HudScene');
   }
 
   override update(_time: number, delta: number): void {
@@ -179,13 +170,6 @@ export default class GameScene extends Phaser.Scene {
     this.#deps.settings.submitScore(this.#sim.stats.score);
     this.scene.stop('HudScene');
     this.scene.start('MenuScene');
-  }
-
-  #chooseTheme(levelTheme: string | undefined): ResolvedTheme {
-    const { themes, urlTheme, settings } = this.#deps;
-    const choice = chooseTheme({ urlTheme, optionTheme: settings.theme, levelTheme }, themes);
-    for (const warning of choice.warnings) console.warn(warning);
-    return themes.resolve(choice.id);
   }
 
   #createViews(): void {

@@ -11,8 +11,7 @@ import { followBoardCamera } from '../view/layout/boardCamera';
 import { layoutForWidth } from '../view/layout/computeLayout';
 import { ArtFactory } from '../view/raster/ArtFactory';
 import type { GameSession, SessionState } from '../view/session/GameSession';
-import type { ResolvedTheme } from '../view/theme/Theme';
-import type { ThemeRegistry } from '../view/theme/ThemeRegistry';
+import { PALETTE } from '../view/theme/palette';
 import { MenuList } from '../view/ui/MenuList';
 import type { UiSounds } from '../view/ui/UiSounds';
 
@@ -20,15 +19,10 @@ export interface HudSceneDependencies {
   readonly tier: RenderTier;
   readonly localization: Localization;
   readonly session: GameSession;
-  readonly themes: ThemeRegistry;
   readonly input: ActionReader;
   readonly touchPad: TouchPad;
   readonly modality: InputModality;
   readonly sounds: UiSounds;
-}
-
-export interface HudSceneData {
-  readonly themeId: string;
 }
 
 const DEPTH = { panels: 10, touch: 11, overlay: 20, menu: 21 };
@@ -41,7 +35,6 @@ const PAUSE_TOP = 150;
  */
 export default class HudScene extends Phaser.Scene {
   readonly #deps: HudSceneDependencies;
-  #theme!: ResolvedTheme;
   #panels!: HudPanels;
   #overlay!: OverlayView;
   #pauseMenu: MenuList | null = null;
@@ -52,13 +45,12 @@ export default class HudScene extends Phaser.Scene {
     this.#deps = deps;
   }
 
-  create(data: HudSceneData): void {
-    const { tier, localization, session, themes, touchPad, modality } = this.#deps;
-    this.#theme = themes.resolve(data.themeId);
+  create(): void {
+    const { tier, localization, session, touchPad, modality } = this.#deps;
     this.#shown = '';
     this.#pauseMenu = null;
-    const { palette } = this.#theme;
-    const art = new ArtFactory(this, this.#theme.id, tier);
+    const palette = PALETTE;
+    const art = new ArtFactory(this, tier);
     this.#panels = new HudPanels(
       this,
       art,
@@ -159,7 +151,7 @@ export default class HudScene extends Phaser.Scene {
 
   #showPause(): void {
     const { localization, session, tier } = this.#deps;
-    const { palette } = this.#theme;
+    const palette = PALETTE;
     this.#overlay.show(localization.t('pause.title'), [], SHADE.pause, PAUSE_TOP);
     this.#pauseMenu = new MenuList(
       this,

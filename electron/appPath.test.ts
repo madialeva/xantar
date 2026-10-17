@@ -43,7 +43,7 @@ describe('resolveAppPath', () => {
 
 describe('siteOf', () => {
   it('keeps the scheme and host, also for custom schemes', () => {
-    expect(siteOf('app://xantar/index.html?theme=midnight')).toBe('app://xantar');
+    expect(siteOf('app://xantar/index.html?lang=es')).toBe('app://xantar');
     expect(siteOf('http://localhost:5173/src/main.ts')).toBe('http://localhost:5173');
     expect(siteOf('https://example.com/')).toBe('https://example.com');
     expect(siteOf('nonsense')).toBeNull();

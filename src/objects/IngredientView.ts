@@ -10,7 +10,7 @@ const STOMP_DEPTH = 3;
 const LANDING_SQUASH = { scaleX: 1.06, scaleY: 0.7, ms: 220 };
 
 /**
- * Phaser view of an ingredient: draws its segments with the theme graphics (lowered when
+ * Phaser view of an ingredient: draws its segments with the game graphics (lowered when
  * stomped) and places it on its platform, in the air while it falls or on the plate once
  * stacked. Its origin is the bottom centre, so landing squashes it against the floor.
  */

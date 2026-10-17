@@ -1,16 +1,16 @@
 import type Phaser from 'phaser';
 import type { RenderTier } from '../../config';
-import { renderedArtUrl } from '../art/sources';
+import { renderedArt, svgSources } from '../art/sources';
 import { applyPalette, withSize } from '../theme/applyPalette';
-import { GRAPHICS, GRAPHIC_IDS, type GraphicId, textureKey } from '../theme/graphics';
-import type { ResolvedTheme } from '../theme/Theme';
+import { PALETTE } from '../theme/palette';
+import { GRAPHICS, GRAPHIC_IDS, type GraphicId } from '../theme/graphics';
 
 const PLACEHOLDER_CELL = 4;
 
 /**
- * Turns the SVG sources of a theme (or the rendered PNG that stands in for one) into Phaser
- * textures sized for the render tier. A source that cannot be drawn is replaced by a visible
- * placeholder and reported on the console.
+ * Turns every graphic of the catalogue, from its rendered PNG or its SVG source painted with
+ * the palette, into a Phaser texture sized for the render tier and keyed by the graphic id. A
+ * source that cannot be drawn is replaced by a visible placeholder and reported on the console.
  */
 export class SvgRasterizer {
   readonly #textures: Phaser.Textures.TextureManager;
@@ -21,11 +21,11 @@ export class SvgRasterizer {
     this.#tier = tier;
   }
 
-  async rasterizeTheme(theme: ResolvedTheme): Promise<void> {
-    await Promise.all(GRAPHIC_IDS.map((graphic) => this.#rasterize(theme, graphic)));
+  async rasterizeAll(): Promise<void> {
+    await Promise.all(GRAPHIC_IDS.map((graphic) => this.#rasterize(graphic)));
   }
 
-  async #rasterize(theme: ResolvedTheme, graphic: GraphicId): Promise<void> {
+  async #rasterize(graphic: GraphicId): Promise<void> {
     const width = GRAPHICS[graphic].width * this.#tier;
     const height = GRAPHICS[graphic].height * this.#tier;
     const canvas = document.createElement('canvas');
@@ -34,28 +34,24 @@ export class SvgRasterizer {
     const context = canvas.getContext('2d');
     if (!context) throw new Error('A 2D canvas context is required to rasterize the art');
     try {
-      const image = await this.#source(theme, graphic, width, height);
+      const image = await this.#source(graphic, width, height);
       context.imageSmoothingQuality = 'high';
       context.drawImage(image, 0, 0, width, height);
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
-      console.error(`Could not rasterize graphic "${graphic}" of theme "${theme.id}": ${reason}`);
+      console.error(`Could not rasterize graphic "${graphic}": ${reason}`);
       this.#drawPlaceholder(context, width, height);
     }
-    const key = textureKey(theme.id, graphic);
-    if (this.#textures.exists(key)) this.#textures.remove(key);
-    this.#textures.addCanvas(key, canvas);
+    if (this.#textures.exists(graphic)) this.#textures.remove(graphic);
+    this.#textures.addCanvas(graphic, canvas);
   }
 
-  async #source(
-    theme: ResolvedTheme,
-    graphic: GraphicId,
-    width: number,
-    height: number
-  ): Promise<HTMLImageElement> {
-    const rendered = renderedArtUrl(theme.id, graphic);
+  async #source(graphic: GraphicId, width: number, height: number): Promise<HTMLImageElement> {
+    const rendered = renderedArt().get(graphic);
     if (rendered !== undefined) return this.#decode(rendered, width, height);
-    const svg = withSize(applyPalette(theme.art[graphic], theme.palette), width, height);
+    const source = svgSources().get(graphic);
+    if (source === undefined) throw new Error('The graphic has no source');
+    const svg = withSize(applyPalette(source, PALETTE), width, height);
     const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
     try {
       return await this.#decode(url, width, height);

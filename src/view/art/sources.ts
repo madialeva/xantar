@@ -1,32 +1,28 @@
-const files = import.meta.glob<string>('./*/*.svg', {
+const svgFiles = import.meta.glob<string>('./classic/*.svg', {
   query: '?raw',
   import: 'default',
   eager: true
 });
 
-const renderedFiles = import.meta.glob<string>('./*/*.png', {
+const pngFiles = import.meta.glob<string>('./classic/*.png', {
   query: '?url',
   import: 'default',
   eager: true
 });
 
-const FILE_PATTERN = /^\.\/([^/]+)\/([^/]+)\.svg$/;
+const byGraphic = (files: Record<string, string>): ReadonlyMap<string, string> =>
+  new Map(
+    Object.entries(files).map(([path, value]) => [
+      path.slice(path.lastIndexOf('/') + 1, path.lastIndexOf('.')),
+      value
+    ])
+  );
 
-/** URL of a rendered (PNG) graphic that stands in for the SVG source, if the theme folder has one. */
-export function renderedArtUrl(theme: string, graphic: string): string | undefined {
-  return renderedFiles[`./${theme}/${graphic}.png`];
-}
+const svgs = byGraphic(svgFiles);
+const pngs = byGraphic(pngFiles);
 
-/** SVG sources grouped by theme folder and keyed by file name (the graphic id). */
-export function artSources(): ReadonlyMap<string, Readonly<Record<string, string>>> {
-  const byTheme = new Map<string, Record<string, string>>();
-  for (const [path, source] of Object.entries(files)) {
-    const match = FILE_PATTERN.exec(path);
-    if (!match) continue;
-    const [, theme, graphic] = match;
-    const art = byTheme.get(theme) ?? {};
-    art[graphic] = source;
-    byTheme.set(theme, art);
-  }
-  return byTheme;
-}
+/** SVG sources of the art, keyed by file name (the graphic id). */
+export const svgSources = (): ReadonlyMap<string, string> => svgs;
+
+/** URLs of the rendered (PNG) art, keyed by file name (the graphic id). */
+export const renderedArt = (): ReadonlyMap<string, string> => pngs;

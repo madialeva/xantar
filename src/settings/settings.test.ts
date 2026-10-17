@@ -20,30 +20,19 @@ describe('parseSettings', () => {
   });
 
   it('keeps the valid fields and replaces only the invalid ones', () => {
-    const record = {
-      version: SETTINGS_VERSION,
-      language: 'fr',
-      theme: 'midnight',
-      bestScore: 9000
-    };
+    const record = { version: SETTINGS_VERSION, language: 'fr', bestScore: 9000 };
     expect(parseSettings(record, defaults)).toEqual({
       ...defaults,
       language: 'en',
-      theme: 'midnight',
       bestScore: 9000
     });
-    const bad = { version: SETTINGS_VERSION, language: 'es', theme: 'Mid Night', bestScore: -5 };
+    const bad = { version: SETTINGS_VERSION, language: 'es', bestScore: -5 };
     expect(parseSettings(bad, defaults)).toEqual({ ...defaults, language: 'es' });
   });
 
-  it('reads a record written before the sound and key settings existed', () => {
+  it('reads a record of earlier versions, with a theme and without sound or keys', () => {
     const old = { version: 1, language: 'es', theme: 'midnight', bestScore: 4200 };
-    expect(parseSettings(old, defaults)).toEqual({
-      ...defaults,
-      language: 'es',
-      theme: 'midnight',
-      bestScore: 4200
-    });
+    expect(parseSettings(old, defaults)).toEqual({ ...defaults, language: 'es', bestScore: 4200 });
   });
 
   it('keeps valid sound settings and replaces volumes out of range', () => {
@@ -83,16 +72,9 @@ describe('Settings', () => {
       bestScore: 10
     });
     const settings = new Settings(store, defaults);
-    expect([settings.language, settings.theme, settings.bestScore]).toEqual(['es', 'auto', 10]);
+    expect([settings.language, settings.bestScore]).toEqual(['es', 10]);
     settings.setLanguage('en');
-    settings.setTheme('midnight');
-    expect(store.load()).toEqual({
-      ...defaults,
-      version: 1,
-      language: 'en',
-      theme: 'midnight',
-      bestScore: 10
-    });
+    expect(store.load()).toEqual({ ...defaults, version: 1, language: 'en', bestScore: 10 });
   });
 
   it('saves the sound and key settings and tells its listeners', () => {

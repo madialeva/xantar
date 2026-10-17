@@ -6,28 +6,24 @@ import { phaserSoundSystem, registerSoundEffects } from '../view/audio/phaserSou
 import { hudText } from '../view/hud/textStyle';
 import { followBoardCamera } from '../view/layout/boardCamera';
 import { SvgRasterizer } from '../view/raster/SvgRasterizer';
-import type { ThemeRegistry } from '../view/theme/ThemeRegistry';
 
 export interface BootSceneDependencies {
-  readonly themes: ThemeRegistry;
   readonly tier: RenderTier;
   readonly localization: Localization;
   readonly audio: GameAudio;
 }
 
 /**
- * First scene: loads the music, synthesizes the sound effects, rasterizes the art of every
- * registered theme for the render tier and then hands over to the title scene.
+ * First scene: loads the music, synthesizes the sound effects, rasterizes the art for the
+ * render tier and then hands over to the title scene.
  */
 export default class BootScene extends Phaser.Scene {
-  readonly #themes: ThemeRegistry;
   readonly #tier: RenderTier;
   readonly #localization: Localization;
   readonly #audio: GameAudio;
 
-  constructor({ themes, tier, localization, audio }: BootSceneDependencies) {
+  constructor({ tier, localization, audio }: BootSceneDependencies) {
     super({ key: 'BootScene' });
-    this.#themes = themes;
     this.#tier = tier;
     this.#localization = localization;
     this.#audio = audio;
@@ -48,13 +44,8 @@ export default class BootScene extends Phaser.Scene {
       )
       .setOrigin(0.5);
     this.#audio.attach(phaserSoundSystem(this.sound), registerSoundEffects(this));
-    void this.#rasterize().then(() => this.scene.start('TitleScene'));
-  }
-
-  async #rasterize(): Promise<void> {
-    const rasterizer = new SvgRasterizer(this.textures, this.#tier);
-    for (const id of this.#themes.ids) {
-      await rasterizer.rasterizeTheme(this.#themes.resolve(id));
-    }
+    void new SvgRasterizer(this.textures, this.#tier)
+      .rasterizeAll()
+      .then(() => this.scene.start('TitleScene'));
   }
 }

@@ -5,7 +5,7 @@ import type { ArtFactory } from '../raster/ArtFactory';
 import { segmentParts } from '../theme/graphics';
 
 /**
- * Static drawing of a level with the graphics of a theme: backdrop, ladders, platform runs
+ * Static drawing of a level with the game graphics: backdrop, ladders, platform runs
  * with their end caps, crossings and plates.
  */
 export class MazeView extends Phaser.GameObjects.Container {

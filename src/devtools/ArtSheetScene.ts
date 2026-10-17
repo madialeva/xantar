@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 import { TILE, type RenderTier, platformY } from '../config';
 import IngredientView from '../objects/IngredientView';
 import { type IngredientKind, type IngredientSnapshot } from '../sim';
-import { applyBloom } from '../view/fx/bloom';
 import { HUD_FONT } from '../view/hud/textStyle';
 import { ArtFactory } from '../view/raster/ArtFactory';
 import { SvgRasterizer } from '../view/raster/SvgRasterizer';
@@ -14,7 +13,7 @@ import { chefRig, enemyRigs } from '../view/rigs/rigs';
 import type { RigDefinition } from '../view/rigs/RigDefinition';
 import { chefStates, enemyStates } from '../view/rigs/states';
 import { GRAPHIC_IDS, type GraphicId, segmentParts } from '../view/theme/graphics';
-import type { ResolvedTheme } from '../view/theme/Theme';
+import { PALETTE } from '../view/theme/palette';
 
 export const SHEET_WIDTH = 1000;
 export const SHEET_HEIGHT = 940;
@@ -31,7 +30,6 @@ const KINDS: readonly IngredientKind[] = ['bunTop', 'lettuce', 'patty', 'bunBott
 const RUN_WIDTHS = [4, 3, 2] as const;
 
 export interface ArtSheetDependencies {
-  readonly theme: ResolvedTheme;
   readonly tier: RenderTier;
 }
 
@@ -43,30 +41,25 @@ interface Specimen {
 }
 
 /**
- * Development-only page scene: draws every graphic of a theme with the real rasterizer,
+ * Development-only page scene: draws every graphic with the real rasterizer,
  * ingredient and plate runs, a piece of maze and each character in each animation state.
  */
 export default class ArtSheetScene extends Phaser.Scene {
-  readonly #theme: ResolvedTheme;
   readonly #tier: RenderTier;
   #art!: ArtFactory;
   readonly #specimens: Specimen[] = [];
   #nextReplay = 0;
 
-  constructor({ theme, tier }: ArtSheetDependencies) {
+  constructor({ tier }: ArtSheetDependencies) {
     super({ key: 'ArtSheetScene' });
-    this.#theme = theme;
     this.#tier = tier;
   }
 
   create(): void {
-    this.cameras.main.setBackgroundColor(this.#theme.palette.background).setZoom(this.#tier);
+    this.cameras.main.setBackgroundColor(PALETTE.background).setZoom(this.#tier);
     this.cameras.main.setOrigin(0, 0);
-    if (this.#theme.bloom) applyBloom(this);
-    this.#art = new ArtFactory(this, this.#theme.id, this.#tier);
-    void new SvgRasterizer(this.textures, this.#tier)
-      .rasterizeTheme(this.#theme)
-      .then(() => this.#draw());
+    this.#art = new ArtFactory(this, this.#tier);
+    void new SvgRasterizer(this.textures, this.#tier).rasterizeAll().then(() => this.#draw());
   }
 
   override update(time: number): void {
@@ -79,7 +72,7 @@ export default class ArtSheetScene extends Phaser.Scene {
   }
 
   #draw(): void {
-    this.#label(MARGIN, 8, `Lámina de arte · tema ${this.#theme.id}`, 16);
+    this.#label(MARGIN, 8, 'Lámina de arte', 16);
     this.#drawCharacters(40);
     const gridBottom = this.#drawGraphics(270);
     this.#drawRuns(gridBottom + 20);
@@ -217,7 +210,7 @@ export default class ArtSheetScene extends Phaser.Scene {
     this.add.text(x, y, text, {
       fontFamily: HUD_FONT,
       fontSize: `${size}px`,
-      color: this.#theme.palette.hudText,
+      color: PALETTE.hudText,
       resolution: this.#tier
     });
   }
