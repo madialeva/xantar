@@ -4,7 +4,7 @@ import IngredientView from '../objects/IngredientView';
 import { type IngredientKind, type IngredientSnapshot } from '../sim';
 import { HUD_FONT } from '../view/hud/textStyle';
 import { ArtFactory } from '../view/raster/ArtFactory';
-import { SvgRasterizer } from '../view/raster/SvgRasterizer';
+import { ArtRasterizer } from '../view/raster/ArtRasterizer';
 import { CharacterRig } from '../view/rigs/CharacterRig';
 import type { AnimationState } from '../view/rigs/AnimationState';
 import { RigAnimator } from '../view/rigs/RigAnimator';
@@ -12,8 +12,8 @@ import { RigMotion } from '../view/rigs/RigMotion';
 import { chefRig, enemyRigs } from '../view/rigs/rigs';
 import type { RigDefinition } from '../view/rigs/RigDefinition';
 import { chefStates, enemyStates } from '../view/rigs/states';
-import { GRAPHIC_IDS, type GraphicId, segmentParts } from '../view/theme/graphics';
-import { PALETTE } from '../view/theme/palette';
+import { GRAPHIC_IDS, type GraphicId, segmentParts } from '../view/art/graphics';
+import { PALETTE } from '../view/art/palette';
 
 export const SHEET_WIDTH = 1000;
 export const SHEET_HEIGHT = 940;
@@ -59,7 +59,7 @@ export default class ArtSheetScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(PALETTE.background).setZoom(this.#tier);
     this.cameras.main.setOrigin(0, 0);
     this.#art = new ArtFactory(this, this.#tier);
-    void new SvgRasterizer(this.textures, this.#tier).rasterizeAll().then(() => this.#draw());
+    void new ArtRasterizer(this.textures, this.#tier).rasterizeAll().then(() => this.#draw());
   }
 
   override update(time: number): void {

@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
 import type { RenderTier } from '../../config';
-import { GRAPHICS, type GraphicId, type GraphicSize } from '../theme/graphics';
+import { GRAPHICS, type GraphicId, type GraphicSize } from '../art/graphics';
 
 /**
  * Creates images of the game's graphics, scaled so that each one covers its logical size

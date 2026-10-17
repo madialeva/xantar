@@ -1,4 +1,4 @@
-"""Prototype renderer for the character graphics (enemies and chef) of the classic theme.
+"""Renderer for the character graphics (enemies and chef) of the game.
 
 The game animates characters as rigs of separate images, so every part is rendered on its own,
 framed exactly as the rig places it. Parts are modelled in rig space: Blender x is the rig's x,
@@ -8,8 +8,9 @@ tile and the feet touch y = +10. Characters face right; the game mirrors them.
 Run from the repository root:
     blender -b --factory-startup --python tools/blender/characters.py -- [--only hotdog] [--samples N]
 
-Writes <graphic>.png at 4x the logical size next to the SVG sources of the classic theme, and
-a preview of each part to tmp/blender/characters/.
+Writes <graphic>.png at 4x the logical size to the art sources (src/view/art/sources/), and
+a preview of each part to tmp/blender/characters/. The rectangles here must match the parts'
+places in src/view/rigs/rigs.ts and their sizes in the graphics catalogue.
 """
 
 import argparse

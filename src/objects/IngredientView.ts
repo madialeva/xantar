@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { TILE, platformY } from '../config';
 import { FALL_TICKS, type IngredientSnapshot } from '../sim';
 import type { ArtFactory } from '../view/raster/ArtFactory';
-import { INGREDIENT_HEIGHTS, segmentParts } from '../view/theme/graphics';
+import { INGREDIENT_HEIGHTS, segmentParts } from '../view/art/graphics';
 
 const PLATFORM_TOP = 6;
 const PLATE_TOP = 5;

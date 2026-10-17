@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GRAPHICS, isGraphicId } from '../theme/graphics';
+import { GRAPHICS, isGraphicId } from '../art/graphics';
 import { chefRig, enemyRigs } from './rigs';
 
 const rigs = { chef: chefRig, ...enemyRigs };

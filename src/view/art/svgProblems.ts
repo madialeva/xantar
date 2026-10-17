@@ -1,5 +1,5 @@
-import type { GraphicSize } from '../theme/graphics';
-import { isPaletteToken } from '../theme/palette';
+import type { GraphicSize } from './graphics';
+import { isPaletteToken } from './palette';
 
 const OPENING_SVG_TAG = /<svg\b([^>]*)>/;
 const ATTRIBUTE = /([\w:-]+)\s*=\s*"([^"]*)"/g;

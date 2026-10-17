@@ -12,7 +12,7 @@ import { RigMotion } from '../view/rigs/RigMotion';
 import { chefRig } from '../view/rigs/rigs';
 import { chefStates } from '../view/rigs/states';
 import type { Platform } from '../view/platform/Platform';
-import { PALETTE } from '../view/theme/palette';
+import { PALETTE } from '../view/art/palette';
 
 export interface TitleSceneDependencies {
   readonly tier: RenderTier;

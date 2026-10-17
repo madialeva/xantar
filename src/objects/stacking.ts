@@ -1,5 +1,5 @@
 import type { IngredientSnapshot } from '../sim';
-import { INGREDIENT_STACK_HEIGHTS } from '../view/theme/graphics';
+import { INGREDIENT_STACK_HEIGHTS } from '../view/art/graphics';
 
 /**
  * How high above its plate each ingredient on its way to a plate, or already on it, sits: the

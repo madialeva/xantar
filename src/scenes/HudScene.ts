@@ -11,7 +11,7 @@ import { followBoardCamera } from '../view/layout/boardCamera';
 import { layoutForWidth } from '../view/layout/computeLayout';
 import { ArtFactory } from '../view/raster/ArtFactory';
 import type { GameSession, SessionState } from '../view/session/GameSession';
-import { PALETTE } from '../view/theme/palette';
+import { PALETTE } from '../view/art/palette';
 import { MenuList } from '../view/ui/MenuList';
 import type { UiSounds } from '../view/ui/UiSounds';
 

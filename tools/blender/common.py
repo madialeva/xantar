@@ -1,4 +1,4 @@
-"""Shared pieces of the prototype Blender renderers: studio scene, shader helpers and image
+"""Shared pieces of the Blender renderers: studio scene, shader helpers and image
 post-processing. One Blender unit is one logical unit of the board."""
 
 import math
@@ -9,7 +9,7 @@ import numpy as np
 from mathutils import Vector
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-ART_DIR = os.path.join(ROOT, "src", "view", "art", "classic")
+ART_DIR = os.path.join(ROOT, "src", "view", "art", "sources")
 PREVIEW_DIR = os.path.join(ROOT, "tmp", "blender")
 TILE = 32
 TIER = 4

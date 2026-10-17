@@ -16,10 +16,10 @@
 
 ## 3. Catálogo y fuentes del arte sin temas
 
-- [ ] 3.1 Mover a `src/view/art/` el catálogo (`graphics.ts`), la paleta (`palette.ts`, con los colores de `classic` como única `PALETTE`), `applyPalette` y `svgProblems`, y las fuentes de `src/view/art/classic/` a `src/view/art/sources/`; `sources.ts` da, por gráfico, su SVG o la URL de su PNG; verificar con `npm run typecheck` y las pruebas de la paleta y del catálogo
-- [ ] 3.2 Convertir `SvgRasterizer` en `ArtRasterizer` sin tema (PNG decodificado y reducido con suavizado alto, SVG con la paleta, clave de textura igual al id del gráfico) y quitar `themeId` de `ArtFactory`; `BootScene` rasteriza una vez; verificar con `npm run typecheck` y con `npm run dev` (arte completo, sin marcadores ni errores en la consola)
-- [ ] 3.3 Borrar los SVG de relleno de los gráficos que tienen PNG (ingredientes, partes del chef y de los enemigos, fotogramas de baile) y reescribir la prueba de arte: cada id del catálogo con exactamente una fuente, ningún fichero sin id, SVG según la guía y PNG de tamaño lógico × 4 (cabecera IHDR); verificar con `npm run test` y comprobando que la prueba falla si se duplica la fuente de un gráfico o se cambia el tamaño de un PNG
-- [ ] 3.4 Ajustar los scripts de `tools/blender/` a la nueva carpeta de fuentes y regenerar ingredientes y personajes; verificar con `git status` (solo cambian los PNG esperados) y con la prueba de arte
+- [x] 3.1 Mover a `src/view/art/` el catálogo (`graphics.ts`), la paleta (`palette.ts`, con los colores de `classic` como única `PALETTE`), `applyPalette` y `svgProblems`, y las fuentes de `src/view/art/classic/` a `src/view/art/sources/`; `sources.ts` da, por gráfico, su SVG o la URL de su PNG; verificar con `npm run typecheck` y las pruebas de la paleta y del catálogo
+- [x] 3.2 Convertir `SvgRasterizer` en `ArtRasterizer` sin tema (PNG decodificado y reducido con suavizado alto, SVG con la paleta, clave de textura igual al id del gráfico) y quitar `themeId` de `ArtFactory`; `BootScene` rasteriza una vez; verificar con `npm run typecheck` y con `npm run dev` (arte completo, sin marcadores ni errores en la consola)
+- [x] 3.3 Borrar los SVG de relleno de los gráficos que tienen PNG (ingredientes, partes del chef y de los enemigos, fotogramas de baile) y reescribir la prueba de arte: cada id del catálogo con exactamente una fuente, ningún fichero sin id, SVG según la guía y PNG de tamaño lógico × 4 (cabecera IHDR); verificar con `npm run test` y comprobando que la prueba falla si se duplica la fuente de un gráfico o se cambia el tamaño de un PNG
+- [x] 3.4 Ajustar los scripts de `tools/blender/` a la nueva carpeta de fuentes y regenerar ingredientes y personajes; verificar con `git status` (solo cambian los PNG esperados) y con la prueba de arte
 
 ## 4. Personajes, bailes y apilado
 

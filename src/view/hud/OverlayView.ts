@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, type RenderTier } from '../../config';
-import type { Palette } from '../theme/palette';
+import type { Palette } from '../art/palette';
 import { hudText } from './textStyle';
 
 const SHADE_ALPHA = 0.72;

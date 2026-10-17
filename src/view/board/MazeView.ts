@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, TILE, platformY } from '../../config';
 import type { Level } from '../../sim';
 import type { ArtFactory } from '../raster/ArtFactory';
-import { segmentParts } from '../theme/graphics';
+import { segmentParts } from '../art/graphics';
 
 /**
  * Static drawing of a level with the game graphics: backdrop, ladders, platform runs

@@ -22,7 +22,7 @@ import type { Settings } from '../settings/Settings';
 import { followBoardCamera } from '../view/layout/boardCamera';
 import { ArtFactory } from '../view/raster/ArtFactory';
 import type { GameSession, SessionRequest } from '../view/session/GameSession';
-import { PALETTE } from '../view/theme/palette';
+import { PALETTE } from '../view/art/palette';
 
 const CAMERA_FLASH_MS = 180;
 const DEPTH = { maze: 0, ingredients: 5, enemies: 6, chef: 7, effects: 8 };

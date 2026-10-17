@@ -9,7 +9,7 @@ import type { GameAudio } from '../view/audio/GameAudio';
 import type { Platform } from '../view/platform/Platform';
 import { hudText } from '../view/hud/textStyle';
 import { followBoardCamera } from '../view/layout/boardCamera';
-import { PALETTE } from '../view/theme/palette';
+import { PALETTE } from '../view/art/palette';
 import { ControlsPage, type KeyCapture } from '../view/ui/ControlsPage';
 import { type MenuItem, MenuList } from '../view/ui/MenuList';
 

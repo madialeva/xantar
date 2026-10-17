@@ -1,10 +1,10 @@
-const svgFiles = import.meta.glob<string>('./classic/*.svg', {
+const svgFiles = import.meta.glob<string>('./sources/*.svg', {
   query: '?raw',
   import: 'default',
   eager: true
 });
 
-const pngFiles = import.meta.glob<string>('./classic/*.png', {
+const pngFiles = import.meta.glob<string>('./sources/*.png', {
   query: '?url',
   import: 'default',
   eager: true

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { IngredientKind, IngredientSnapshot } from '../sim';
-import { INGREDIENT_STACK_HEIGHTS } from '../view/theme/graphics';
+import { INGREDIENT_STACK_HEIGHTS } from '../view/art/graphics';
 import { stackLifts } from './stacking';
 
 const ingredient = (

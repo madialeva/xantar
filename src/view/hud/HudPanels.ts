@@ -3,7 +3,7 @@ import type { RenderTier } from '../../config';
 import type { SessionStats } from '../session/GameSession';
 import { type Layout, type Rect } from '../layout/computeLayout';
 import type { ArtFactory } from '../raster/ArtFactory';
-import type { Palette } from '../theme/palette';
+import type { Palette } from '../art/palette';
 import { hudText } from './textStyle';
 
 const MARGIN = 8;

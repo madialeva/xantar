@@ -5,7 +5,7 @@ import { type GameAudio, TITLE_MUSIC } from '../view/audio/GameAudio';
 import { phaserSoundSystem, registerSoundEffects } from '../view/audio/phaserSound';
 import { hudText } from '../view/hud/textStyle';
 import { followBoardCamera } from '../view/layout/boardCamera';
-import { SvgRasterizer } from '../view/raster/SvgRasterizer';
+import { ArtRasterizer } from '../view/raster/ArtRasterizer';
 
 export interface BootSceneDependencies {
   readonly tier: RenderTier;
@@ -44,7 +44,7 @@ export default class BootScene extends Phaser.Scene {
       )
       .setOrigin(0.5);
     this.#audio.attach(phaserSoundSystem(this.sound), registerSoundEffects(this));
-    void new SvgRasterizer(this.textures, this.#tier)
+    void new ArtRasterizer(this.textures, this.#tier)
       .rasterizeAll()
       .then(() => this.scene.start('TitleScene'));
   }

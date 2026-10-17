@@ -1,4 +1,4 @@
-import type { GraphicId } from '../theme/graphics';
+import type { GraphicId } from '../art/graphics';
 
 export interface RigPart {
   readonly name: string;

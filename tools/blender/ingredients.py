@@ -1,4 +1,4 @@
-"""Prototype renderer for the burger ingredient graphics of the classic theme.
+"""Renderer for the burger ingredient graphics of the game.
 
 Builds each ingredient procedurally, lights it with sun lamps only and renders it with Cycles.
 One Blender unit is one logical unit of the board, and x runs along the four tiles of the
@@ -9,8 +9,9 @@ pattern repeats exactly once per tile.
 Run from the repository root:
     blender -b --factory-startup --python tools/blender/ingredients.py -- [--only patty] [--samples N] [--no-hero]
 
-Writes the game slices (<kind>.left/mid/right.png at 4x the logical size) next to the SVG
-sources of the classic theme, and previews plus metrics.json to tmp/blender/.
+Writes the game slices (<kind>.left/mid/right.png at 4x the logical size) to the art sources
+(src/view/art/sources/), and previews plus metrics.json to tmp/blender/. The visible
+thickness of each ingredient in metrics.json gives INGREDIENT_STACK_HEIGHTS in the game.
 """
 
 import argparse

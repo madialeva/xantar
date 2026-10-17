@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6 11" width="6" height="11">
-  <g transform="translate(0 0.8)">
-  <rect class="f-chef s-outline" x="1" y="0.75" width="4" height="6" rx="2" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-  <rect class="f-chefShade" x="1.6" y="5" width="2.8" height="1.2" rx="0.6"/>
-  <circle class="f-skin s-outline" cx="3" cy="7.9" r="1.6" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-</g>
-</svg>
