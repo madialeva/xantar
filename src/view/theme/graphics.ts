@@ -14,6 +14,17 @@ export const INGREDIENT_HEIGHTS: Readonly<Record<IngredientKind, number>> = {
   bunBottom: 14
 };
 
+/**
+ * How far above an ingredient's bottom the next ingredient of a burger sits, which is how
+ * thick it looks in the rendered art (seen slightly from above, the next one covers its top).
+ */
+export const INGREDIENT_STACK_HEIGHTS: Readonly<Record<IngredientKind, number>> = {
+  bunTop: 13,
+  lettuce: 4.8,
+  patty: 8.3,
+  bunBottom: 7.4
+};
+
 const ingredient = <K extends IngredientKind>(kind: K) => {
   const box = size(32, INGREDIENT_HEIGHTS[kind]);
   return { [`${kind}.left`]: box, [`${kind}.mid`]: box, [`${kind}.right`]: box } as Record<
@@ -40,19 +51,32 @@ export const GRAPHICS = {
   'chef.head': size(16, 14),
   'chef.hat': size(20, 13),
   'chef.eyes': size(8, 5),
-  'chef.armLeft': size(6, 10),
-  'chef.armRight': size(6, 10),
+  'chef.ponytail': size(8, 11),
+  'chef.armLeft': size(6, 11),
+  'chef.armRight': size(6, 11),
   'chef.legLeft': size(8, 9),
   'chef.legRight': size(8, 9),
-  'hotdog.body': size(30, 14),
-  'hotdog.eyes': size(12, 6),
-  'hotdog.feet': size(18, 6),
-  'pickle.body': size(16, 26),
-  'pickle.eyes': size(12, 6),
-  'pickle.feet': size(14, 6),
-  'egg.body': size(24, 18),
-  'egg.eyes': size(12, 6),
-  'egg.feet': size(16, 6),
+  'hotdog.body': size(18, 34),
+  'hotdog.bendBack2': size(18, 34),
+  'hotdog.bendBack1': size(18, 34),
+  'hotdog.bendFront1': size(18, 34),
+  'hotdog.bendFront2': size(18, 34),
+  'hotdog.eyes': size(12, 7),
+  'hotdog.leg': size(6, 8),
+  'pickle.body': size(18, 34),
+  'pickle.wiggleBack2': size(18, 34),
+  'pickle.wiggleBack1': size(18, 34),
+  'pickle.wiggleFront1': size(18, 34),
+  'pickle.wiggleFront2': size(18, 34),
+  'pickle.eyes': size(12, 7),
+  'pickle.leg': size(6, 8),
+  'egg.body': size(30, 30),
+  'egg.rippleBack2': size(30, 30),
+  'egg.rippleBack1': size(30, 30),
+  'egg.rippleFront1': size(30, 30),
+  'egg.rippleFront2': size(30, 30),
+  'egg.eyes': size(12, 7),
+  'egg.leg': size(6, 8),
   'fx.pepper': size(32, 32),
   'fx.squash': size(32, 16),
   'fx.sparkle': size(24, 24),

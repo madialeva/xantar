@@ -22,7 +22,7 @@ export default class EnemyView extends Phaser.GameObjects.Container {
     super(scene, 0, 0);
     const rig = new CharacterRig(scene, art, enemyRigs[kind]);
     this.add(rig);
-    this.#animator = new RigAnimator(new RigMotion(rig, scene.tweens), enemyStates);
+    this.#animator = new RigAnimator(new RigMotion(rig, scene.tweens), enemyStates[kind]);
     scene.add.existing(this);
   }
 

@@ -4,6 +4,7 @@ import classicDocument from '../levels/classic.level.json';
 import ChefView from '../objects/ChefView';
 import EnemyView from '../objects/EnemyView';
 import IngredientView from '../objects/IngredientView';
+import { stackLifts } from '../objects/stacking';
 import type { ActionReader } from '../input/actions';
 import { toSimInput } from '../input/toSimInput';
 import {
@@ -28,6 +29,7 @@ import type { ThemeRegistry } from '../view/theme/ThemeRegistry';
 
 const CAMERA_FLASH_MS = 180;
 const DEPTH = { maze: 0, ingredients: 5, enemies: 6, chef: 7, effects: 8 };
+const STACK_DEPTH_STEP = 0.01;
 
 export interface GameSceneDependencies {
   readonly themes: ThemeRegistry;
@@ -205,8 +207,12 @@ export default class GameScene extends Phaser.Scene {
   #syncViews(alpha: number): void {
     this.#chefView.sync(this.#sim.chef, alpha, this.#sim.phase === 'dying');
     this.#sim.enemies.forEach((enemy, index) => this.#enemyViews[index].sync(enemy, alpha));
+    const lifts = stackLifts(this.#sim.ingredients);
     for (const ingredient of this.#sim.ingredients) {
-      this.#ingredientViews.get(ingredient.id)?.sync(ingredient, alpha);
+      this.#ingredientViews
+        .get(ingredient.id)
+        ?.setDepth(DEPTH.ingredients + (ingredient.stackSlot ?? 0) * STACK_DEPTH_STEP)
+        .sync(ingredient, alpha, lifts.get(ingredient.id));
     }
   }
 

@@ -6,7 +6,6 @@ import { INGREDIENT_HEIGHTS, segmentParts } from '../view/theme/graphics';
 
 const PLATFORM_TOP = 6;
 const PLATE_TOP = 5;
-const STACK_STEP = 11;
 const STOMP_DEPTH = 3;
 const LANDING_SQUASH = { scaleX: 1.06, scaleY: 0.7, ms: 220 };
 
@@ -37,8 +36,9 @@ export default class IngredientView extends Phaser.GameObjects.Container {
     this.setY(this.#restBottom(ingredient.row));
   }
 
-  sync(ingredient: IngredientSnapshot, alpha: number): void {
-    this.setY(this.#bottomFor(ingredient, alpha));
+  /** `lift` is how high above its plate the ingredient sits once stacked (see `stackLifts`). */
+  sync(ingredient: IngredientSnapshot, alpha: number, lift = 0): void {
+    this.setY(this.#bottomFor(ingredient, alpha, lift));
     this.#segments.forEach((segment, index) => {
       segment.setY(-this.#height / 2 + (ingredient.stomped[index] ? STOMP_DEPTH : 0));
     });
@@ -66,19 +66,19 @@ export default class IngredientView extends Phaser.GameObjects.Container {
     super.destroy(fromScene);
   }
 
-  #bottomFor(ingredient: IngredientSnapshot, alpha: number): number {
+  #bottomFor(ingredient: IngredientSnapshot, alpha: number, lift: number): number {
     switch (ingredient.phase) {
       case 'idle':
       case 'waiting':
         return this.#restBottom(ingredient.row);
       case 'stacked':
-        return this.#stackBottom(ingredient.fallToRow, ingredient.stackSlot ?? 0);
+        return this.#stackBottom(ingredient.fallToRow, lift);
       case 'falling': {
         const progress = Math.min(1, ingredient.fallProgress + alpha / FALL_TICKS);
         const eased = Phaser.Math.Easing.Quadratic.In(progress);
         const from = this.#restBottom(ingredient.fallFromRow);
         const to = ingredient.landsOnPlate
-          ? this.#stackBottom(ingredient.fallToRow, ingredient.stackSlot ?? 0)
+          ? this.#stackBottom(ingredient.fallToRow, lift)
           : this.#restBottom(ingredient.fallToRow);
         return Phaser.Math.Linear(from, to, eased);
       }
@@ -89,7 +89,7 @@ export default class IngredientView extends Phaser.GameObjects.Container {
     return platformY(row) - PLATFORM_TOP;
   }
 
-  #stackBottom(plateRow: number, slot: number): number {
-    return platformY(plateRow) - PLATE_TOP - slot * STACK_STEP;
+  #stackBottom(plateRow: number, lift: number): number {
+    return platformY(plateRow) - PLATE_TOP - lift;
   }
 }

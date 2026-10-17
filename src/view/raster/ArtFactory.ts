@@ -25,6 +25,10 @@ export class ArtFactory {
     return GRAPHICS[graphic];
   }
 
+  key(graphic: GraphicId): string {
+    return textureKey(this.themeId, graphic);
+  }
+
   image(graphic: GraphicId, x = 0, y = 0): Phaser.GameObjects.Image {
     return this.#scene.add.image(x, y, textureKey(this.themeId, graphic)).setScale(this.scale);
   }

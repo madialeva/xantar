@@ -4,7 +4,18 @@ const files = import.meta.glob<string>('./*/*.svg', {
   eager: true
 });
 
+const renderedFiles = import.meta.glob<string>('./*/*.png', {
+  query: '?url',
+  import: 'default',
+  eager: true
+});
+
 const FILE_PATTERN = /^\.\/([^/]+)\/([^/]+)\.svg$/;
+
+/** URL of a rendered (PNG) graphic that stands in for the SVG source, if the theme folder has one. */
+export function renderedArtUrl(theme: string, graphic: string): string | undefined {
+  return renderedFiles[`./${theme}/${graphic}.png`];
+}
 
 /** SVG sources grouped by theme folder and keyed by file name (the graphic id). */
 export function artSources(): ReadonlyMap<string, Readonly<Record<string, string>>> {

@@ -24,6 +24,8 @@ interface BasePose {
 export class CharacterRig extends Phaser.GameObjects.Container {
   readonly #parts = new Map<string, Phaser.GameObjects.Image>();
   readonly #base = new Map<string, BasePose>();
+  readonly #textures = new Map<string, string>();
+  readonly #frames = new Map<string, readonly string[]>();
 
   constructor(scene: Phaser.Scene, art: ArtFactory, definition: RigDefinition) {
     super(scene, 0, 0);
@@ -33,6 +35,12 @@ export class CharacterRig extends Phaser.GameObjects.Container {
         .setOrigin(part.originX ?? 0.5, part.originY ?? 0.5);
       this.#parts.set(part.name, image);
       this.#base.set(part.name, { x: part.x, y: part.y, scale: image.scaleX });
+      this.#textures.set(part.name, art.key(part.graphic));
+      if (part.frames)
+        this.#frames.set(
+          part.name,
+          part.frames.map((frame) => art.key(frame))
+        );
       this.add(image);
     }
   }
@@ -43,6 +51,18 @@ export class CharacterRig extends Phaser.GameObjects.Container {
 
   has(name: string): boolean {
     return this.#parts.has(name);
+  }
+
+  frameCount(name: string): number {
+    return this.#frames.get(name)?.length ?? 0;
+  }
+
+  /** Shows one of the part's frames; the index is clamped to the frames it has. */
+  showFrame(name: string, index: number): void {
+    const frames = this.#frames.get(name);
+    const image = this.#parts.get(name);
+    if (!frames || !image) return;
+    image.setTexture(frames[Math.max(0, Math.min(frames.length - 1, index))]);
   }
 
   /** Tween properties that take a part from its base pose to the given offset. */
@@ -68,6 +88,8 @@ export class CharacterRig extends Phaser.GameObjects.Container {
     for (const [name, image] of this.#parts) {
       const base = this.#base.get(name);
       if (base) image.setPosition(base.x, base.y).setAngle(0).setScale(base.scale);
+      const texture = this.#textures.get(name);
+      if (texture !== undefined && image.texture.key !== texture) image.setTexture(texture);
     }
   }
 }

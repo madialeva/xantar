@@ -96,7 +96,7 @@ export default class ArtSheetScene extends Phaser.Scene {
     const enemies = Object.entries(enemyRigs).flatMap(([kind, rig]) =>
       (['walk', 'climb', 'stunned'] as const).map((state) => ({
         rig,
-        states: enemyStates,
+        states: enemyStates[kind as keyof typeof enemyStates],
         state,
         name: `${kind} · ${state}`
       }))
