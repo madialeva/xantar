@@ -42,7 +42,8 @@ comes next.
 |   ✅   | Deterministic simulation core at a fixed 60 Hz step, independent of the renderer and the frame rate       |   —    |  #2   |
 |   ✅   | Levels described as data, validated on load, and automated tests of the game rules                        |   —    |  #2   |
 |   ✅   | Level model: tile pieces, ingredient segments, navigation graph and validator; turn around mid-ladder     |   —    |  #3   |
-|   ✅   | Modern vector visuals: SVG art, themes and side panels                                                    |   —    |  #4   |
+|   ✅   | Modern vector visuals: SVG art and side panels                                                            |   —    |  #4   |
+|   ✅   | Rendered 3D art for the food and the characters, dancing enemies and a single look                        |   —    |  #37  |
 |   ✅   | Game state machine, pause, high score, Spanish and English                                                |   —    |  #5   |
 |   ⬜   | Enemies riding ingredients (an extra level per rider)                                                     | v1.0.0 |  #9   |
 |   ✅   | Gamepad and touch controls, music and sound effects, CI and a hardened desktop app                        |   —    |  #6   |
@@ -65,8 +66,7 @@ must bring them all the way down to the plate.
 
 The title screen waits for a click, a tap or any key, then opens the **main
 menu**: **Play** starts a game and **Options** lets you choose the **language**
-(Spanish or English; the first time it follows your browser), the **theme**
-(**Automatic** uses the one of each level), the **music** and **effects**
+(Spanish or English; the first time it follows your browser), the **music** and **effects**
 volumes (left and right change them; tapping, clicking or confirming one turns
 it up and, from the top, back to zero), whether the **sound** is on, and the
 keyboard **controls**. Your choices and your **best
@@ -173,13 +173,17 @@ while the game is in the background.
   and pepper shots are shown in **side panels**. On widescreen monitors and on
   phones held sideways the game fills the whole screen; narrower screens show
   bars above and below. The left panel also shows your best score.
-- Everything is drawn from **vector art**, so it stays sharp at any size. The
-  characters are made of separate parts that bounce, swing and squash as they
-  move.
-- The game comes with two **themes**: `classic` and `midnight` (a night-blue,
-  neon look). Each level says which theme it uses, and you can force one in
-  **Options**; in the browser version you can also add `?theme=midnight` to the
-  address.
+- The burger ingredients and the characters are **rendered 3D art**: a sesame
+  bun, a barbecued patty with grill marks, lettuce and a bottom bun that look
+  like real food, a blond chef with a ponytail, and a hot dog, a fried egg and
+  a pickle as tall as the chef. The characters are made of separate parts that
+  bounce, swing and squash as they move, and each enemy **dances its own way**
+  as it walks: the hot dog bends one way and the other, the pickle wiggles and
+  the egg's white wobbles.
+- Finished burgers stack on their plates piece on piece, like real ones.
+- The maze, plates, effects and panels are crisp **vector art**.
+- The game looks best on a **Full HD** screen or larger; smaller screens show
+  it scaled down.
 
 ---
 

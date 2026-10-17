@@ -28,8 +28,8 @@
 
 ## 5. Documentación
 
-- [ ] 5.1 Reescribir `docs/STYLE_GUIDE.md` (en español): aspecto renderizado de ingredientes y personajes (vista, luz, materiales, tamaños y encuadre a 4×, tramo central sin costuras, fotogramas de baile) y reglas de los SVG que quedan con la paleta única; verificar releyendo que todo nombre citado existe
-- [ ] 5.2 Actualizar `docs/MANUAL.md` (estructura de `src/view/art/`, rasterizador, sin temas, escala 4, flujo de trabajo con Blender 5.2: instalación, órdenes, `--only`, vistas previas en `tmp/blender/`, `metrics.json` y grosores de apilado), `docs/GAMEDEV_FUNDAMENTALS.md` (sprites prerenderizados en 3D, texturas periódicas y mosaico sin costuras, animación por fotogramas combinada con tweens; quitar temas y bloom), `README.md` (sin temas ni `?theme=`, arte nuevo) y `AGENTS.md` (ubicación del arte y herramienta de autor Blender); verificar con `npm run format:check` y `grep -rni "tema\|theme" README.md AGENTS.md docs` sin restos del concepto
+- [x] 5.1 Reescribir `docs/STYLE_GUIDE.md` (en español): aspecto renderizado de ingredientes y personajes (vista, luz, materiales, tamaños y encuadre a 4×, tramo central sin costuras, fotogramas de baile) y reglas de los SVG que quedan con la paleta única; verificar releyendo que todo nombre citado existe
+- [x] 5.2 Actualizar `docs/MANUAL.md` (estructura de `src/view/art/`, rasterizador, sin temas, escala 4, flujo de trabajo con Blender 5.2: instalación, órdenes, `--only`, vistas previas en `tmp/blender/`, `metrics.json` y grosores de apilado), `docs/GAMEDEV_FUNDAMENTALS.md` (sprites prerenderizados en 3D, texturas periódicas y mosaico sin costuras, animación por fotogramas combinada con tweens; quitar temas y bloom), `README.md` (sin temas ni `?theme=`, arte nuevo) y `AGENTS.md` (ubicación del arte y herramienta de autor Blender); verificar con `npm run format:check` y `grep -rni "tema\|theme" README.md AGENTS.md docs` sin restos del concepto
 
 ## 6. Comprobación final
 
