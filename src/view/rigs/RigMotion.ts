@@ -61,8 +61,7 @@ export class RigMotion {
 
   stop(): void {
     this.#tweens.killTweensOf(this.#rig.partImages);
-    this.#tweens.killTweensOf(this.#counters);
-    this.#counters.length = 0;
+    this.#tweens.killTweensOf(this.#counters.splice(0));
     this.#rig.resetPose();
   }
 }

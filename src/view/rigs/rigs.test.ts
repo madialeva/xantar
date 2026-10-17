@@ -29,6 +29,14 @@ describe('rigs', () => {
     }
   });
 
+  it('gives every enemy two legs', () => {
+    for (const rig of Object.values(enemyRigs)) {
+      expect(rig.parts.map((part) => part.name)).toEqual(
+        expect.arrayContaining(['legLeft', 'legRight'])
+      );
+    }
+  });
+
   it('gives every enemy a dancing body', () => {
     for (const rig of Object.values(enemyRigs)) {
       expect(rig.parts.find((part) => part.name === 'body')?.frames?.length).toBe(5);

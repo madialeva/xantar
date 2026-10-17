@@ -23,8 +23,8 @@
 
 ## 4. Personajes, bailes y apilado
 
-- [ ] 4.1 Revisar y dejar como definitivo lo del prototipo en los rigs: `RigPart.frames`, `CharacterRig.showFrame`, `RigMotion.cycle`, estados por tipo de enemigo con sus bailes, piernas de los enemigos (`<enemigo>.leg`) y coleta del chef; añadir pruebas de que `cycle` no hace nada sin fotogramas y de que todos los enemigos tienen piernas; verificar con `npm run test` y con `npm run dev` (bailes, coleta y brazos unidos al hombro)
-- [ ] 4.2 Dejar como definitivo el apilado por grosor (`INGREDIENT_STACK_HEIGHTS`, `stackLifts`, profundidad por `stackSlot` en `GameScene`) y `RENDER_TIER = 4`; verificar con las pruebas de `stackLifts` y completando una hamburguesa en `npm run dev` (capas apoyadas sin huecos)
+- [x] 4.1 Revisar y dejar como definitivo lo del prototipo en los rigs: `RigPart.frames`, `CharacterRig.showFrame`, `RigMotion.cycle`, estados por tipo de enemigo con sus bailes, piernas de los enemigos (`<enemigo>.leg`) y coleta del chef; añadir pruebas de que `cycle` no hace nada sin fotogramas y de que todos los enemigos tienen piernas; verificar con `npm run test` y con `npm run dev` (bailes, coleta y brazos unidos al hombro)
+- [x] 4.2 Dejar como definitivo el apilado por grosor (`INGREDIENT_STACK_HEIGHTS`, `stackLifts`, profundidad por `stackSlot` en `GameScene`) y `RENDER_TIER = 4`; verificar con las pruebas de `stackLifts` y completando una hamburguesa en `npm run dev` (capas apoyadas sin huecos)
 
 ## 5. Documentación
 
