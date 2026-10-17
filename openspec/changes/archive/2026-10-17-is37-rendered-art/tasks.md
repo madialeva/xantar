@@ -34,4 +34,4 @@
 ## 6. Comprobación final
 
 - [x] 6.1 Ejecutar `npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build` y `npm run smoke`, y revisar `/tools/art-sheet.html`; verificar que todo pasa y que las capturas muestran el arte nuevo en 16:9, 4:3 y 19,5:9
-- [ ] 6.2 Revisión visual del autor jugando (ingredientes, hamburguesa completa, personajes y bailes) y prueba en un móvil real con escala 4 (rendimiento y nitidez); la marca el autor
+- [x] 6.2 Revisión visual del autor jugando (ingredientes, hamburguesa completa, personajes y bailes) y prueba en un móvil real con escala 4 (rendimiento y nitidez); la marca el autor
