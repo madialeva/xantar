@@ -3,14 +3,13 @@ import { GAME_HEIGHT, GAME_WIDTH, type RenderTier } from '../config';
 import { LANGUAGES } from '../i18n/language';
 import type { ActionReader } from '../input/actions';
 import type { Localization } from '../i18n/Localization';
-import { AUTO_THEME, type AudioBus, nextVolume } from '../settings/PlayerSettings';
+import { type AudioBus, nextVolume } from '../settings/PlayerSettings';
 import type { Settings } from '../settings/Settings';
 import type { GameAudio } from '../view/audio/GameAudio';
 import type { Platform } from '../view/platform/Platform';
 import { hudText } from '../view/hud/textStyle';
 import { followBoardCamera } from '../view/layout/boardCamera';
-import type { ResolvedTheme } from '../view/theme/Theme';
-import type { ThemeRegistry } from '../view/theme/ThemeRegistry';
+import { PALETTE } from '../view/art/palette';
 import { ControlsPage, type KeyCapture } from '../view/ui/ControlsPage';
 import { type MenuItem, MenuList } from '../view/ui/MenuList';
 
@@ -18,7 +17,6 @@ export interface MenuSceneDependencies {
   readonly tier: RenderTier;
   readonly localization: Localization;
   readonly settings: Settings;
-  readonly themes: ThemeRegistry;
   readonly audio: GameAudio;
   readonly platform: Platform;
   readonly input: ActionReader;
@@ -28,7 +26,7 @@ export interface MenuSceneDependencies {
 
 type Page = 'main' | 'options' | 'controls';
 
-const OPTION_ROWS = { controls: 5, back: 6 } as const;
+const OPTION_ROWS = { controls: 4, back: 5 } as const;
 const OPTIONS_STYLE = { titleY: 78, y: 150, spacing: 38, size: 22 } as const;
 
 const cycle = <T>(values: readonly T[], current: T, direction: 1 | -1): T =>
@@ -36,7 +34,7 @@ const cycle = <T>(values: readonly T[], current: T, direction: 1 | -1): T =>
 
 /**
  * Main menu (play, options, best score and, on the desktop, quit) and options page
- * (language and theme), both driven by keyboard or pointer. Options are applied and saved
+ * (language, sound and controls), both driven by keyboard or pointer. Options are applied and saved
  * at once.
  */
 export default class MenuScene extends Phaser.Scene {
@@ -62,15 +60,6 @@ export default class MenuScene extends Phaser.Scene {
     else this.#menu?.update();
   }
 
-  #theme(): ResolvedTheme {
-    const { themes, settings } = this.#deps;
-    const id =
-      settings.theme !== AUTO_THEME && themes.has(settings.theme)
-        ? settings.theme
-        : themes.defaultId;
-    return themes.resolve(id);
-  }
-
   #show(page: Page, selected = 0): void {
     this.#menu?.destroy();
     this.#menu = null;
@@ -79,7 +68,7 @@ export default class MenuScene extends Phaser.Scene {
     for (const object of this.#page) object.destroy();
     this.#page = [];
     const { tier, localization } = this.#deps;
-    const { palette } = this.#theme();
+    const palette = PALETTE;
     this.cameras.main.setBackgroundColor(palette.background);
     const text = (y: number, value: string, size: number, color: string): void => {
       this.#page.push(
@@ -155,16 +144,13 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   #optionItems(): MenuItem[] {
-    const { localization, settings, themes } = this.#deps;
+    const { localization, settings } = this.#deps;
     const volume = (bus: AudioBus, label: 'options.music' | 'options.effects'): MenuItem => ({
       label: () => localization.t(label),
       value: () => String(settings.volume(bus)),
       change: (direction) => settings.setVolume(bus, settings.volume(bus) + direction),
       cycle: () => settings.setVolume(bus, nextVolume(settings.volume(bus)))
     });
-    const themeIds = [AUTO_THEME, ...themes.ids];
-    const currentTheme = (): string =>
-      themeIds.includes(settings.theme) ? settings.theme : AUTO_THEME;
     return [
       {
         label: () => localization.t('options.language'),
@@ -174,19 +160,6 @@ export default class MenuScene extends Phaser.Scene {
           settings.setLanguage(language);
           localization.setLanguage(language);
           this.#show('options', 0);
-        }
-      },
-      {
-        label: () => localization.t('options.theme'),
-        value: () => {
-          const id = currentTheme();
-          return id === AUTO_THEME
-            ? localization.t('theme.auto')
-            : themes.resolve(id).name.toUpperCase();
-        },
-        change: (direction) => {
-          settings.setTheme(cycle(themeIds, currentTheme(), direction));
-          this.#show('options', 1);
         }
       },
       volume('music', 'options.music'),

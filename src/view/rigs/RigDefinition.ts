@@ -1,4 +1,4 @@
-import type { GraphicId } from '../theme/graphics';
+import type { GraphicId } from '../art/graphics';
 
 export interface RigPart {
   readonly name: string;
@@ -7,6 +7,11 @@ export interface RigPart {
   readonly y: number;
   readonly originX?: number;
   readonly originY?: number;
+  /**
+   * Graphics, all the size of `graphic`, that the part can switch between for changes of
+   * shape a tween cannot make, such as a body bending one way and the other.
+   */
+  readonly frames?: readonly GraphicId[];
 }
 
 /**

@@ -1,21 +1,28 @@
 # Guía de estilo visual — Xantar
 
-Estilo vectorial moderno y limpio: formas geométricas simples, esquinas
-redondeadas, contorno oscuro fino, sombras y brillos suaves dibujados dentro de
-cada gráfico. Nada de pixel art ni de texturas fotográficas. Esta guía se escribe
+Xantar tiene un único aspecto con dos familias de arte:
+
+- **Arte renderizado** (ingredientes y personajes): modelos 3D procedurales
+  hechos con Blender y renderizados como PNG con transparencia. Comida que
+  parece comida de verdad y personajes 3D con aire de dibujo animado.
+- **Arte vectorial** (piezas del laberinto, platos, efectos e iconos del HUD):
+  formas geométricas limpias, esquinas redondeadas, contorno oscuro fino y
+  sombras y brillos suaves, coloreadas con una paleta única.
+
+Cada gráfico del catálogo (`src/view/art/graphics.ts`) tiene exactamente una
+fuente en `src/view/art/sources/`: `<id>.png` o `<id>.svg`. Esta guía se escribe
 en español de forma provisional; se traducirá al inglés más adelante.
 
 ## 1. Unidades y rejilla
 
 - Todo se mide en **unidades lógicas**: una casilla del tablero mide 32×32 y el
-  tablero 640×480 (20×15 casillas). El juego rasteriza cada SVG a su tamaño
-  lógico multiplicado por el nivel de escala (2 en esta versión), así que un
-  SVG de 32×32 acaba siendo una textura de 64×64 píxeles.
-- El `viewBox` de cada SVG coincide con su tamaño lógico del catálogo
-  (`src/view/theme/graphics.ts`): `viewBox="0 0 32 12"` para un tramo de
-  plataforma, por ejemplo. La prueba de arte lo comprueba.
-- Coordenadas con como mucho medio punto de precisión (`0.5`) para que los
-  bordes caigan en píxeles enteros a 2×.
+  tablero 640×480 (20×15 casillas). El juego dibuja cada gráfico a su tamaño
+  lógico multiplicado por el nivel de escala (4 en esta versión): un gráfico de
+  32×32 acaba siendo una textura de 128×128 píxeles. El objetivo son pantallas
+  Full HD o mayores.
+- El tamaño lógico de cada gráfico lo fija el catálogo; los SVG lo repiten en
+  su `viewBox` y los PNG miden exactamente ese tamaño × 4. La prueba de arte
+  (`src/view/art/art.test.ts`) lo comprueba.
 
 ### Encaje de las piezas
 
@@ -25,93 +32,124 @@ en español de forma provisional; se traducirá al inglés más adelante.
 | Escalera (`ladder`) | 32×32 | una por fila, desde la línea de un piso hasta la del siguiente, detrás de las plataformas |
 | Plato (`plate.left/mid/right`) | 32×10 | centrado en la línea del plato |
 | Segmento de ingrediente (`<tipo>.left/mid/right`) | 32×(12–18) | apoyado sobre el suelo de la plataforma |
-| Personajes | partes de 8–30 | el punto de anclaje es el centro de su casilla; los pies tocan el suelo (+10 respecto al anclaje) |
+| Partes de personaje | según el rig | el punto de anclaje es el centro de su casilla; los pies tocan el suelo (+10 respecto al anclaje) |
 | Fondo del tablero (`board.backdrop`) | 640×480 | detrás de todo |
 
 Un tramo de 2 casillas usa `left` + `right`; de 3, `left` + `mid` + `right`; de
 4 o más, `mid` repetido entre los extremos. Un tramo de una sola casilla usa
 solo `mid`.
 
-## 2. Paleta
+## 2. Arte renderizado
+
+Lo generan los scripts de `tools/blender/` (ver el manual del desarrollador,
+§8.7). Ningún PNG se retoca a mano: se cambia el script y se vuelve a generar.
+
+### 2.1 Luz, cámara y materiales
+
+- **Luz** igual para todo: tres soles (direccionales) — principal cálido
+  desde arriba, delante y a la izquierda; relleno suave desde la derecha; y
+  contraluz sin sombras para recortar las siluetas — y un entorno gris cálido
+  tenue. Transformación de color *Khronos PBR Neutral*, que respeta los colores
+  de los materiales.
+- **Cámara** ortográfica. Ingredientes: inclinada **5°** hacia abajo, para ver
+  un poco de la cara superior (sésamo, miga, marcas de parrilla). Personajes:
+  de frente, sin inclinación, mirando a la **derecha** (el juego los voltea).
+- **Materiales** realistas pero apetecibles: corteza dorada y brillante en el
+  pan, miga pálida y porosa, carne a la brasa con tonos claros y oscuros y
+  marcas de parrilla, lechuga verde translúcida con nervios, salchicha roja y
+  muy brillante, clara de huevo con el borde tostado y crujiente, pepinillo
+  verde oscuro con verrugas, tela mate con brillo suave en la ropa del chef.
+- Sin contorno dibujado: la silueta la marcan la luz y el contraluz.
+
+### 2.2 Ingredientes
+
+- Se renderizan los cuatro tramos de una vez y se cortan en `left`, `mid` y
+  `right`. El **tramo central se repite sin costuras**: la luz no cambia a lo
+  largo del ingrediente, y las texturas, las semillas, los desplazamientos y
+  las ondas de la lechuga se repiten exactamente una vez por casilla.
+- Cada ingrediente se apoya en la base de su imagen, con un margen de 1 unidad
+  para su sombra de contacto.
+- **Grosor visible** para el apilado en el plato (`INGREDIENT_STACK_HEIGHTS`):
+  pan de abajo 7,4, carne 8,3, lechuga 4,8 y pan de arriba 13. Si cambia la
+  forma de un ingrediente, se recalcula con `tmp/blender/metrics.json`.
+
+| Ingrediente | Imagen | Forma |
+|---|---|---|
+| `bunTop` | 32×18 | cúpula de 13,5 de alto con unas 125 semillas de sésamo |
+| `lettuce` | 32×12 | dos hojas posadas con el borde rizado colgando |
+| `patty` | 32×14 | disco de 9,2 de alto con borde irregular y marcas de parrilla |
+| `bunBottom` | 32×14 | base más ancha en el corte, con la miga a la vista |
+
+### 2.3 Personajes
+
+- Se componen de **partes** independientes, cada una renderizada sola con el
+  encuadre exacto de su rectángulo en el rig (`src/view/rigs/rigs.ts`), de modo
+  que su punto de giro coincide con el del juego.
+- **Chef**: rubia con coleta, gorro de chef, chaqueta blanca con dos filas de
+  botones y pañuelo rojo, pantalón azul y zapatos negros. Partes: `body`,
+  `head`, `eyes`, `hat`, `ponytail`, `armLeft`/`armRight` (con el hombro
+  incluido, para que el brazo gire unido al cuerpo) y `legLeft`/`legRight`.
+- **Enemigos**: de la altura del chef (unas 38 unidades de los pies a la
+  cabeza), con piernas de su color y zapatillas blancas, ojos grandes con cejas
+  de enfadado. Partes: `body`, `eyes` y `leg` (una imagen para las dos piernas).
+- **Bailes**: cada enemigo tiene cinco imágenes de su cuerpo, del mismo tamaño,
+  de un extremo a otro de su baile con `body` en el centro:
+  `<enemigo>.<baile>Back2`, `Back1`, `body`, `Front1`, `Front2`. La salchicha
+  se dobla (`bend`), el pepinillo se contonea en S (`wiggle`) y la clara del
+  huevo ondula (`ripple`). Los ojos son una parte aparte que el juego desplaza
+  para seguir el baile.
+- El resto de la animación (rebote, balanceo, *squash & stretch*) se hace
+  moviendo y escalando partes.
+
+## 3. Arte vectorial
+
+### 3.1 Paleta
 
 Los colores **no se escriben en los SVG**: cada forma usa un token de la paleta
-mediante una clase, y el tema activo decide el color. Paleta del tema `classic`:
+mediante una clase, y el juego le da el color de `PALETTE`
+(`src/view/art/palette.ts`).
 
-| Token | `classic` | Uso |
+| Token | Color | Uso |
 |---|---|---|
 | `background` | `#14181f` | fondo fuera del tablero |
 | `backdrop` / `backdropAccent` | `#1b2130` / `#232b3d` | fondo del tablero y su motivo |
 | `platform` / `platformEdge` | `#3d7ea6` / `#2c5d7c` | losa de plataforma y su canto |
 | `ladder` / `ladderShade` | `#c98b4a` / `#9a6633` | largueros y peldaños |
 | `plate` / `plateEdge` | `#e8edf2` / `#a9b4c0` | platos |
-| `bun` / `bunShade` / `seed` | `#e9a75a` / `#c47f35` / `#fff1d6` | panes y sésamo |
-| `patty` / `pattyShade` | `#7b3f1d` / `#5a2b12` | carne |
-| `lettuce` / `lettuceShade` | `#6cc24a` / `#3f8f2c` | lechuga |
-| `chef` / `chefShade` / `skin` / `cheek` | `#ffffff` / `#d7dde5` / `#f3c58f` / `#f29c8f` | chef |
-| `scarf` / `trousers` | `#e2504c` / `#5b84d8` | pañuelo y pantalón del chef (y botones de la chaqueta) |
-| `hair` / `shoe` | `#7a4421` / `#c98a52` | pelo y bigote; zapatos (claros para destacar sobre fondo oscuro) |
-| `hotdog` / `sausage` | `#e3a052` / `#c8442f` | perrito |
-| `pickle` / `pickleShade` | `#5f9e3a` / `#3e6e24` | pepinillo |
-| `egg` / `yolk` | `#fbfbf6` / `#f6c03b` | huevo |
-| `eye` / `pupil` | `#ffffff` / `#1d1f24` | ojos de todos los personajes |
+| `chef` / `chefShade` | `#ffffff` / `#d7dde5` | icono de vidas (gorro) |
+| `sausage` / `scarf` / `pupil` | `#c8442f` / `#e2504c` / `#1d1f24` | pimentero del HUD y motas de la nube de pimienta |
 | `outline` | `#1d222b` | contorno |
 | `shadow` / `highlight` | `#000000` / `#ffffff` | sombra y brillo (siempre con opacidad) |
 | `pepper` / `sparkle` | `#f4f1ea` / `#ffe27a` | nube de pimienta y destellos |
 | `hudText` / `hudAccent` / `hudPanel` / `danger` | `#f2f4f8` / `#ffc857` / `#1e2533` / `#ff5a5a` | HUD |
 
-Un tema puede cambiar cualquier token; los que no cambia se toman de `classic`.
-Para añadir un token nuevo hay que añadirlo a `PALETTE_TOKENS`
-(`src/view/theme/palette.ts`) y darle color en `classic`.
+Para añadir un token hay que añadirlo a `PALETTE_TOKENS` y darle color en
+`PALETTE`.
 
-## 3. Trazo, radios, sombras y brillos
+### 3.2 Trazo, radios, sombras y brillos
 
 - **Contorno**: `stroke-width="1.5"`, `stroke-linejoin="round"`,
-  `stroke-linecap="round"`, clase `s-outline`. Lo llevan ingredientes,
-  personajes, platos e iconos. Las plataformas y escaleras no llevan contorno:
-  se distinguen por el canto (`platformEdge`, `ladderShade`).
-- **Radios**: 3 en piezas pequeñas (segmentos, peldaños, partes de 8–12) y 6
-  en cuerpos grandes (cuerpo del chef, enemigos, fondo de los paneles). Los
-  extremos `left` y `right` de ingredientes y platos van redondeados solo por
-  fuera; el tramo `mid` es recto para que el ingrediente se lea continuo.
+  `stroke-linecap="round"`, clase `s-outline`. Lo llevan platos, efectos e
+  iconos. Las plataformas y escaleras no llevan contorno: se distinguen por el
+  canto (`platformEdge`, `ladderShade`).
+- **Radios**: 3 en piezas pequeñas (peldaños, iconos) y 6 en piezas grandes
+  (fondo de los paneles). Los extremos `left` y `right` de plataformas y platos
+  van redondeados solo por fuera; el tramo `mid` es recto para que se lean
+  continuos.
 - **Sombra**: la forma principal repetida 1,5 unidades más abajo con la clase
   `f-shadow` y `opacity="0.25"`, dibujada antes que la forma.
 - **Brillo**: una franja o elipse en la parte superior con `f-highlight` y
   `opacity="0.3"`.
-- **Sombreado**: la parte inferior de una forma con su token `…Shade`, sin
-  degradados. Los degradados se permiten (con `c-<token>` en `stop`) pero se
-  evitan salvo en efectos.
+- **Sombreado**: la parte inferior de una forma con su token `…Shade` o
+  `…Edge`, sin degradados. Los degradados se permiten (con `c-<token>` en
+  `stop`) pero se evitan salvo en efectos.
 
-## 4. Personajes
-
-- Se componen de **partes** independientes (`chef.body`, `chef.head`,
-  `chef.hat`, `chef.eyes`, brazos y piernas; `<enemigo>.body`, `.eyes` y
-  `.feet`). Cada parte es un SVG propio, dibujado de frente o de perfil
-  mirando a la **derecha**: el juego la voltea para mirar a la izquierda.
-- Las partes no llevan sombra al suelo; la sombra de contacto la dibuja el
-  cuerpo.
-- Ojos grandes y redondos (`eye` + `pupil`) para que se lean a tamaño pequeño.
-- La animación (rebote, balanceo, *squash & stretch*) se hace moviendo y
-  escalando partes; no hay fotogramas alternativos.
-
-## 5. HUD y tipografía
-
-- Paneles laterales con fondo `hudPanel`, radio 6 y margen interior de 8.
-- Fuente: pila del sistema `"Trebuchet MS", "Segoe UI", "Helvetica Neue",
-  Arial, sans-serif`, en negrita. Tamaños: 11 (etiquetas), 16 (valores), 22
-  (títulos de las pantallas de fin). Etiquetas en `hudText` con opacidad 0,7;
-  valores en `hudText`; avisos en `hudAccent` o `danger`.
-- Iconos del HUD (`hud.life`, `hud.pepper`, `hud.pause`) con el mismo
-  contorno que los personajes.
-
-## 6. Convención de autoría de los SVG
-
-Las fuentes viven en `src/view/art/<tema>/<graphicId>.svg` y el tema
-`classic` tiene un fichero por cada gráfico del catálogo.
+### 3.3 Convención de autoría de los SVG
 
 ```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 14" width="32" height="14">
-  <rect class="f-shadow" x="1" y="2.5" width="30" height="11" rx="3" opacity="0.25"/>
-  <rect class="f-patty s-outline" x="1" y="1" width="30" height="11" rx="3" stroke-width="1.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 10" width="32" height="10">
+  <rect class="f-shadow" x="1" y="2.5" width="30" height="7" rx="3" opacity="0.25"/>
+  <rect class="f-plate s-outline" x="1" y="1" width="30" height="7" rx="3" stroke-width="1.5"/>
 </svg>
 ```
 
@@ -128,9 +166,19 @@ Reglas (las comprueba `src/view/art/art.test.ts`):
    `<foreignObject>`. Grosores, opacidades y uniones van en atributos
    (`stroke-width`, `opacity`, `stroke-linejoin`…).
 
-### Exportar desde Inkscape
+#### Exportar desde Inkscape
 
 Inkscape escribe colores en `style`. Para mantener un SVG editado con él:
 guardar como **SVG plano**, quitar los atributos `style`, `inkscape:*` y
 `sodipodi:*`, y sustituir cada color por la clase del token correspondiente.
 La prueba de arte señala el fichero y el atributo que falten por limpiar.
+
+## 4. HUD y tipografía
+
+- Paneles laterales con fondo `hudPanel`, radio 6 y margen interior de 8.
+- Fuente: pila del sistema `"Trebuchet MS", "Segoe UI", "Helvetica Neue",
+  Arial, sans-serif`, en negrita. Tamaños: 11 (etiquetas), 16 (valores), 22
+  (títulos de las pantallas de fin). Etiquetas en `hudText` con opacidad 0,7;
+  valores en `hudText`; avisos en `hudAccent` o `danger`.
+- Iconos del HUD (`hud.life`, `hud.pepper`, `hud.pause`) con contorno
+  `s-outline`.

@@ -3,8 +3,7 @@ import {
   DEFAULT_SEGMENTS,
   LEVEL_FORMAT,
   LEVEL_VERSION,
-  type LevelDocument,
-  THEME_ID_PATTERN
+  type LevelDocument
 } from './LevelDocument';
 import { LAYER_IDS, LevelError } from './LevelError';
 
@@ -30,17 +29,6 @@ function readSegments(record: UnknownRecord): number {
     );
   }
   return value;
-}
-
-function readTheme(record: UnknownRecord): { readonly theme?: string } {
-  const value = record.theme;
-  if (value === undefined) return {};
-  if (typeof value !== 'string' || !THEME_ID_PATTERN.test(value)) {
-    throw new LevelError(
-      `The level "theme" must be an id of lowercase letters, digits and hyphens starting with a letter (found ${JSON.stringify(value)})`
-    );
-  }
-  return { theme: value };
 }
 
 function readLayers(record: UnknownRecord, cols: number, rows: number): LevelDocument['layers'] {
@@ -94,7 +82,6 @@ export function parseLevelDocument(value: unknown): LevelDocument {
     cols,
     rows,
     segments: readSegments(value),
-    ...readTheme(value),
     layers: readLayers(value, cols, rows)
   };
 }
@@ -124,9 +111,6 @@ export function serializeLevel(document: LevelDocument): string {
     `${indent(1)}"cols": ${document.cols},`,
     `${indent(1)}"rows": ${document.rows},`,
     `${indent(1)}"segments": ${document.segments},`,
-    ...(document.theme === undefined
-      ? []
-      : [`${indent(1)}"theme": ${JSON.stringify(document.theme)},`]),
     `${indent(1)}"layers": {`,
     layers.join(',\n'),
     `${indent(1)}}`,

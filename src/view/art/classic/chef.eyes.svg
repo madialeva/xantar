@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 5" width="8" height="5">
-  <ellipse class="f-eye s-outline" cx="2.1" cy="2.5" rx="1.4" ry="2" stroke-width="0.6"/>
-  <ellipse class="f-eye s-outline" cx="5.7" cy="2.5" rx="1.4" ry="2" stroke-width="0.6"/>
-  <ellipse class="f-pupil" cx="2.6" cy="2.8" rx="0.75" ry="1.1"/>
-  <ellipse class="f-pupil" cx="6.2" cy="2.8" rx="0.75" ry="1.1"/>
-  <circle class="f-highlight" cx="2.8" cy="2.3" r="0.3"/>
-  <circle class="f-highlight" cx="6.4" cy="2.3" r="0.3"/>
-</svg>

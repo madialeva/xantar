@@ -1,26 +1,26 @@
 # player-settings Specification
 
 ## Purpose
-Guardar entre sesiones las preferencias del jugador (idioma y tema) y su mejor
+Guardar entre sesiones las preferencias del jugador (idioma, sonido y teclas) y su mejor
 puntuación, en el navegador y en la aplicación de escritorio, sin que unos datos
 ausentes o dañados impidan jugar.
 
 ## Requirements
 
 ### Requirement: Ajustes persistentes
-El juego SHALL guardar en el almacenamiento local del navegador el idioma, el
-tema elegido ("Automático" o un id de tema), la mejor puntuación, el volumen de
-la música, el volumen de los efectos, el silencio y las teclas asignadas a cada
-acción reasignable, en un único registro versionado. Los ajustes SHALL leerse
-al arrancar y guardarse al cambiar. El almacenamiento SHALL funcionar igual en
-el navegador y en la aplicación de escritorio. Un registro guardado antes de
-existir los campos de sonido y teclas SHALL seguir leyéndose, con esos campos
-en sus valores por defecto.
+El juego SHALL guardar en el almacenamiento local del navegador el idioma, la
+mejor puntuación, el volumen de la música, el volumen de los efectos, el
+silencio y las teclas asignadas a cada acción reasignable, en un único registro
+versionado. Los ajustes SHALL leerse al arrancar y guardarse al cambiar. El
+almacenamiento SHALL funcionar igual en el navegador y en la aplicación de
+escritorio. Un registro guardado antes de existir los campos de sonido y teclas
+SHALL seguir leyéndose, con esos campos en sus valores por defecto, y un
+registro que conserve el campo de tema de versiones anteriores SHALL leerse
+igual, ignorando ese campo.
 
 #### Scenario: Ajustes tras reiniciar
-- **WHEN** el jugador elige inglés y el tema `midnight`, cierra el juego y lo
-  vuelve a abrir
-- **THEN** el juego arranca en inglés con el tema `midnight`
+- **WHEN** el jugador elige inglés, cierra el juego y lo vuelve a abrir
+- **THEN** el juego arranca en inglés
 
 #### Scenario: Sonido y teclas tras reiniciar
 - **WHEN** el jugador pone la música a 3, silencia el juego y asigna X a la
@@ -29,8 +29,8 @@ en sus valores por defecto.
 
 #### Scenario: Registro anterior
 - **WHEN** el registro guardado solo tiene idioma, tema y récord
-- **THEN** se conservan esos tres valores y el sonido y las teclas toman sus
-  valores por defecto
+- **THEN** se conservan el idioma y el récord, el tema se ignora y el sonido y
+  las teclas toman sus valores por defecto
 
 ### Requirement: Datos ausentes o dañados
 Si no hay ajustes guardados, o el registro no se puede leer, tiene una versión
@@ -43,8 +43,8 @@ almacenamiento no está disponible, el juego SHALL funcionar sin guardar.
 
 #### Scenario: Registro dañado
 - **WHEN** el registro guardado no es JSON válido
-- **THEN** el juego arranca con idioma según el navegador, tema "Automático",
-  récord 0, volúmenes y silencio por defecto y teclas por defecto
+- **THEN** el juego arranca con idioma según el navegador, récord 0, volúmenes
+  y silencio por defecto y teclas por defecto
 
 #### Scenario: Un campo no válido
 - **WHEN** el registro tiene un idioma desconocido y un récord de 9 000
@@ -73,5 +73,6 @@ puntuación menor o igual SHALL NOT modificarla.
 - **THEN** el récord sigue siendo 8 000
 
 #### Scenario: Tema guardado que ya no existe
-- **WHEN** el tema guardado es un id que ya no está registrado
-- **THEN** se trata como "Automático" y el juego avisa en la consola
+- **WHEN** el registro guardado conserva un tema elegido en una versión
+  anterior
+- **THEN** el juego lo ignora sin avisar y conserva la mejor puntuación

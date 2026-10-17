@@ -1,28 +1,53 @@
 import { describe, expect, it } from 'vitest';
-import { createThemeRegistry } from '../themes';
-import { GRAPHICS, GRAPHIC_IDS, isGraphicId } from '../theme/graphics';
-import { artSources } from './sources';
+import { GRAPHICS, GRAPHIC_IDS, isGraphicId } from './graphics';
+import { renderedArt, svgSources } from './sources';
 import { svgProblems } from './svgProblems';
 
-const sources = artSources();
+/** How many times its logical size a rendered image is drawn at. */
+const RENDER_SCALE = 4;
 
-describe('SVG art', () => {
-  it('has a complete classic theme', () => {
-    const classic = sources.get('classic') ?? {};
-    expect(GRAPHIC_IDS.filter((id) => classic[id] === undefined)).toEqual([]);
+const pngData = import.meta.glob<string>('./sources/*.png', {
+  query: '?inline',
+  import: 'default',
+  eager: true
+});
+
+/** Width and height from the IHDR chunk of a PNG given as a base64 data URL. */
+function pngSize(dataUrl: string): { width: number; height: number } {
+  const bytes = Uint8Array.from(atob(dataUrl.slice(dataUrl.indexOf(',') + 1)), (char) =>
+    char.charCodeAt(0)
+  );
+  const view = new DataView(bytes.buffer);
+  return { width: view.getUint32(16), height: view.getUint32(20) };
+}
+
+describe('art', () => {
+  it('has exactly one source, SVG or rendered, for every graphic', () => {
+    const sources = GRAPHIC_IDS.map((id) => [
+      id,
+      Number(svgSources().has(id)) + Number(renderedArt().has(id))
+    ]);
+    expect(sources.filter(([, count]) => count !== 1)).toEqual([]);
   });
 
-  it('only has folders of registered themes', () => {
-    const registry = createThemeRegistry();
-    expect([...sources.keys()].filter((theme) => !registry.has(theme))).toEqual([]);
+  it('has no source for a graphic that is not in the catalogue', () => {
+    const files = [...svgSources().keys(), ...renderedArt().keys()];
+    expect(files.filter((graphic) => !isGraphicId(graphic))).toEqual([]);
   });
 
-  for (const [theme, art] of sources) {
-    for (const [graphic, source] of Object.entries(art)) {
-      it(`${theme}/${graphic}.svg follows the style guide`, () => {
-        expect(isGraphicId(graphic), `unknown graphic id "${graphic}"`).toBe(true);
-        if (isGraphicId(graphic)) expect(svgProblems(source, GRAPHICS[graphic])).toEqual([]);
-      });
-    }
+  for (const [path, data] of Object.entries(pngData)) {
+    const graphic = path.slice(path.lastIndexOf('/') + 1, -'.png'.length);
+    it(`${graphic}.png is rendered at ${RENDER_SCALE}x its logical size`, () => {
+      if (!isGraphicId(graphic)) throw new Error(`unknown graphic id "${graphic}"`);
+      const { width, height } = GRAPHICS[graphic];
+      expect(pngSize(data)).toEqual({ width: width * RENDER_SCALE, height: height * RENDER_SCALE });
+    });
+  }
+
+  for (const [graphic, source] of svgSources()) {
+    it(`${graphic}.svg follows the style guide`, () => {
+      expect(isGraphicId(graphic), `unknown graphic id "${graphic}"`).toBe(true);
+      if (isGraphicId(graphic)) expect(svgProblems(source, GRAPHICS[graphic])).toEqual([]);
+    });
   }
 });

@@ -8,4 +8,4 @@ export const platformY = (row: number): number => (row + 0.5) * TILE;
 
 export type RenderTier = 1 | 2 | 4;
 
-export const RENDER_TIER: RenderTier = 2;
+export const RENDER_TIER: RenderTier = 4;

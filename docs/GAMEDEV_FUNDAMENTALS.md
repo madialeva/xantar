@@ -243,14 +243,14 @@ juegos. Los que usamos:
 | **State** (estado) | Un objeto cambia de comportamiento según su estado, y cada estado es un objeto propio en lugar de un `switch` gigante | Fases de partida (preparado, jugando, muriendo, nivel completado, fin) en [`src/sim/phases/`](../src/sim/phases/); fases del ingrediente (reposo, esperando, cayendo, apilado) en [`Ingredient.ts`](../src/sim/entities/Ingredient.ts); estados de animación de los personajes en [`states.ts`](../src/view/rigs/states.ts) |
 | **Strategy** (estrategia) | Comportamientos intercambiables detrás de una interfaz | La "mente" de los enemigos, [`EnemyBrain`](../src/sim/entities/EnemyBrain.ts) (`ChaseBrain` persigue al chef por el camino más corto) |
 | **Observer** (observador) | Quien produce algo no sabe quién lo escucha | Los eventos de la simulación (`EventSink`) que la vista escucha; `GameSession` (estado de la partida para el HUD) y `Localization` (cambio de idioma) |
-| **Factory** (fábrica) | Un punto que sabe crear objetos | `createEnemy`, `ArtFactory` (crea imágenes del tema a la escala correcta) |
+| **Factory** (fábrica) | Un punto que sabe crear objetos | `createEnemy`, `ArtFactory` (crea imágenes del juego a la escala correcta) |
 | **Command** (orden) | Una acción representada como dato | `SimInput`: la entrada del tick como un objeto inmutable; base de las repeticiones |
-| **Registry** (registro) | Catálogo extensible de tipos por identificador | [`PieceRegistry`](../src/sim/level/pieces/PieceRegistry.ts) (piezas de nivel), `ThemeRegistry` (temas) |
+| **Registry** (registro) | Catálogo extensible de tipos por identificador | [`PieceRegistry`](../src/sim/level/pieces/PieceRegistry.ts) (piezas de nivel) |
 
 Otras dos prácticas que verás por todo el código:
 
 - **Inyección de dependencias por constructor**: un objeto recibe sus
-  colaboradores (el generador aleatorio, el registro de temas…) en lugar de
+  colaboradores (el generador aleatorio, la entrada, el audio…) en lugar de
   crearlos. Así en las pruebas se pueden sustituir. Todo se "conecta" en un
   solo sitio, la **raíz de composición** ([`src/main.ts`](../src/main.ts)).
 - **Datos inmutables y funciones puras** para cálculos sin estado (geometría,
@@ -351,11 +351,12 @@ Muchas pantallas tienen más de un píxel físico por "píxel CSS" (el
 `devicePixelRatio`; 2 en muchos portátiles y móviles). Si el juego dibuja en un
 lienzo pequeño y el navegador lo estira, se ve borroso.
 
-Xantar dibuja el lienzo al doble de su tamaño lógico (**nivel de escala** o
-*render tier* 2, `RENDER_TIER` en `src/config.ts`) y la cámara aplica un zoom
-de 2, de modo que el código sigue trabajando en unidades lógicas pero la
-imagen sale nítida. Elegir el nivel automáticamente según la pantalla es
-trabajo pendiente (#23).
+Xantar dibuja el lienzo a cuatro veces su tamaño lógico (**nivel de escala**
+o *render tier* 4, `RENDER_TIER` en `src/config.ts`) y la cámara aplica un zoom
+de 4, de modo que el código sigue trabajando en unidades lógicas pero la imagen
+sale nítida. Se da por hecho una pantalla Full HD o mayor: en una menor el
+juego simplemente se ve reducido. Elegir el nivel automáticamente según la
+pantalla es trabajo pendiente.
 
 ---
 
@@ -382,18 +383,35 @@ La tarjeta gráfica, al final, siempre dibuja píxeles: un vectorial tiene que
 |---|---|---|---|
 | **Pixel art** | Arte dibujado píxel a píxel a resolución muy baja, como los juegos de 8 y 16 bits | Estética retro, ficheros pequeños, rápido de iterar para un dibujante | Solo se ve bien escalado por enteros y sin suavizado; exige oficio |
 | **Raster en alta resolución** (ilustración) | Dibujos pintados a mano o en 3D renderizado a 2D | Máximo detalle | Ficheros grandes; hay que preparar varias resoluciones |
-| **Vectorial** | Formas geométricas limpias, colores planos | Nítido a cualquier tamaño, fácil de recolorear (temas), ficheros pequeños | Menos detalle orgánico; hay que rasterizar en el momento adecuado |
-| **3D** | Modelos con volumen, luces y materiales | Libertad de cámara | Otra dimensión de complejidad; no aplica a Xantar |
+| **Vectorial** | Formas geométricas limpias, colores planos | Nítido a cualquier tamaño, fácil de recolorear, ficheros pequeños | Menos detalle orgánico; hay que rasterizar en el momento adecuado |
+| **3D en tiempo real** | Modelos con volumen, luces y materiales dibujados en cada fotograma | Libertad de cámara | Otra dimensión de complejidad; no aplica a Xantar |
+| **3D prerrenderizado** | Modelos 3D renderizados de antemano como imágenes 2D (como *Donkey Kong Country*) | Volumen, luz y materiales realistas sin coste en el juego; la misma luz para todo | Las imágenes son raster: tamaño fijo y no se recolorean; cada cambio pide volver a renderizar |
 
 Un detalle técnico del pixel art: al escalar se usa **filtrado "vecino más
 cercano"** (*nearest*), que mantiene los píxeles cuadrados; el filtrado
 **lineal** (*linear*), el normal para ilustración y vectorial, suaviza los
 bordes.
 
-**En Xantar** se eligió el **vectorial** (#4): todo sale de SVG que siguen la
-[guía de estilo](STYLE_GUIDE.md), se rasterizan al arrancar a la escala real
-de dibujo (`BootScene` + `SvgRasterizer`) y se usan como texturas. Así el juego
-se ve nítido en cualquier pantalla y el mismo dibujo sirve para varios temas.
+**En Xantar** se empezó con **vectorial** (#4) y después (#37) los
+ingredientes y los personajes pasaron a **3D prerrenderizado**: scripts de
+Blender modelan cada gráfico, lo iluminan y lo renderizan como PNG a 4× su
+tamaño lógico. El escenario, los platos, los efectos y el HUD siguen siendo SVG
+de la [guía de estilo](STYLE_GUIDE.md). Al arrancar, `BootScene` y
+`ArtRasterizer` convierten unos y otros en texturas a la escala real de dibujo.
+
+Dos ideas del render de Xantar que sirven para cualquier juego:
+
+- **Modelado procedural**: el modelo no se esculpe a mano, lo construye un
+  programa (perfiles que se barren alrededor de un contorno, semillas
+  repartidas con una regla, texturas de ruido). Es reproducible: cambiar la luz
+  o la forma de todo el reparto es cambiar un número y volver a renderizar.
+- **Mosaico sin costuras** (*seamless tiling*): el tramo central de un
+  ingrediente se dibuja varias veces seguidas, así que su borde derecho debe
+  encajar con su propio borde izquierdo. Se consigue haciendo que todo lo que
+  varía a lo largo del ingrediente (texturas de ruido, semillas, ondas) sea
+  **periódico**: se repite exactamente una vez por casilla. Para el ruido se usa
+  un truco clásico: se "enrolla" la coordenada x en un círculo (seno y coseno),
+  de modo que al dar la vuelta se vuelve al mismo punto.
 
 ### 8.3 Sprites, hojas de sprites y atlas
 
@@ -410,11 +428,13 @@ se ve nítido en cualquier pantalla y el mismo dibujo sirve para varios temas.
 ### 8.4 Paleta, temas y guía de estilo
 
 - **Paleta**: el conjunto cerrado de colores del juego. En Xantar cada color
-  tiene un nombre (*token*: `bun`, `patty`, `outline`…) y los SVG usan el
+  tiene un nombre (*token*: `platform`, `plate`, `outline`…) y los SVG usan el
   nombre, no el color.
-- **Tema** o *skin*: un revestimiento visual intercambiable. Un tema cambia la
-  paleta y, si quiere, algunos dibujos; el nivel y las reglas no cambian.
-  Xantar tiene `classic` y `midnight`, y un nivel puede elegir el suyo.
+- **Tema** o *skin*: un revestimiento visual intercambiable (otra paleta, otros
+  dibujos) sin tocar el nivel ni las reglas. Xantar los tuvo (`classic` y
+  `midnight`) y los retiró al pasar al arte renderizado: una imagen renderizada
+  no se recolorea con una paleta, y mantener cada gráfico dos veces no
+  compensaba.
 - **Guía de estilo**: el documento que fija las reglas visuales (paleta,
   grosores, radios, sombras, tipografía) para que todo parezca hecho por la
   misma mano.
@@ -459,6 +479,13 @@ movimiento mecánico y uno con vida.
 sus estados (quieto, andar, trepar, golpeado, aturdido) son objetos State en
 [`states.ts`](../src/view/rigs/states.ts). Qué estado toca lo decide una
 función pura a partir del snapshot de la simulación.
+
+Las piezas rígidas no pueden **deformarse**: girar y escalar no doblan una
+salchicha. Para eso Xantar combina las dos técnicas: el cuerpo de cada enemigo
+tiene cinco fotogramas renderizados (doblado a un lado, a medio camino, recto…)
+y un tween recorre esos fotogramas de ida y vuelta al ritmo de las piernas,
+mientras los ojos, que son otra pieza, se desplazan para seguir la doblez. Así
+la salchicha "baila" al andar con solo cinco imágenes.
 
 ### 9.4 Principios de animación
 
@@ -520,9 +547,9 @@ Efectos típicos: **glow** (resplandor alrededor de un objeto), **bloom**
 personaje, y bloom sobre la cámara. En el equipo de referencia (una gráfica
 integrada modesta), glow y sombra por objeto suponían unas 20 pasadas extra
 por fotograma y el juego dejaba de ser fluido; el bloom, una sola pasada, iba
-bien. Por eso: las sombras y brillos van **horneados** (dibujados dentro de los
-propios SVG, sin coste extra) y el único filtro en uso es el bloom del tema
-`midnight`.
+bien. Por eso: las sombras y brillos van **horneados** (dentro de los propios
+SVG y de las imágenes renderizadas, sin coste extra). El bloom se usó en un
+tema que después se retiró, así que hoy no hay ningún filtro en uso.
 
 **Hornear** (*bake*) un efecto es calcularlo una vez de antemano y guardarlo
 en el asset, en vez de calcularlo en cada fotograma.
@@ -773,7 +800,7 @@ Conceptos relacionados:
   se usa `localStorage`; hay que **versionar** el registro y **tolerar datos
   rotos** (un ajuste corrupto no debe impedir jugar). En Xantar,
   `src/settings/`.
-- **Opciones**: idioma, tema y, más adelante, volumen y controles.
+- **Opciones**: idioma, volumen, silencio y controles.
 
 ---
 
@@ -942,7 +969,9 @@ sensación.
 | Spritesheet | Imagen con los fotogramas de una animación |
 | Squash & stretch | Aplastar y estirar para dar peso y elasticidad |
 | SVG | Formato de imagen vectorial de la web |
-| Tema / skin | Revestimiento visual intercambiable |
+| Tema / skin | Revestimiento visual intercambiable (Xantar ya no los usa) |
+| Prerrenderizado | Imagen 2D obtenida renderizando un modelo 3D de antemano |
+| Mosaico sin costuras | Imagen que se puede repetir seguida sin que se note dónde empieza cada copia |
 | Textura | Imagen cargada en la GPU |
 | Tick | Paso fijo de la simulación (1/60 s en Xantar) |
 | Tile (casilla) | Celda de la rejilla del nivel |

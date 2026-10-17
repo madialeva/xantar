@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 9" width="8" height="9">
-  <rect class="f-trousers s-outline" x="1.5" y="0.75" width="3.8" height="5.4" rx="1.2" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-  <rect class="f-highlight" x="2.2" y="1.2" width="1" height="4" rx="0.5" opacity="0.3"/>
-  <path class="f-shoe s-outline" d="M0.9 6.4 Q0.9 5.3 2.1 5.3 H5.1 Q7.4 5.3 7.4 7.1 Q7.4 8.3 6.1 8.3 H1.8 Q0.9 8.3 0.9 7.5 Z" stroke-width="1" stroke-linejoin="round"/>
-  <path class="f-highlight" d="M2.4 6 H5 Q6.3 6 6.6 6.8 H2.4 Z" opacity="0.4"/>
-</svg>

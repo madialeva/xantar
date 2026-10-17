@@ -13,7 +13,7 @@ import {
 import { keyLabel } from '../../input/keyLabel';
 import type { Settings } from '../../settings/Settings';
 import { hudText } from '../hud/textStyle';
-import type { Palette } from '../theme/palette';
+import type { Palette } from '../art/palette';
 import { SILENT_UI, type UiSounds } from './UiSounds';
 
 /** The part of the keyboard the page needs: capturing the next key. */

@@ -12,13 +12,12 @@ import { RigMotion } from '../view/rigs/RigMotion';
 import { chefRig } from '../view/rigs/rigs';
 import { chefStates } from '../view/rigs/states';
 import type { Platform } from '../view/platform/Platform';
-import type { ThemeRegistry } from '../view/theme/ThemeRegistry';
+import { PALETTE } from '../view/art/palette';
 
 export interface TitleSceneDependencies {
   readonly tier: RenderTier;
   readonly localization: Localization;
   readonly audio: GameAudio;
-  readonly themes: ThemeRegistry;
   readonly platform: Platform;
   readonly input: ActionReader;
 }
@@ -40,20 +39,14 @@ export default class TitleScene extends Phaser.Scene {
   }
 
   create(): void {
-    const { tier, localization, themes } = this.#deps;
-    const theme = themes.resolve(themes.defaultId);
+    const { tier, localization } = this.#deps;
     this.#leaving = false;
-    this.cameras.main.setBackgroundColor(theme.palette.background);
+    this.cameras.main.setBackgroundColor(PALETTE.background);
     followBoardCamera(this, tier);
     this.add
-      .text(
-        GAME_WIDTH / 2,
-        110,
-        localization.t('game.title'),
-        hudText(64, theme.palette.hudAccent, tier)
-      )
+      .text(GAME_WIDTH / 2, 110, localization.t('game.title'), hudText(64, PALETTE.hudAccent, tier))
       .setOrigin(0.5);
-    const rig = new CharacterRig(this, new ArtFactory(this, theme.id, tier), chefRig);
+    const rig = new CharacterRig(this, new ArtFactory(this, tier), chefRig);
     this.add.existing(rig.setPosition(GAME_WIDTH / 2, 250).setScale(CHEF_ZOOM));
     new RigAnimator(new RigMotion(rig, this.tweens), chefStates).show('walk');
     const isMobile = this.sys.game.device.os.android || this.sys.game.device.os.iOS;
@@ -62,7 +55,7 @@ export default class TitleScene extends Phaser.Scene {
         GAME_WIDTH / 2,
         GAME_HEIGHT - 90,
         localization.t(isMobile ? 'title.startTouch' : 'title.startPointer'),
-        hudText(20, theme.palette.hudText, tier)
+        hudText(20, PALETTE.hudText, tier)
       )
       .setOrigin(0.5);
     this.tweens.add({ targets: prompt, alpha: 0.2, duration: BLINK_MS, yoyo: true, repeat: -1 });

@@ -5,7 +5,6 @@
   "cols": 20,
   "rows": 15,
   "segments": 4,
-  "theme": "classic",
   "layers": {
     "structure": [
       "....................",

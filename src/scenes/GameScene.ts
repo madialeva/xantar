@@ -4,6 +4,7 @@ import classicDocument from '../levels/classic.level.json';
 import ChefView from '../objects/ChefView';
 import EnemyView from '../objects/EnemyView';
 import IngredientView from '../objects/IngredientView';
+import { stackLifts } from '../objects/stacking';
 import type { ActionReader } from '../input/actions';
 import { toSimInput } from '../input/toSimInput';
 import {
@@ -17,21 +18,17 @@ import {
 import { type CuePlayer, EventSounds } from '../view/audio/EventSounds';
 import { MazeView } from '../view/board/MazeView';
 import { EventEffects } from '../view/fx/EventEffects';
-import { applyBloom } from '../view/fx/bloom';
 import type { Settings } from '../settings/Settings';
 import { followBoardCamera } from '../view/layout/boardCamera';
 import { ArtFactory } from '../view/raster/ArtFactory';
 import type { GameSession, SessionRequest } from '../view/session/GameSession';
-import { chooseTheme } from '../view/theme/chooseTheme';
-import type { ResolvedTheme } from '../view/theme/Theme';
-import type { ThemeRegistry } from '../view/theme/ThemeRegistry';
+import { PALETTE } from '../view/art/palette';
 
 const CAMERA_FLASH_MS = 180;
 const DEPTH = { maze: 0, ingredients: 5, enemies: 6, chef: 7, effects: 8 };
+const STACK_DEPTH_STEP = 0.01;
 
 export interface GameSceneDependencies {
-  readonly themes: ThemeRegistry;
-  readonly urlTheme: string | null;
   readonly tier: RenderTier;
   readonly session: GameSession;
   readonly settings: Settings;
@@ -48,7 +45,6 @@ export interface GameSceneDependencies {
  */
 export default class GameScene extends Phaser.Scene {
   readonly #deps: GameSceneDependencies;
-  #theme!: ResolvedTheme;
   #art!: ArtFactory;
   #sim!: Simulation;
   readonly #stepper = new FixedStepper();
@@ -70,13 +66,10 @@ export default class GameScene extends Phaser.Scene {
 
   create(): void {
     const { session, settings, tier } = this.#deps;
-    const levelDocument = parseLevelDocument(classicDocument);
-    this.#theme = this.#chooseTheme(levelDocument.theme);
-    this.#art = new ArtFactory(this, this.#theme.id, tier);
-    this.cameras.main.setBackgroundColor(this.#theme.palette.background);
-    if (this.#theme.bloom) applyBloom(this);
+    this.#art = new ArtFactory(this, tier);
+    this.cameras.main.setBackgroundColor(PALETTE.background);
     this.#sim = new Simulation({
-      level: loadLevel(levelDocument),
+      level: loadLevel(parseLevelDocument(classicDocument)),
       rng: new SeededRng(Date.now())
     });
     this.#stepper.reset();
@@ -94,7 +87,7 @@ export default class GameScene extends Phaser.Scene {
     session.start(settings.bestScore);
     session.update(this.#sim.stats, this.#sim.phase);
     this.#listen();
-    this.scene.launch('HudScene', { themeId: this.#theme.id });
+    this.scene.launch('HudScene');
   }
 
   override update(_time: number, delta: number): void {
@@ -179,13 +172,6 @@ export default class GameScene extends Phaser.Scene {
     this.scene.start('MenuScene');
   }
 
-  #chooseTheme(levelTheme: string | undefined): ResolvedTheme {
-    const { themes, urlTheme, settings } = this.#deps;
-    const choice = chooseTheme({ urlTheme, optionTheme: settings.theme, levelTheme }, themes);
-    for (const warning of choice.warnings) console.warn(warning);
-    return themes.resolve(choice.id);
-  }
-
   #createViews(): void {
     this.#chefView = new ChefView(this, this.#art).setDepth(DEPTH.chef);
     this.#enemyViews = this.#sim.enemies.map((enemy) =>
@@ -205,8 +191,12 @@ export default class GameScene extends Phaser.Scene {
   #syncViews(alpha: number): void {
     this.#chefView.sync(this.#sim.chef, alpha, this.#sim.phase === 'dying');
     this.#sim.enemies.forEach((enemy, index) => this.#enemyViews[index].sync(enemy, alpha));
+    const lifts = stackLifts(this.#sim.ingredients);
     for (const ingredient of this.#sim.ingredients) {
-      this.#ingredientViews.get(ingredient.id)?.sync(ingredient, alpha);
+      this.#ingredientViews
+        .get(ingredient.id)
+        ?.setDepth(DEPTH.ingredients + (ingredient.stackSlot ?? 0) * STACK_DEPTH_STEP)
+        .sync(ingredient, alpha, lifts.get(ingredient.id));
     }
   }
 

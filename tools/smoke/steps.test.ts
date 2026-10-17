@@ -42,15 +42,8 @@ describe('parseSize', () => {
 });
 
 describe('SCENARIOS', () => {
-  it('captures both themes at three aspect ratios in the review', () => {
-    expect(SCENARIOS.review?.map((run) => run.name)).toEqual([
-      'classic-16x9',
-      'classic-4x3',
-      'classic-19.5x9',
-      'midnight-16x9',
-      'midnight-4x3',
-      'midnight-19.5x9'
-    ]);
+  it('captures the game at three aspect ratios in the review', () => {
+    expect(SCENARIOS.review?.map((run) => run.name)).toEqual(['16x9', '4x3', '19.5x9']);
   });
 
   it('only has valid sizes and steps', () => {

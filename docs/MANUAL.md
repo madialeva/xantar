@@ -33,7 +33,7 @@ Xantar es un único proyecto que produce **dos artefactos** a partir del mismo c
 
 El código del juego no cambia entre ambos destinos; solo cambia el envoltorio. La lógica de escritorio vive exclusivamente en la carpeta `electron/`.
 
-Estado actual del juego: un juego de una sola pantalla con un nivel clásico, inspirado en **BurgerTime** (1982). El recorrido es arranque → título → menú (con opciones de idioma y tema) → partida; `GameScene` ejecuta el núcleo de simulación (`src/sim/`: chef, ingredientes de segmentos que se pisan y caen, enemigos, pimienta, puntuación, vidas y fases de partida) y lo dibuja, y `HudScene` muestra a su lado los paneles, los mensajes y la pausa (ver 8.8). La hoja de ruta está en el README y en las issues de GitHub.
+Estado actual del juego: un juego de una sola pantalla con un nivel clásico, inspirado en **BurgerTime** (1982). El recorrido es arranque → título → menú (con opciones de idioma, sonido y controles) → partida; `GameScene` ejecuta el núcleo de simulación (`src/sim/`: chef, ingredientes de segmentos que se pisan y caen, enemigos, pimienta, puntuación, vidas y fases de partida) y lo dibuja, y `HudScene` muestra a su lado los paneles, los mensajes y la pausa (ver 8.8). La hoja de ruta está en el README y en las issues de GitHub.
 
 Si los conceptos de desarrollo de juegos (bucle de juego, paso fijo, HUD, rig, filtros, tipos de assets…) son nuevos para ti, empieza por [`GAMEDEV_FUNDAMENTALS.md`](GAMEDEV_FUNDAMENTALS.md): los explica para principiantes y los relaciona con este proyecto.
 
@@ -65,6 +65,7 @@ Si los conceptos de desarrollo de juegos (bucle de juego, paso fijo, HUD, rig, f
 - **Node.js** 22.12 o superior (incluye `npm`). Se desarrolla con Node 24 LTS: el fichero `.nvmrc` lo fija para `nvm use`.
 - Un **navegador moderno** (Chrome, Firefox, Edge o Safari recientes).
 - Opcional: en Linux, `xvfb` si vas a ejecutar Electron en un entorno sin pantalla (por ejemplo CI).
+- Opcional, solo para regenerar el arte de ingredientes y personajes: **Blender 5.2 LTS** (ver 8.7). Compilar, probar y jugar no lo necesitan.
 
 Comprueba tu entorno:
 
@@ -117,6 +118,7 @@ xantar/
 │   ├── publish-site.mjs         # Publica el build web en la web personal (npm run publish:site)
 │   └── smoke.mjs                # Lanzador de la prueba de humo (compila tools/smoke y abre Electron)
 ├── tools/                       # Herramientas de desarrollo (no van en la build publicada)
+│   ├── blender/                 # Scripts de Blender que renderizan ingredientes y personajes (ver 8.7)
 │   ├── smoke/                   # Prueba de humo en Electron: pasos, escenarios y proceso principal
 │   ├── ci/                      # Comprobación de versión frente a la rama (CI)
 │   └── art-sheet.html           # Lámina de arte (se abre con npm run dev)
@@ -137,14 +139,13 @@ xantar/
 │   │   └── classic.level.json   # Nivel clásico en el formato de nivel v1
 │   ├── devtools/                # Código de la lámina de arte (ArtSheetScene)
 │   ├── i18n/                    # Textos por idioma: catálogos es/en, Translator, Localization
-│   ├── settings/                # Ajustes del jugador (idioma, tema, récord, sonido, teclas) y su almacenamiento
+│   ├── settings/                # Ajustes del jugador (idioma, récord, sonido, teclas) y su almacenamiento
 │   ├── input/                   # Acciones, asignaciones de teclas, estado por fotograma y cruceta (puro)
-│   ├── objects/                 # Vistas Phaser (sin lógica): ChefView, EnemyView, IngredientView
+│   ├── objects/                 # Vistas Phaser (sin lógica): ChefView, EnemyView, IngredientView y apilado (stacking)
 │   ├── view/                    # Pipeline visual (ver 8.7)
-│   │   ├── art/<tema>/*.svg     # Fuentes SVG de cada tema (se incluyen en el bundle como texto)
-│   │   ├── theme/               # Paleta, catálogo de gráficos, temas y su selección (puro)
-│   │   ├── themes/              # Paletas de los temas y registro (createThemeRegistry)
-│   │   ├── raster/              # SvgRasterizer (SVG -> textura) y ArtFactory (imágenes a escala)
+│   │   ├── art/                 # Catálogo de gráficos, paleta, aplicación de la paleta y comprobaciones (puro)
+│   │   │   └── sources/         # Una fuente por gráfico: <id>.png (renderizado) o <id>.svg (vectorial)
+│   │   ├── raster/              # ArtRasterizer (PNG o SVG -> textura) y ArtFactory (imágenes a escala)
 │   │   ├── layout/              # computeLayout (tablero + paneles) y cámara del tablero
 │   │   ├── board/               # MazeView: fondo, escaleras, plataformas, cruces y platos
 │   │   ├── hud/                 # HudPanels (paneles laterales), OverlayView (fin de nivel/partida) y TouchControls
@@ -156,7 +157,7 @@ xantar/
 │   │   ├── platform/            # Platform (web o escritorio) y ForcedLandscape (horizontal en móvil)
 │   │   └── audio/               # GameAudio (buses, silencio), EventSounds, mezcla y synth/ (efectos sintetizados)
 │   └── scenes/
-│       ├── BootScene.ts         # Rasteriza el arte de todos los temas y pasa al título
+│       ├── BootScene.ts         # Rasteriza el arte y pasa al título
 │       ├── TitleScene.ts        # Título: primer gesto -> pantalla completa, música y menú
 │       ├── MenuScene.ts         # Menú principal (Jugar, Opciones, récord) y opciones
 │       ├── GameScene.ts         # Tablero: ejecuta la simulación a paso fijo y la dibuja
@@ -164,7 +165,7 @@ xantar/
 ├── docs/
 │   ├── GAMEDEV_FUNDAMENTALS.md  # Fundamentos del desarrollo de juegos (para principiantes)
 │   ├── MANUAL.md                # Este manual de desarrollador
-│   └── STYLE_GUIDE.md           # Guía de estilo visual (paleta, trazo, convención de los SVG)
+│   └── STYLE_GUIDE.md           # Guía de estilo visual (arte renderizado, paleta, convención de los SVG)
 ├── .vscode/
 │   ├── extensions.json          # Extensiones recomendadas del workspace
 │   └── settings.json            # Formato y lint al guardar
@@ -178,7 +179,7 @@ xantar/
 ├── .prettierrc.json             # Reglas de estilo de Prettier
 ├── .prettierignore              # Exclusiones de Prettier
 ├── .editorconfig                # Convenciones básicas de editor
-└── .gitignore                   # Ignora node_modules/, dist/, dist-electron/, release/, .smoke/
+└── .gitignore                   # Ignora node_modules/, dist/, dist-electron/, release/, .smoke/, tmp/
 ```
 
 **Directorios generados (no editar, están en `.gitignore`):**
@@ -245,7 +246,7 @@ xantar/
   <script type="module" src="/src/main.ts"></script>
   ```
 
-- `src/main.ts` es la **raíz de composición**: crea el registro de temas, lee `?theme=` de la URL, carga los ajustes del jugador, crea la localización, la plataforma (web o escritorio), la entrada (`ActionInput` con teclado, mando y táctil), el audio (`GameAudio`), la sesión de partida y `ForcedLandscape` (que gira el juego en un móvil en vertical), calcula el tamaño del área de juego con `computeLayout` y construye las escenas pasándoles sus dependencias por constructor (Phaser acepta instancias de escena en `config.scene`). Lo esencial:
+- `src/main.ts` es la **raíz de composición**: carga los ajustes del jugador, crea la localización, la plataforma (web o escritorio), la entrada (`ActionInput` con teclado, mando y táctil), el audio (`GameAudio`), la sesión de partida y `ForcedLandscape` (que gira el juego en un móvil en vertical), calcula el tamaño del área de juego con `computeLayout` y construye las escenas pasándoles sus dependencias por constructor (Phaser acepta instancias de escena en `config.scene`). Lo esencial:
 
   ```ts
   const settings = new Settings(
@@ -258,11 +259,11 @@ xantar/
   const input = new ActionInput([keyboard, gamepad, touchPad]);
   // ...
   scene: [
-    new BootScene({ themes, tier, localization, audio }),
-    new TitleScene({ tier, localization, audio, themes, platform, input }),
-    new MenuScene({ tier, localization, settings, themes, audio, platform, input, keyboard, keyLayout }),
-    new GameScene({ themes, urlTheme, tier, session, settings, input, sounds: audio, interruptions }),
-    new HudScene({ tier, localization, session, themes, input, touchPad, modality, sounds: audio.ui })
+    new BootScene({ tier, localization, audio }),
+    new TitleScene({ tier, localization, audio, platform, input }),
+    new MenuScene({ tier, localization, settings, audio, platform, input, keyboard, keyLayout }),
+    new GameScene({ tier, session, settings, input, sounds: audio, interruptions }),
+    new HudScene({ tier, localization, session, input, touchPad, modality, sounds: audio.ui })
   ];
   // Una vez por fotograma, antes de las escenas: entrada y tecla de silencio.
   game.events.on(Phaser.Core.Events.PRE_STEP, (time: number) => {
@@ -273,7 +274,7 @@ xantar/
 
   Al cambiar el tamaño de la ventana (agrupado con `requestAnimationFrame`) vuelve a calcular el layout y llama a `game.scale.setGameSize`.
 
-El juego trabaja en **unidades lógicas**: el tablero mide 640×480 (20×15 casillas de 32, `src/config.ts`) y nunca cambia de coordenadas. El área de juego mide 480 de alto y entre 832 y 1152 de ancho según la proporción de la ventana; lo que sobra a los lados del tablero son los paneles del HUD. El lienzo se crea a ese tamaño multiplicado por el **nivel de escala** (`RENDER_TIER`, 2) y la cámara de cada escena aplica ese zoom (ver 8.7), así que se ve nítido en pantallas grandes sin tocar coordenadas.
+El juego trabaja en **unidades lógicas**: el tablero mide 640×480 (20×15 casillas de 32, `src/config.ts`) y nunca cambia de coordenadas. El área de juego mide 480 de alto y entre 832 y 1152 de ancho según la proporción de la ventana; lo que sobra a los lados del tablero son los paneles del HUD. El lienzo se crea a ese tamaño multiplicado por el **nivel de escala** (`RENDER_TIER`, 4) y la cámara de cada escena aplica ese zoom (ver 8.7), así que se ve nítido en pantallas grandes sin tocar coordenadas.
 
 ### 8.2 Escenas de Phaser
 
@@ -304,7 +305,7 @@ Para cambiar de escena: `this.scene.start('GameScene')`; para lanzar otra en par
 **Flujo actual** (detalle en 8.8):
 
 ```
-index.html -> src/main.ts -> BootScene (carga la música, sintetiza los efectos, rasteriza los temas) -> TitleScene
+index.html -> src/main.ts -> BootScene (carga la música, sintetiza los efectos, rasteriza el arte) -> TitleScene
 TitleScene --(clic, toque, tecla o botón del mando)--> pantalla completa + música -> MenuScene
 MenuScene --Jugar--> GameScene ══launch══> HudScene
 GameScene --(salir desde la pausa o fin de partida)--> MenuScene   (sin recargar la página)
@@ -328,7 +329,7 @@ Ventajas de `public/`:
 
 La aplicación de escritorio sirve `dist/` por el protocolo propio `app://xantar/` (ver 8.4), así que el cargador de Phaser funciona igual que en la web, también por `XHR` (audio, JSON). `src/main.ts` mantiene `loader.imageLoadType: 'HTMLImageElement'`: es inofensivo y fue imprescindible mientras Electron cargaba el juego desde `file://`, donde `XHR` está bloqueado.
 
-**Excepción: el arte SVG no vive en `public/`.** Las fuentes SVG de los temas están en `src/view/art/<tema>/` y se importan como texto (`import.meta.glob` con `?raw`), de modo que viajan dentro del bundle y el juego puede inyectarles la paleta del tema antes de rasterizarlas (ver 8.7).
+**Excepción: el arte del juego no vive en `public/`.** Las fuentes de los gráficos (PNG renderizados y SVG) están en `src/view/art/sources/` y se importan con `import.meta.glob` (los SVG como texto, los PNG como URL), de modo que viajan dentro del bundle y el juego puede inyectar la paleta a los SVG antes de rasterizarlos (ver 8.7).
 
 ### 8.4 Capa Electron
 
@@ -423,7 +424,6 @@ Un nivel es un documento JSON versionado (`src/sim/level/`). Se lee con `parseLe
   "cols": 20,
   "rows": 15,
   "segments": 4,
-  "theme": "classic",
   "layers": {
     "structure":   ["....", "+==+", "H..H", "+==+", ".__."],
     "ingredients": ["....", ".TT.", "....", ".BB.", "...."],
@@ -434,7 +434,7 @@ Un nivel es un documento JSON versionado (`src/sim/level/`). Se lee con `parseLe
 
 (Ejemplo abreviado: cada capa tiene `rows` cadenas de `cols` caracteres.) `segments` es opcional (2, 3 o 4; 4 por defecto): fija el número de segmentos de cada ingrediente y el ancho en casillas de ingredientes y platos, para pantallas de minihamburguesas.
 
-`theme` también es opcional: es el id del tema visual con que se dibuja el nivel (minúsculas, cifras y guiones, empezando por letra; por ejemplo `classic` o `midnight`). La simulación no lo usa y la carga no comprueba que el tema exista: si la vista no lo conoce, avisa por consola y usa el tema por defecto. `serializeLevel` lo escribe tras `segments` solo si está presente.
+Los ficheros de nivel de versiones anteriores pueden traer un campo `theme`: se ignora al leer y `serializeLevel` ya no lo escribe.
 
 | Capa | Símbolo | Pieza |
 |------|---------|-------|
@@ -446,23 +446,37 @@ Reglas: una racha de casillas iguales de una pieza ancha (ingredientes y platos)
 
 Cada símbolo lo define una `PieceDefinition` (id, símbolo, capa, ancho y qué aporta al nivel) del `PieceRegistry`. Las piezas no contienen nada gráfico.
 
-### 8.7 Pipeline visual: SVG, temas, nivel de escala y layout
+### 8.7 Pipeline visual: arte renderizado, SVG, nivel de escala y layout
 
-Todo lo que se ve sale de **fuentes SVG** que siguen la guía de estilo (`docs/STYLE_GUIDE.md`):
+El juego tiene un único aspecto. Los ingredientes y los personajes son **arte renderizado** (PNG generados con Blender); las piezas del laberinto, los platos, los efectos y los iconos del HUD son **SVG** coloreados con una paleta única. Ambos siguen la guía de estilo (`docs/STYLE_GUIDE.md`):
 
-1. **Catálogo** (`src/view/theme/graphics.ts`): lista cerrada de `GraphicId` (`platform.left`, `bunTop.mid`, `chef.hat`, `fx.pepper`, `hud.life`…) con su tamaño lógico. Las piezas usan el id del registro de piezas como prefijo.
-2. **Fuentes** (`src/view/art/<tema>/<graphicId>.svg`): sin colores literales; cada forma usa clases `f-<token>`, `s-<token>` o `c-<token>` de la paleta. `src/view/art/art.test.ts` comprueba todas las fuentes de todos los temas con `svgProblems`.
-3. **Temas** (`src/view/theme/Theme.ts`, `ThemeRegistry.ts`, `src/view/themes/`): un tema es una paleta parcial más fuentes SVG para algunos gráficos. `ThemeRegistry.resolve(id)` completa lo que falta con el tema por defecto, `classic`, que debe estar completo.
-4. **Selección** (`chooseTheme`): al empezar un tablero se usa el tema de `?theme=` en la URL, si no el campo `theme` del nivel y si no `classic`. Los ids desconocidos se saltan con un aviso en consola que dice de dónde venían.
-5. **Rasterizado** (`BootScene` + `SvgRasterizer`): al arrancar, cada gráfico de cada tema registrado se convierte en textura con clave `<tema>/<graphicId>`: `applyPalette` inserta un `<style>` con los colores del tema, `withSize` fija el tamaño al lógico × `RENDER_TIER`, se decodifica como imagen y se dibuja en un canvas que pasa a ser la textura. Si falla, la textura es un damero magenta y la consola dice qué gráfico de qué tema.
-6. **Dibujo** (`ArtFactory`): crea imágenes de un tema con escala `1 / RENDER_TIER`, de modo que una textura de 64 px ocupa una casilla de 32 unidades.
-7. **Cámara y layout** (`followBoardCamera`, `computeLayout`): cada escena aplica a su cámara principal zoom `RENDER_TIER` y la centra en el centro del tablero; el tablero ocupa (0,0)–(640,480) en el mundo, el panel izquierdo queda en `x < 0` y el derecho en `x ≥ 640`. Al redimensionar, la cámara se recoloca y la escena recibe el nuevo ancho lógico.
+1. **Catálogo** (`src/view/art/graphics.ts`): lista cerrada de `GraphicId` (`platform.left`, `bunTop.mid`, `chef.hat`, `hotdog.bendBack2`, `fx.pepper`, `hud.life`…) con su tamaño lógico. Las piezas usan el id del registro de piezas como prefijo. Aquí viven también `INGREDIENT_HEIGHTS` (alto de cada segmento) e `INGREDIENT_STACK_HEIGHTS` (grosor visible de cada ingrediente al apilarse en el plato).
+2. **Fuentes** (`src/view/art/sources/`): exactamente una por gráfico, `<id>.png` o `<id>.svg`. `sources.ts` las importa con `import.meta.glob` (los SVG como texto con `?raw`, los PNG como URL con `?url`), así que viajan en el bundle. Los SVG no llevan colores literales: cada forma usa clases `f-<token>`, `s-<token>` o `c-<token>` de `PALETTE` (`palette.ts`). `src/view/art/art.test.ts` comprueba que cada gráfico tiene una sola fuente, que no sobra ninguna, que cada PNG mide su tamaño lógico × 4 y que cada SVG cumple la convención (`svgProblems`).
+3. **Rasterizado** (`BootScene` + `ArtRasterizer`): al arrancar, cada gráfico se convierte en una textura con su id como clave y tamaño lógico × `RENDER_TIER`. Un PNG se decodifica y se dibuja reducido con suavizado alto; un SVG recibe la paleta (`applyPalette` inserta un `<style>`), se fija su tamaño (`withSize`) y se decodifica. Si falla, la textura es un damero magenta y la consola dice qué gráfico.
+4. **Dibujo** (`ArtFactory`): crea imágenes con escala `1 / RENDER_TIER`, de modo que una textura de 128 px ocupa una casilla de 32 unidades.
+5. **Cámara y layout** (`followBoardCamera`, `computeLayout`): cada escena aplica a su cámara principal zoom `RENDER_TIER` y la centra en el centro del tablero; el tablero ocupa (0,0)–(640,480) en el mundo, el panel izquierdo queda en `x < 0` y el derecho en `x ≥ 640`. Al redimensionar, la cámara se recoloca y la escena recibe el nuevo ancho lógico.
 
-Para pasar a 4× basta con cambiar `RENDER_TIER` en `src/config.ts`: texturas, cámara y textos se adaptan solos.
+`RENDER_TIER` vale **4**: el objetivo son pantallas Full HD o mayores. No se comprueba la resolución; en pantallas menores el juego se ve reducido. Cambiarlo en `src/config.ts` adapta texturas, cámara y textos (los PNG están a 4×, así que a menos escala se reducen al cargar).
 
-**Personajes por partes** (`src/view/rigs/`): el chef y cada enemigo son un `CharacterRig` (un `Container` con una imagen por parte) descrito como datos en `rigs.ts` (`RigDefinition`: nombre, gráfico, posición respecto al centro de su casilla y punto de giro). `chefAnimation` y `enemyAnimation` deciden, como funciones puras del snapshot, en qué estado está cada personaje; `RigAnimator` cambia de estado (patrón State: `AnimationState` en `states.ts`) parando los tweens, volviendo a la postura base y arrancando los del nuevo. Los tweens solo tocan partes y nunca la posición del personaje, que sigue saliendo de la interpolación de la simulación.
+**Arte renderizado con Blender** (`tools/blender/`). Herramienta de autor, no dependencia del juego: los PNG generados se versionan y el build no necesita Blender. Se usa Blender 5.2 LTS (la versión oficial portable de blender.org basta; con una GPU NVIDIA, Cycles usa OptiX):
 
-**Rendimiento y post-procesado**: la referencia es una gráfica integrada modesta (AMD Radeon de un Ryzen «Renoir»); cualquier efecto debe mantener 60 fps en ella. Por eso las sombras y brillos van dibujados dentro de los SVG y el único filtro de Phaser en uso es el resplandor de los temas con `bloom` (`src/view/fx/bloom.ts`), una sola pasada sobre la cámara. Los filtros por objeto (brillo o sombra en cada ingrediente o personaje) se descartaron: con unas 20 pasadas extra por fotograma el juego dejaba de ser fluido en el equipo de referencia.
+```bash
+# Ingredientes (unos 2 minutos con vistas previas grandes; --no-hero las omite)
+blender -b --factory-startup --python tools/blender/ingredients.py -- [--only patty] [--samples 384] [--no-hero]
+# Personajes (unos 15 segundos)
+blender -b --factory-startup --python tools/blender/characters.py -- [--only hotdog|egg|pickle|chef] [--samples 256]
+```
+
+- `common.py` reúne la escena de estudio (tres soles, entorno, Cycles, transformación *Khronos PBR Neutral*), los ayudantes de nodos de material y el posprocesado (reducción de 8× a 4× en luz lineal con alfa premultiplicado).
+- `ingredients.py` modela cada ingrediente sobre un contorno de estadio, con texturas y patrones que se repiten una vez por casilla para que el tramo central encaje consigo mismo, renderiza los cuatro tramos de una vez y los corta en `left`, `mid` y `right`, fundiendo unos píxeles en cada junta. Escribe `tmp/blender/metrics.json`: de ahí salen los grosores de `INGREDIENT_STACK_HEIGHTS` si cambia la forma de un ingrediente.
+- `characters.py` modela cada parte de los personajes en coordenadas del rig y la renderiza sola con el encuadre de su rectángulo; esos rectángulos deben coincidir con `src/view/rigs/rigs.ts` y con el catálogo. También genera los cinco fotogramas de baile de cada enemigo.
+- Las vistas previas (render grande, tira montada, cada pieza) quedan en `tmp/blender/` (ignorado por git). El ruido de muestreo hace que cada ejecución cambie un poco los PNG: regenera solo lo que toques (`--only`) y revisa el resultado en la lámina de arte antes de versionarlo.
+
+**Personajes por partes** (`src/view/rigs/`): el chef y cada enemigo son un `CharacterRig` (un `Container` con una imagen por parte) descrito como datos en `rigs.ts` (`RigDefinition`: nombre, gráfico, posición respecto al centro de su casilla, punto de giro y, opcionalmente, `frames`: gráficos del mismo tamaño entre los que la parte puede alternar). `chefAnimation` y `enemyAnimation` deciden, como funciones puras del snapshot, en qué estado está cada personaje; `RigAnimator` cambia de estado (patrón State: `AnimationState` en `states.ts`) parando los tweens, volviendo a la postura base y arrancando los del nuevo. `RigMotion.cycle` recorre los fotogramas de una parte de ida y vuelta; así bailan los enemigos al andar (`enemyStates` tiene una tabla por tipo: la salchicha se dobla, el pepinillo se contonea y el huevo ondula), con los ojos desplazándose a la vez. Los tweens solo tocan partes y nunca la posición del personaje, que sigue saliendo de la interpolación de la simulación.
+
+**Apilado en el plato** (`src/objects/stacking.ts`): `stackLifts` calcula, como función pura, a qué altura sobre su plato va cada ingrediente que cae a él o ya está en él (la suma de `INGREDIENT_STACK_HEIGHTS` de los que tiene debajo en ese plato). `GameScene` la llama una vez por fotograma y dibuja cada ingrediente del plato por encima de los de debajo.
+
+**Rendimiento y post-procesado**: la referencia es una gráfica integrada modesta (AMD Radeon de un Ryzen «Renoir»); cualquier efecto debe mantener 60 fps en ella. Por eso la luz y las sombras van horneadas en el arte (renderizado o SVG) y no se usa ningún filtro de Phaser. Los filtros por objeto (brillo o sombra en cada ingrediente o personaje) se descartaron: con unas 20 pasadas extra por fotograma el juego dejaba de ser fluido en el equipo de referencia. Con la escala 4 el lienzo interno ronda 3400×1920; en móviles hay que comprobar que se mantiene fluido.
 
 **Efectos** (`EventEffects`): adornos de vida corta (nube de pimienta, destello al pisar un segmento, aplastamiento de enemigo, chispas al completar una hamburguesa) que se destruyen solos y que `GameScene` limpia en `boardStarted`.
 
@@ -489,9 +503,7 @@ El juego tiene **dos máquinas de estados** separadas a propósito:
 
 **Idioma** (`src/i18n/`): todos los textos visibles salen de los catálogos `catalogs/es.ts` (el de referencia) y `catalogs/en.ts` (declarado como `Catalog`, de modo que si le falta, le sobra o cambia de forma alguna clave, falla `npm run typecheck`). Un texto es una cadena o una función `(parámetros, format) => string`; `format.number` y `format.plural` usan `Intl.NumberFormat` e `Intl.PluralRules` del idioma. `Localization` guarda el idioma activo y avisa a sus suscriptores al cambiarlo; `main.ts` mantiene el atributo `lang` del documento. El idioma inicial sale de `detectLanguage(navigator.languages)`: español si la primera preferencia es cualquier español, si no inglés.
 
-**Ajustes** (`src/settings/`): `Settings` guarda idioma, tema (`auto` o un id), mejor puntuación, volúmenes de música y efectos (0–10), silencio y teclas asignadas en un único registro versionado (`{ "version": 1, ... }`) bajo la clave `xantar.settings` de `localStorage`, que también funciona en Electron. `parseSettings` lo lee campo a campo: un campo no válido toma su valor por defecto sin perder los demás, y un registro roto o de otra versión se ignora entero. Las teclas se validan como conjunto (`validateBindings`): si algo no cuadra, todas vuelven a las de por defecto. Los campos añadidos después de escribir un registro simplemente toman su valor por defecto, así que no hace falta cambiar de versión para añadir uno. `Settings` avisa a sus suscriptores en cada cambio (el teclado y el audio se actualizan así). Si el almacenamiento está bloqueado, el juego funciona sin recordar nada.
-
-**Tema**: `chooseTheme` aplica la prioridad URL (`?theme=`) → opción del jugador (salvo `auto`) → tema del nivel → `classic`.
+**Ajustes** (`src/settings/`): `Settings` guarda idioma, mejor puntuación, volúmenes de música y efectos (0–10), silencio y teclas asignadas en un único registro versionado (`{ "version": 1, ... }`) bajo la clave `xantar.settings` de `localStorage`, que también funciona en Electron. `parseSettings` lo lee campo a campo: un campo no válido toma su valor por defecto sin perder los demás, y un registro roto o de otra versión se ignora entero. Las teclas se validan como conjunto (`validateBindings`): si algo no cuadra, todas vuelven a las de por defecto. Los campos añadidos después de escribir un registro simplemente toman su valor por defecto, y los que ya no se usan (como el tema de versiones anteriores) se ignoran, así que no hace falta cambiar de versión para añadir o quitar uno. `Settings` avisa a sus suscriptores en cada cambio (el teclado y el audio se actualizan así). Si el almacenamiento está bloqueado, el juego funciona sin recordar nada.
 
 ### 8.10 Audio: buses, efectos sintetizados y eventos
 
@@ -574,7 +586,7 @@ Ninguna escena lee teclas. Todo pasa por **acciones** (`src/input/actions.ts`): 
 
 3. Recuerda que la ruta es relativa a la raíz y que `loader.imageLoadType: 'HTMLImageElement'` es lo que permite que funcione en Electron.
 
-Para gráficos del juego (piezas, ingredientes, personajes, efectos, iconos del HUD) no se usan imágenes de `public/` sino SVG de tema: ver 9.8.
+Para gráficos del juego (piezas, ingredientes, personajes, efectos, iconos del HUD) no se usan imágenes de `public/` sino las fuentes del catálogo de arte: ver 9.8.
 
 ### 9.3 Comunicar renderer ↔ main (IPC)
 
@@ -635,33 +647,34 @@ El script no hace commit ni push. Un workflow de GitHub Actions que publicara au
 
 ---
 
-### 9.8 Añadir un gráfico SVG
+### 9.8 Añadir un gráfico
 
-1. Añade su id y su tamaño lógico al catálogo `GRAPHICS` de `src/view/theme/graphics.ts` (las piezas llevan como prefijo el id del registro de piezas: `platform.left`, `plate.mid`…).
-2. Dibuja `src/view/art/classic/<id>.svg` siguiendo `docs/STYLE_GUIDE.md`: `viewBox`, `width` y `height` iguales al tamaño del catálogo y colores solo con clases `f-`/`s-`/`c-` de la paleta.
-3. Ejecuta `npx vitest run src/view/art`: la prueba de arte dice qué fichero y qué atributo no cumplen la convención, y la de temas avisa si `classic` se ha quedado incompleto.
-4. Úsalo desde la vista con `art.image('<id>', x, y)` (`ArtFactory`): `BootScene` ya lo rasteriza para todos los temas.
+1. Añade su id y su tamaño lógico al catálogo `GRAPHICS` de `src/view/art/graphics.ts` (las piezas llevan como prefijo el id del registro de piezas: `platform.left`, `plate.mid`…).
+2. Crea **una** fuente en `src/view/art/sources/`:
+   - **Vectorial** (laberinto, platos, efectos, HUD): `<id>.svg` siguiendo `docs/STYLE_GUIDE.md`, con `viewBox`, `width` y `height` iguales al tamaño del catálogo y colores solo con clases `f-`/`s-`/`c-` de la paleta.
+   - **Renderizada** (ingredientes, personajes): `<id>.png` a 4× el tamaño del catálogo, generada por un script de `tools/blender/` (ver 8.7). Añade el modelo y su rectángulo al script en lugar de pintar el PNG a mano.
+3. Ejecuta `npx vitest run src/view/art`: la prueba de arte dice si falta o sobra una fuente, si un PNG no mide lo que debe o qué fichero y qué atributo de un SVG no cumplen la convención.
+4. Úsalo desde la vista con `art.image('<id>', x, y)` (`ArtFactory`): `BootScene` ya lo rasteriza.
 
-### 9.9 Crear un tema
+### 9.9 Añadir un fotograma de baile
 
-1. Crea `src/view/themes/<id>.ts` con su paleta parcial (`Partial<Palette>`): solo los tokens que cambian.
-2. Si sustituye gráficos, pon sus SVG en `src/view/art/<id>/` con el mismo nombre que en `classic`; lo que no sustituya se toma de `classic`.
-3. Regístralo en `createThemeRegistry` (`src/view/themes/index.ts`) con `registry.register({ id, name, palette, art: art.get(id) ?? {} })`. Añade `bloom: true` si el tema se dibuja con resplandor (una sola pasada de cámara con `applyBloom`; solo con WebGL y sin heredarse de `classic`). Hoy lo usa `midnight`.
-4. Pruébalo con `?theme=<id>` en la URL o con `"theme": "<id>"` en un nivel. `npm run test` comprueba que solo usa tokens y gráficos existentes y colores válidos.
+1. Añade los ids de los fotogramas al catálogo con el mismo tamaño que el cuerpo (`<enemigo>.<baile>Back2`, `Back1`, `Front1`, `Front2`) y genéralos en `tools/blender/characters.py` (`dance_frames`).
+2. Lista los fotogramas, en orden y con el cuerpo en el centro, en `frames` de la parte del rig (`src/view/rigs/rigs.ts`).
+3. En el estado de andar de ese enemigo (`enemyStates`, `src/view/rigs/states.ts`), llama a `motion.cycle('body', STEP_MS)` y desplaza los ojos con un `swing` del mismo periodo. `rigs.test.ts` comprueba que los fotogramas existen y tienen el tamaño del cuerpo.
 
 ### 9.10 Añadir o animar una parte de un personaje
 
-1. Para una parte nueva: añade su gráfico (9.8) y una entrada en el rig correspondiente de `src/view/rigs/rigs.ts` con su posición respecto al centro de la casilla y su punto de giro (`originX`/`originY`; por ejemplo, el hombro para un brazo). El orden de la lista es el orden de dibujo.
+1. Para una parte nueva: añade su gráfico (9.8), modélala en `tools/blender/characters.py` con el mismo rectángulo que tendrá en el rig, y añade una entrada en el rig correspondiente de `src/view/rigs/rigs.ts` con su posición respecto al centro de la casilla y su punto de giro (`originX`/`originY`; por ejemplo, el hombro para un brazo). El orden de la lista es el orden de dibujo.
 2. Para animarla, edita el estado en `src/view/rigs/states.ts`: `motion.swing(parte, desde, hasta, ms)` la mueve de ida y vuelta, `motion.once(...)` una sola vez y `motion.hold(...)` la deja en una postura. Los desplazamientos son relativos a la postura base (`dx`, `dy`, `angle`, `scaleX`, `scaleY`).
 3. Un estado nuevo se añade al tipo (`ChefAnimation` o `EnemyAnimation`), a la función que lo elige (`chooseAnimation.ts`, con su prueba) y a la tabla de estados.
 
 ### 9.11 Verificar visualmente un cambio
 
-1. **Prueba de humo**: `npm run smoke` compila la web y Electron y abre `dist/` en Electron (bajo `file://` y con el preload real de la aplicación, como la app de escritorio). En lugar de cerrar, registra las peticiones de salida (`app:quit`). Por defecto ejecuta el escenario `review`: los dos temas a 1920×1080, 1024×768 y 2340×1080, pulsando derecha un momento. Por cada ejecución guarda `.smoke/<escenario>/<ejecución>/*.png` y `console.log`, imprime `ok` o `FAILED` y termina con código 1 si la consola registra algún error o el renderizador se cae.
+1. **Prueba de humo**: `npm run smoke` compila la web y Electron y abre `dist/` en Electron (bajo `file://` y con el preload real de la aplicación, como la app de escritorio). En lugar de cerrar, registra las peticiones de salida (`app:quit`). Por defecto ejecuta el escenario `review`: el juego a 1920×1080, 1024×768 y 2340×1080, pulsando derecha un momento. Por cada ejecución guarda `.smoke/<escenario>/<ejecución>/*.png` y `console.log`, imprime `ok` o `FAILED` y termina con código 1 si la consola registra algún error o el renderizador se cae.
    - Otros escenarios: `npm run smoke -- quick`, `climb`, `game-over`, `menu` (menú y opciones en los dos idiomas), `pause` o `quit` (Esc selecciona Salir y Enter pide cerrar; el paso `expectQuit` falla si no llegó la petición) (definidos en `tools/smoke/scenarios.ts`; añadir uno es añadir datos). Todos pasan por el título (clic) y el menú (`Enter` en Jugar). Cada ventana usa un almacenamiento propio en memoria, así que los ajustes de una ejecución no afectan a la siguiente.
-   - Una ejecución a medida: `npm run smoke -- --size 1280x720 --query theme=midnight --steps "wait:2500,click,wait:2000,down:Up,wait:500,shot:sube,up:Up" --name prueba`. Pasos: `wait:<ms>`, `click` (centro de la ventana), `key:<tecla>[:<ms>]`, `down:<tecla>`, `up:<tecla>` y `shot:<nombre>`; las teclas usan los nombres de Electron (`Left`, `Up`, `Space`, `Return`…).
+   - Una ejecución a medida: `npm run smoke -- --size 1280x720 --query lang=en --steps "wait:2500,click,wait:2000,down:Up,wait:500,shot:sube,up:Up" --name prueba`. Pasos: `wait:<ms>`, `click` (centro de la ventana), `key:<tecla>[:<ms>]`, `down:<tecla>`, `up:<tecla>` y `shot:<nombre>`; las teclas usan los nombres de Electron (`Left`, `Up`, `Space`, `Return`…).
    - En Linux usa `xvfb-run` si está instalado, sin abrir ventanas y con WebGL por software; `--visible` lo desactiva. Si `dist/` y `dist-electron/` ya están al día, `node scripts/smoke.mjs <escenario>` se salta la compilación.
-2. **Lámina de arte**: con `npm run dev`, abre http://localhost:5173/tools/art-sheet.html. Dibuja con el código del juego (rasterizador, temas y rigs) todos los gráficos del catálogo, las tiras de ingredientes y platos de 4, 3 y 2 segmentos, un tramo de plataforma con escalera y cada personaje en cada estado de animación; el selector cambia de tema. Al editar un SVG, Vite recarga la página. Solo existe en desarrollo: `npm run build` no la incluye.
+2. **Lámina de arte**: con `npm run dev`, abre http://localhost:5173/tools/art-sheet.html. Dibuja con el código del juego (rasterizador y rigs) todos los gráficos del catálogo, las tiras de ingredientes y platos de 4, 3 y 2 segmentos, un tramo de plataforma con escalera y cada personaje en cada estado de animación, con sus bailes. Al editar un SVG o regenerar un PNG, Vite recarga la página. Solo existe en desarrollo: `npm run build` no la incluye.
 
 ### 9.12 Añadir un texto a la interfaz
 
@@ -732,7 +745,7 @@ Objetivos configurados en `package.json` (campo `build`):
 
 **Limitación importante:** electron-builder solo puede generar el instalador de la plataforma en la que ejecutas el build. Los tres instaladores los genera la CI con una matriz Linux/Windows/macOS (ver 10.4).
 
-**Iconos.** La fuente es `build/icon.svg`: la cabeza, los ojos y el gorro del chef copiados de `src/view/art/classic/` y colocados como en su rig, con la paleta clásica (al ser un recurso de empaquetado, lleva los colores escritos en un `<style>`). `npm run icon` la rasteriza a `build/icon.png` (1024×1024) con una ventana oculta de Electron (`scripts/build-icon.mjs`); el PNG se versiona y electron-builder deriva de él el `.ico` y el `.icns`. Si cambias el SVG, vuelve a ejecutar `npm run icon` (en Linux sin pantalla: `xvfb-run -a npm run icon`).
+**Iconos.** La fuente es `build/icon.svg`: la cabeza, los ojos y el gorro del antiguo chef vectorial colocados como en su rig, con la paleta del juego (al ser un recurso de empaquetado, lleva los colores escritos en un `<style>`). `npm run icon` la rasteriza a `build/icon.png` (1024×1024) con una ventana oculta de Electron (`scripts/build-icon.mjs`); el PNG se versiona y electron-builder deriva de él el `.ico` y el `.icns`. Si cambias el SVG, vuelve a ejecutar `npm run icon` (en Linux sin pantalla: `xvfb-run -a npm run icon`).
 
 **Fusibles de Electron** (`build.electronFuses`): el ejecutable empaquetado no se puede usar como Node (`ELECTRON_RUN_AS_NODE`), ignora `NODE_OPTIONS` y `--inspect`, solo carga la aplicación desde `app.asar` (con validación de integridad donde Electron la admite), cifra las cookies y no da privilegios extra a `file://`. No afectan a `npm run dev:desktop` ni a la prueba de humo, que usan el Electron de `node_modules`.
 

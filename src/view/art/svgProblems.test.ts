@@ -8,7 +8,7 @@ const svg = (body: string, root = 'viewBox="0 0 32 14" width="32" height="14"'):
 describe('svgProblems', () => {
   it('accepts a source that follows the convention', () => {
     const source = svg(
-      '<rect class="f-patty s-outline" x="1" y="1" width="30" height="11" rx="3" stroke-width="1.5" fill-opacity="0.9"/><path d="M0 0" fill="none" class="s-outline"/><rect fill="url(#dots)"/>'
+      '<rect class="f-platform s-outline" x="1" y="1" width="30" height="11" rx="3" stroke-width="1.5" fill-opacity="0.9"/><path d="M0 0" fill="none" class="s-outline"/><rect fill="url(#dots)"/>'
     );
     expect(svgProblems(source, box)).toEqual([]);
   });
