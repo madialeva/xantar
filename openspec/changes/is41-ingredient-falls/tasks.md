@@ -27,7 +27,7 @@
 
 ## 5. Integración
 
-- [ ] 5.1 Ejecutar las comprobaciones de entrega completas (`npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build`, `npm run smoke`) y `openspec validate is41-ingredient-falls --strict`; verificar que todo termina sin errores
+- [x] 5.1 Ejecutar las comprobaciones de entrega completas (`npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build`, `npm run smoke`) y `openspec validate is41-ingredient-falls --strict`; verificar que todo termina sin errores
 - [ ] 5.2 Jugar en `npm run dev` y en `npm run dev:desktop` comparando con la grabación: un piso en ≈ 0,57 s, rebote y espera al golpear, hundimiento en los pisos, rebote en el plato, cascada de una columna y un enemigo montado que baja tres pisos con +500 (lo verifica el autor)
 
 ## Workflow follow-up
