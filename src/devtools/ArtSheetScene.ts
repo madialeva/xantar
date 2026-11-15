@@ -198,10 +198,10 @@ export default class ArtSheetScene extends Phaser.Scene {
       row: 0,
       phase: 'idle',
       stomped: Array.from({ length: width }, (_, index) => index === 1),
-      fallFromRow: 0,
-      fallToRow: 0,
-      fallProgress: 0,
-      landsOnPlate: false,
+      x: width / 2,
+      y: 0,
+      prevX: width / 2,
+      prevY: 0,
       stackSlot: null
     };
   }

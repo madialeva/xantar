@@ -1,3 +1,5 @@
+import type { IngredientKind } from './level/kinds';
+
 export const TICKS_PER_SECOND = 60;
 export const TICK_SECONDS = 1 / TICKS_PER_SECOND;
 export const TICK_MS = 1000 / TICKS_PER_SECOND;
@@ -16,8 +18,18 @@ export const EDGE_MARGIN = fromPx(12);
 export const LADDER_GRAB_DISTANCE = 0.6;
 export const STEP_OFF_DISTANCE = 0.4;
 
-export const FALL_TICKS = fromMs(200);
-export const FALL_STAGGER_TICKS = 7;
+export const FALL_SPEED = fromPx(170);
+export const BOUNCE_HEIGHT = fromPx(20);
+export const BOUNCE_RISE_TICKS = fromMs(80);
+export const BOUNCE_HOLD_TICKS = fromMs(220);
+
+/** How thick each ingredient is: where the next one rests on it, on a floor or in a burger. */
+export const INGREDIENT_THICKNESS: Readonly<Record<IngredientKind, number>> = {
+  bunTop: fromPx(13),
+  lettuce: fromPx(4.8),
+  patty: fromPx(8.3),
+  bunBottom: fromPx(7.4)
+};
 
 export const READY_TICKS = fromMs(1500);
 export const DYING_TICKS = fromMs(2000);

@@ -1,13 +1,13 @@
 import type { EventSink } from '../events';
 import type { GameStats } from '../GameStats';
 import type { Level } from '../level/Level';
-import { FALL_STAGGER_TICKS, SCORE } from '../rules';
+import { SCORE } from '../rules';
 import type { ChefPosition } from './Chef';
 import {
-  type FallPlan,
   Ingredient,
   type IngredientHost,
-  type IngredientSnapshot
+  type IngredientSnapshot,
+  type Support
 } from './Ingredient';
 import { Plate } from './Plate';
 
@@ -19,12 +19,15 @@ export interface CrushTarget {
   crush(left: number, right: number, fromRow: number, toRow: number): void;
 }
 
-const overlap = (a: IngredientSnapshot, b: IngredientSnapshot): boolean =>
-  a.left < b.right && b.left < a.right;
+const overlap = (
+  a: Pick<IngredientSnapshot, 'left' | 'right'>,
+  b: Pick<IngredientSnapshot, 'left' | 'right'>
+): boolean => a.left < b.right && b.left < a.right;
 
 /**
  * Coordinates all the ingredients and plates of a level: stomping from the chef's position,
- * chain falls by impact, crush requests, landings and burger completion.
+ * the support of each fall, the ingredients a falling one meets and knocks down, crush
+ * requests, landings and burger completion.
  */
 export class IngredientField implements IngredientHost {
   readonly ingredients: readonly Ingredient[];
@@ -33,6 +36,7 @@ export class IngredientField implements IngredientHost {
   readonly #events: EventSink;
   readonly #stats: GameStats;
   readonly #crush: CrushTarget;
+  readonly #struck = new Set<Ingredient>();
 
   constructor(level: Level, events: EventSink, stats: GameStats, crush: CrushTarget) {
     this.#level = level;
@@ -48,56 +52,52 @@ export class IngredientField implements IngredientHost {
     return withIngredients.length > 0 && withIngredients.every((plate) => plate.isComplete);
   }
 
+  beginTick(): void {
+    for (const ingredient of this.ingredients) ingredient.beginTick();
+  }
+
+  /**
+   * Stomps under the chef and moves the falling ingredients. The ones knocked down during the
+   * tick start falling at its end, so they move from the next tick whatever their order.
+   */
   step(chef: ChefPosition): void {
     if (chef.onPlatform) {
       for (const ingredient of this.ingredients) this.#stomp(ingredient, chef);
     }
     for (const ingredient of this.ingredients) ingredient.step();
+    this.#knockDownStruck();
   }
 
-  startFall(ingredient: IngredientSnapshot): FallPlan {
-    const landing = this.#level.landingBelow(ingredient.row, ingredient.left, ingredient.right);
-    if (landing === undefined) {
-      return {
-        fromRow: ingredient.row,
-        toRow: ingredient.row,
-        toPlate: false,
-        plateId: null,
-        stackSlot: null
-      };
-    }
-    this.#crush.crush(ingredient.left, ingredient.right, ingredient.row, landing.row);
-    if (landing.plate === undefined) {
-      return {
-        fromRow: ingredient.row,
-        toRow: landing.row,
-        toPlate: false,
-        plateId: null,
-        stackSlot: null
-      };
-    }
-    const plate = this.plates[landing.plate.id];
-    return {
-      fromRow: ingredient.row,
-      toRow: landing.row,
-      toPlate: true,
-      plateId: plate.id,
-      stackSlot: plate.assignSlot()
-    };
+  strike(ingredient: IngredientSnapshot, toY: number): number | undefined {
+    const met = this.ingredients.filter(
+      (other) =>
+        other.id !== ingredient.id &&
+        other.phase !== 'stacked' &&
+        overlap(other, ingredient) &&
+        other.top > ingredient.y &&
+        other.top <= toY
+    );
+    if (met.length === 0) return undefined;
+    for (const other of met) if (other.isIdle) this.#struck.add(other);
+    return Math.min(...met.map((other) => other.top));
   }
 
-  landed(ingredient: IngredientSnapshot, plan: FallPlan): void {
+  touchedDown(ingredient: IngredientSnapshot, support: Support): void {
     this.#events.emit({
       type: 'ingredientLanded',
       ingredientId: ingredient.id,
-      plateId: plan.plateId,
-      stackSlot: plan.stackSlot
+      plateId: support.plateId,
+      stackSlot: support.stackSlot
     });
-    if (plan.plateId === null) return;
-    if (this.plates[plan.plateId].registerLanding()) {
+  }
+
+  cameToRest(_ingredient: IngredientSnapshot, support: Support): void {
+    this.#stats.addScore(SCORE.ingredient);
+    if (support.plateId === null) return;
+    if (this.plates[support.plateId].registerLanding()) {
       this.#stats.addScore(SCORE.burger);
       this.#stats.grantPepper();
-      this.#events.emit({ type: 'burgerDone', plateId: plan.plateId, points: SCORE.burger });
+      this.#events.emit({ type: 'burgerDone', plateId: support.plateId, points: SCORE.burger });
     }
   }
 
@@ -106,35 +106,48 @@ export class IngredientField implements IngredientHost {
     const segment = ingredient.segmentAt(chef.x);
     if (segment === undefined || !ingredient.stomp(segment)) return;
     this.#events.emit({ type: 'segmentStomped', ingredientId: ingredient.id, segment });
-    if (ingredient.allStomped) this.#activate(ingredient);
+    if (ingredient.allStomped) this.#startFalls([ingredient]);
   }
 
-  #activate(first: Ingredient): void {
-    const affected = new Set<Ingredient>([first]);
-    const pending: Ingredient[] = [first];
-    for (let current = pending.shift(); current !== undefined; current = pending.shift()) {
-      const landing = this.#level.landingBelow(current.row, current.left, current.right);
-      if (landing === undefined || landing.plate !== undefined) continue;
-      for (const candidate of this.ingredients) {
-        if (
-          candidate.isIdle &&
-          !affected.has(candidate) &&
-          candidate.row === landing.row &&
-          overlap(candidate, current)
-        ) {
-          affected.add(candidate);
-          pending.push(candidate);
-        }
+  #knockDownStruck(): void {
+    if (this.#struck.size === 0) return;
+    const struck = [...this.#struck].sort((a, b) => a.id - b.id);
+    this.#struck.clear();
+    this.#startFalls(struck);
+  }
+
+  #startFalls(ingredients: readonly Ingredient[]): void {
+    const falling: Ingredient[] = [];
+    for (const ingredient of ingredients) {
+      const support = this.#supportBelow(ingredient);
+      if (support === undefined) {
+        ingredient.resetSegments();
+        continue;
       }
+      this.#crush.crush(ingredient.left, ingredient.right, ingredient.row, support.row);
+      ingredient.fall(support);
+      falling.push(ingredient);
     }
-    const falling = [...affected].sort((a, b) => b.row - a.row || a.col - b.col || a.id - b.id);
-    falling.forEach((ingredient, index) => {
-      ingredient.activate(index * FALL_STAGGER_TICKS);
-      this.#stats.addScore(SCORE.ingredient);
-    });
+    if (falling.length === 0) return;
     this.#events.emit({
       type: 'ingredientsTriggered',
       ingredientIds: falling.map((ingredient) => ingredient.id)
     });
+  }
+
+  #supportBelow(ingredient: Ingredient): Support | undefined {
+    const landing = this.#level.landingBelow(ingredient.row, ingredient.left, ingredient.right);
+    if (landing === undefined) return undefined;
+    if (landing.plate === undefined) {
+      return { row: landing.row, y: landing.row, plateId: null, stackSlot: null };
+    }
+    const plate = this.plates[landing.plate.id];
+    const stackSlot = plate.assignSlot(ingredient.kind);
+    return {
+      row: landing.row,
+      y: landing.row - plate.heightBelow(stackSlot),
+      plateId: plate.id,
+      stackSlot
+    };
   }
 }

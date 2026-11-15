@@ -4,7 +4,6 @@ import classicDocument from '../levels/classic.level.json';
 import ChefView from '../objects/ChefView';
 import EnemyView from '../objects/EnemyView';
 import IngredientView from '../objects/IngredientView';
-import { stackLifts } from '../objects/stacking';
 import type { ActionReader } from '../input/actions';
 import { toSimInput } from '../input/toSimInput';
 import {
@@ -191,12 +190,11 @@ export default class GameScene extends Phaser.Scene {
   #syncViews(alpha: number): void {
     this.#chefView.sync(this.#sim.chef, alpha, this.#sim.phase === 'dying');
     this.#sim.enemies.forEach((enemy, index) => this.#enemyViews[index].sync(enemy, alpha));
-    const lifts = stackLifts(this.#sim.ingredients);
     for (const ingredient of this.#sim.ingredients) {
       this.#ingredientViews
         .get(ingredient.id)
         ?.setDepth(DEPTH.ingredients + (ingredient.stackSlot ?? 0) * STACK_DEPTH_STEP)
-        .sync(ingredient, alpha, lifts.get(ingredient.id));
+        .sync(ingredient, alpha);
     }
   }
 
@@ -220,7 +218,7 @@ export default class GameScene extends Phaser.Scene {
           }
           break;
         case 'ingredientLanded':
-          this.#ingredientViews.get(event.ingredientId)?.land();
+          if (event.plateId === null) this.#ingredientViews.get(event.ingredientId)?.touchDown();
           break;
         case 'segmentStomped': {
           const top = this.#ingredientViews.get(event.ingredientId)?.segmentTop(event.segment);

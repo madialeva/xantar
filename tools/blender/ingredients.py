@@ -11,7 +11,7 @@ Run from the repository root:
 
 Writes the game slices (<kind>.left/mid/right.png at 4x the logical size) to the art sources
 (src/view/art/sources/), and previews plus metrics.json to tmp/blender/. The visible
-thickness of each ingredient in metrics.json gives INGREDIENT_STACK_HEIGHTS in the game.
+thickness of each ingredient in metrics.json gives INGREDIENT_THICKNESS in src/sim/rules.ts.
 """
 
 import argparse

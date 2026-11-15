@@ -318,6 +318,18 @@ describe('Simulation: clearing a level', () => {
     expect(sim.stats.score).toBe(450);
   });
 
+  it('waits for the last ingredient to bounce on its plate and rest before clearing', () => {
+    const sim = create(singleBurger);
+    let touched = false;
+    for (let i = 0; i < 200 && !touched; i++) {
+      touched = ofType(run(sim, 1, { left: true }), 'ingredientLanded').length > 0;
+    }
+    expect(touched).toBe(true);
+    expect([sim.phase, sim.ingredients[0].phase]).toEqual(['playing', 'bouncing']);
+    untilPhase(sim, 'levelClear');
+    expect(sim.ingredients[0].phase).toBe('stacked');
+  });
+
   it('continues on its own to the next level keeping score, lives and peppers', () => {
     const sim = create(singleBurger);
     untilPhase(sim, 'levelClear', { left: true });
@@ -388,8 +400,11 @@ describe('Simulation: chain of falls', () => {
         ]
       })
     );
-    const events = run(sim, 160, { left: true });
-    expect(ofType(events, 'ingredientsTriggered')[0].ingredientIds).toEqual([1, 0]);
+    const events = run(sim, 240, { left: true });
+    expect(ofType(events, 'ingredientsTriggered').map((event) => event.ingredientIds)).toEqual([
+      [0],
+      [1]
+    ]);
     expect(sim.stats.score).toBe(100);
     expect(sim.ingredients[1].phase).toBe('stacked');
     expect(sim.ingredients[0].row).toBe(5);

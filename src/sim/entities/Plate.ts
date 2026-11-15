@@ -1,4 +1,6 @@
+import type { IngredientKind } from '../level/kinds';
 import type { PlateSpec } from '../level/Level';
+import { INGREDIENT_THICKNESS } from '../rules';
 
 export interface PlateSnapshot {
   readonly id: number;
@@ -11,8 +13,8 @@ export interface PlateSnapshot {
 }
 
 /**
- * One plate of the level: knows how many ingredients will end on it, hands out stack slots
- * and tells when its burger is complete.
+ * One plate of the level: knows how many ingredients will end on it, hands out stack slots,
+ * knows how high its burger is under each slot and tells when the burger is complete.
  */
 export class Plate implements PlateSnapshot {
   readonly id: number;
@@ -20,7 +22,7 @@ export class Plate implements PlateSnapshot {
   readonly col: number;
   readonly width: number;
   readonly expected: number;
-  #assigned = 0;
+  readonly #kinds: IngredientKind[] = [];
   #landed = 0;
   #announced = false;
 
@@ -40,10 +42,16 @@ export class Plate implements PlateSnapshot {
     return this.expected > 0 && this.#landed >= this.expected;
   }
 
-  assignSlot(): number {
-    const slot = this.#assigned;
-    this.#assigned += 1;
-    return slot;
+  assignSlot(kind: IngredientKind): number {
+    this.#kinds.push(kind);
+    return this.#kinds.length - 1;
+  }
+
+  /** Height of the ingredients stacked under a slot, in rows. */
+  heightBelow(slot: number): number {
+    return this.#kinds
+      .slice(0, slot)
+      .reduce((height, kind) => height + INGREDIENT_THICKNESS[kind], 0);
   }
 
   registerLanding(): boolean {

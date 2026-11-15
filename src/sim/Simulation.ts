@@ -87,6 +87,7 @@ export class Simulation {
   step(input: SimInput): readonly SimEvent[] {
     this.#chef.beginTick();
     for (const enemy of this.#enemies) enemy.beginTick();
+    this.#field.beginTick();
     this.#enterPhase(this.#phase.step(input, this.#phaseHost));
     return this.#events.drain();
   }
