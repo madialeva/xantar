@@ -1,52 +1,102 @@
 import { describe, expect, it } from 'vitest';
 import { EventQueue } from '../events';
+import { NavPlace } from '../nav/NavPlace';
 import { levelFromGrid, tinyGrid } from '../testing/grids';
 import { StubRng } from '../testing/rng';
 import { createEnemy } from './createEnemy';
-import { isHitByPepper, pepperCloudFor, type PepperSource } from './pepper';
+import { isHitByPepper, pepperCloudFor, type PepperSource, type ThrowDirection } from './pepper';
 
 const level = levelFromGrid(tinyGrid);
 const rng = new StubRng(0.99);
+const [ladder] = level.graph.ladders;
 
-const enemyAt = (row: number, x: number, active = true) => {
-  const place = level.graph.placeAt(row, x);
+const enemyAtPlace = (place: NavPlace, active = true) => {
   const enemy = createEnemy(0, 'pickle', new EventQueue(), level.graph, [place]);
   enemy.reset(place, rng);
   if (!active) enemy.squash();
   return enemy;
 };
 
-const chef = (x: number, y: number, facing: 1 | -1 = 1): PepperSource => ({ x, y, facing });
+const enemyAt = (row: number, x: number, active = true) =>
+  enemyAtPlace(level.graph.placeAt(row, x), active);
 
-describe('pepper', () => {
+const enemyOnLadder = (y: number) => enemyAtPlace(NavPlace.onLadder(ladder, y - ladder.topRow));
+
+const chef = (x: number, y: number, throwDirection: ThrowDirection = 'right'): PepperSource => ({
+  x,
+  y,
+  throwDirection
+});
+
+describe('pepper on a platform', () => {
   it('places the cloud in front of the chef', () => {
-    const cloud = pepperCloudFor(chef(4, 5, -1));
+    const cloud = pepperCloudFor(chef(4, 5, 'left'));
     expect(cloud.x).toBeCloseTo(4 - 24 / 32, 10);
-    expect(cloud.direction).toBe(-1);
+    expect(cloud.y).toBeCloseTo(5 - 2 / 32, 10);
+    expect(cloud.direction).toBe('left');
   });
 
   it('hits an enemy in front, close and on the same row', () => {
-    const source = chef(2, 5);
-    expect(isHitByPepper(pepperCloudFor(source), source, enemyAt(5, 3.5))).toBe(true);
+    expect(isHitByPepper(chef(2, 5), enemyAt(5, 3.5))).toBe(true);
   });
 
   it('misses an enemy behind the chef', () => {
-    const source = chef(4, 5);
-    expect(isHitByPepper(pepperCloudFor(source), source, enemyAt(5, 3))).toBe(false);
+    expect(isHitByPepper(chef(4, 5), enemyAt(5, 3))).toBe(false);
   });
 
   it('misses an enemy that is too far from the cloud', () => {
-    const source = chef(0.6, 5);
-    expect(isHitByPepper(pepperCloudFor(source), source, enemyAt(5, 7))).toBe(false);
+    expect(isHitByPepper(chef(0.6, 5), enemyAt(5, 7))).toBe(false);
   });
 
   it('misses an enemy on another row', () => {
-    const source = chef(2, 5);
-    expect(isHitByPepper(pepperCloudFor(source), source, enemyAt(2, 3.5))).toBe(false);
+    expect(isHitByPepper(chef(2, 5), enemyAt(2, 3.5))).toBe(false);
   });
 
   it('misses an inactive enemy', () => {
-    const source = chef(2, 5);
-    expect(isHitByPepper(pepperCloudFor(source), source, enemyAt(5, 3.5, false))).toBe(false);
+    expect(isHitByPepper(chef(2, 5), enemyAt(5, 3.5, false))).toBe(false);
+  });
+});
+
+describe('pepper on a ladder', () => {
+  it('places the cloud above the chef when thrown up', () => {
+    const cloud = pepperCloudFor(chef(3.5, 4, 'up'));
+    expect(cloud.x).toBe(3.5);
+    expect(cloud.y).toBeCloseTo(4 - 24 / 32 - 2 / 32, 10);
+    expect(cloud.direction).toBe('up');
+  });
+
+  it('places the cloud below the chef when thrown down', () => {
+    const cloud = pepperCloudFor(chef(3.5, 3, 'down'));
+    expect(cloud.x).toBe(3.5);
+    expect(cloud.y).toBeCloseTo(3 + 24 / 32 - 2 / 32, 10);
+  });
+
+  it('hits an enemy climbing the same ladder above', () => {
+    expect(isHitByPepper(chef(3.5, 4, 'up'), enemyOnLadder(3))).toBe(true);
+  });
+
+  it('hits an enemy climbing the same ladder below', () => {
+    expect(isHitByPepper(chef(3.5, 3, 'down'), enemyOnLadder(4))).toBe(true);
+  });
+
+  it('hits an enemy waiting on the platform at the top of the ladder', () => {
+    expect(isHitByPepper(chef(3.5, 3.2, 'up'), enemyAt(2, 3.7))).toBe(true);
+  });
+
+  it('hits an enemy waiting on the platform at the bottom of the ladder', () => {
+    expect(isHitByPepper(chef(3.5, 3.8, 'down'), enemyAt(5, 3.3))).toBe(true);
+  });
+
+  it('misses an enemy behind the throw', () => {
+    expect(isHitByPepper(chef(3.5, 4, 'down'), enemyOnLadder(3))).toBe(false);
+    expect(isHitByPepper(chef(3.5, 3, 'up'), enemyOnLadder(4))).toBe(false);
+  });
+
+  it('misses an enemy that is too far along the ladder', () => {
+    expect(isHitByPepper(chef(3.5, 4.9, 'up'), enemyAt(2, 3.5))).toBe(false);
+  });
+
+  it('misses an enemy on the platform away from the ladder', () => {
+    expect(isHitByPepper(chef(3.5, 3, 'up'), enemyAt(2, 5))).toBe(false);
   });
 });

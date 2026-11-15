@@ -1,3 +1,4 @@
+import type { ThrowDirection } from './entities/pepper';
 import type { GamePhaseName } from './phases/GamePhase';
 
 export type SimEvent =
@@ -39,7 +40,7 @@ export type SimEvent =
       readonly type: 'pepperThrown';
       readonly x: number;
       readonly y: number;
-      readonly direction: 1 | -1;
+      readonly direction: ThrowDirection;
     }
   | { readonly type: 'burgerDone'; readonly plateId: number; readonly points: number }
   | { readonly type: 'chefHit'; readonly livesLeft: number }

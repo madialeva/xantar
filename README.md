@@ -135,6 +135,9 @@ disconnected. The pause menu lets you resume or quit to the main menu.
 - You start with **5 pepper shots**.
 - When thrown, the chef creates a cloud in the direction he is facing and
   **stuns** the enemies it touches, so you can walk through them safely.
+- On a ladder the pepper goes **up or down**, the way the chef was last
+  climbing, so you can stop an enemy coming along the ladder or waiting at
+  its end.
 - Completing a burger grants one extra shot.
 
 ### Scoring

@@ -137,6 +137,38 @@ describe('Simulation: pepper', () => {
     run(sim, 20);
     expect(sim.stats.peppers).toBe(START_PEPPERS - 1);
   });
+
+  const ladderDuel = (chefRow: number, enemyRow: number): GridSpec => {
+    const actors = Array.from({ length: 8 }, () => '........');
+    actors[chefRow] = '...C....';
+    actors[enemyRow] = '...h....';
+    return { structure: tinyGrid.structure, actors };
+  };
+
+  const climbTowardsEnemy = (sim: Simulation, input: Partial<SimInput>): void => {
+    for (let i = 0; i < 200; i++) {
+      const [enemy] = sim.enemies;
+      if (sim.chef.isClimbing && Math.abs(enemy.y - sim.chef.y) < 1.5) return;
+      run(sim, 1, input);
+    }
+    throw new Error('the enemy never came close to the chef on the ladder');
+  };
+
+  it.each([
+    { direction: 'up', chefRow: 5, enemyRow: 2, input: { up: true } },
+    { direction: 'down', chefRow: 2, enemyRow: 5, input: { down: true } }
+  ] as const)(
+    'throws $direction along the ladder and stuns the enemy coming that way',
+    ({ direction, chefRow, enemyRow, input }) => {
+      const sim = create(ladderDuel(chefRow, enemyRow));
+      climbTowardsEnemy(sim, input);
+      const events = run(sim, 1, { pepper: true });
+      expect(ofType(events, 'pepperThrown')[0]?.direction).toBe(direction);
+      expect(ofType(events, 'enemyStunned')).toEqual([{ type: 'enemyStunned', enemyId: 0 }]);
+      expect(sim.chef.isClimbing).toBe(true);
+      expect(sim.stats.lives).toBe(START_LIVES);
+    }
+  );
 });
 
 const untilPhase = (

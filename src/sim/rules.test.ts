@@ -12,8 +12,8 @@ import {
   FALL_STAGGER_TICKS,
   FALL_TICKS,
   PEPPER_CLOUD_OFFSET,
-  PEPPER_REACH_X,
-  PEPPER_REACH_Y,
+  PEPPER_REACH_ALONG,
+  PEPPER_REACH_ACROSS,
   RESPAWN_TICKS,
   STUN_TICKS,
   TICK_MS,
@@ -36,8 +36,8 @@ describe('rules', () => {
     expect(CONTACT_X * PX_PER_TILE).toBe(16);
     expect(CONTACT_Y * PX_PER_TILE).toBe(18);
     expect(PEPPER_CLOUD_OFFSET * PX_PER_TILE).toBe(24);
-    expect(PEPPER_REACH_X * PX_PER_TILE).toBe(44);
-    expect(PEPPER_REACH_Y * PX_PER_TILE).toBe(26);
+    expect(PEPPER_REACH_ALONG * PX_PER_TILE).toBe(44);
+    expect(PEPPER_REACH_ACROSS * PX_PER_TILE).toBe(26);
   });
 
   it('converts the durations of the proof of concept to ticks', () => {

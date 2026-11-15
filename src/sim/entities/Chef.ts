@@ -10,6 +10,7 @@ import {
 } from '../rules';
 import type { SimInput } from '../SimInput';
 import { MovingEntity, type PositionSnapshot } from './MovingEntity';
+import type { ThrowDirection } from './pepper';
 
 export interface ChefPosition {
   readonly x: number;
@@ -19,6 +20,7 @@ export interface ChefPosition {
 
 export interface ChefSnapshot extends PositionSnapshot, ChefPosition {
   readonly facing: 1 | -1;
+  readonly throwDirection: ThrowDirection;
   readonly isMoving: boolean;
   readonly isClimbing: boolean;
   readonly place: NavPlace;
@@ -29,12 +31,14 @@ const axis = (positive: boolean, negative: boolean): -1 | 0 | 1 =>
 
 /**
  * The player's character. Walks along platforms, grabs ladders and climbs them only while
- * the player presses, and steps off onto a platform when it reaches its height.
+ * the player presses, and steps off onto a platform when it reaches its height. Throws the
+ * pepper where it faces on a platform and along its last climbing direction on a ladder.
  */
 export class Chef extends MovingEntity implements ChefSnapshot {
   #place: NavPlace;
   #row: number;
   #facing: 1 | -1 = 1;
+  #climbing: 1 | -1 = -1;
   #isMoving = false;
 
   constructor(place: NavPlace) {
@@ -55,6 +59,11 @@ export class Chef extends MovingEntity implements ChefSnapshot {
     return this.#facing;
   }
 
+  get throwDirection(): ThrowDirection {
+    if (this.isClimbing) return this.#climbing < 0 ? 'up' : 'down';
+    return this.#facing > 0 ? 'right' : 'left';
+  }
+
   get isMoving(): boolean {
     return this.#isMoving;
   }
@@ -71,6 +80,7 @@ export class Chef extends MovingEntity implements ChefSnapshot {
     this.#place = place;
     this.#row = place.platform?.row ?? this.#row;
     this.#facing = 1;
+    this.#climbing = -1;
     this.#isMoving = false;
     this.teleportTo(place.point.x, place.point.y);
   }
@@ -94,7 +104,9 @@ export class Chef extends MovingEntity implements ChefSnapshot {
     if (vertical === 0 || platform === undefined) return;
     const goingUp = vertical < 0;
     const ladder = graph.ladderNear(platform, this.#place.along, goingUp);
-    if (ladder !== undefined) this.#place = NavPlace.onLadder(ladder, goingUp ? ladder.length : 0);
+    if (ladder === undefined) return;
+    this.#place = NavPlace.onLadder(ladder, goingUp ? ladder.length : 0);
+    this.#climbing = vertical;
   }
 
   #stepLadder(ladder: LadderEdge, input: SimInput): void {
@@ -104,6 +116,7 @@ export class Chef extends MovingEntity implements ChefSnapshot {
     const vertical = axis(input.down, input.up);
     this.#isMoving = vertical !== 0;
     if (vertical === 0) return;
+    this.#climbing = vertical;
     const along = this.#place.along + vertical * CLIMB_SPEED * TICK_SECONDS;
     if (vertical < 0 && along <= ARRIVAL_THRESHOLD) {
       this.#arriveAt(ladder.top, ladder.topRow, ladder.x);
