@@ -234,6 +234,11 @@ export class Ingredient extends MovingEntity implements IngredientSnapshot {
     return this.#state instanceof IdleState;
   }
 
+  /** Falling or bouncing: moving through the board, where it crushes enemies. */
+  get isMoving(): boolean {
+    return this.#state instanceof FallingState || this.#state instanceof BouncingState;
+  }
+
   get stomped(): readonly boolean[] {
     return this.#state.stomped;
   }

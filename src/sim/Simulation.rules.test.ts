@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 import type { SimEvent } from './events';
 import {
   DYING_TICKS,
+  ENEMY_HEIGHT,
   LEVEL_CLEAR_TICKS,
   READY_TICKS,
   START_LIVES,
   START_PEPPERS,
   STUN_TICKS
 } from './rules';
+import { isCrushedBy } from './entities/crush';
 import { NO_INPUT, type SimInput } from './SimInput';
 import { Simulation } from './Simulation';
 import { type GridSpec, levelFromGrid, tinyGrid, withGrid } from './testing/grids';
@@ -86,6 +88,74 @@ describe('Simulation: stomping and crushing enemies', () => {
     expect(crushed[0].y).toBeLessThanOrEqual(5);
     expect(sim.stats.combo).toBe(2);
     expect(sim.enemies.every((enemy) => !enemy.active)).toBe(true);
+  });
+
+  it('crushes an enemy when the falling ingredient reaches it, not when the fall starts', () => {
+    const sim = create({
+      structure: [
+        '........',
+        '........',
+        '========',
+        '........',
+        '........',
+        '...=....',
+        '........',
+        '.____...'
+      ],
+      ingredients: [
+        '........',
+        '........',
+        '.TTTT...',
+        '........',
+        '........',
+        '........',
+        '........',
+        '........'
+      ],
+      actors: [
+        '........',
+        '........',
+        '......C.',
+        '........',
+        '........',
+        '...h....',
+        '........',
+        '........'
+      ]
+    });
+    let tick = 0;
+    for (
+      ;
+      tick < 200 && ofType(run(sim, 1, { left: true }), 'ingredientsTriggered').length === 0;
+      tick++
+    );
+    expect(sim.enemies[0].active).toBe(true);
+    const enemyY = sim.enemies[0].y;
+    let squashed: SimEvent[] = [];
+    for (; tick < 400 && squashed.length === 0; tick++)
+      squashed = ofType(run(sim, 1), 'enemySquashed');
+    expect(squashed).toHaveLength(1);
+    const [top] = sim.ingredients;
+    expect(top.y).toBeGreaterThan(enemyY - ENEMY_HEIGHT);
+    expect(top.prevY).toBeLessThanOrEqual(enemyY - ENEMY_HEIGHT);
+  });
+
+  it('never crushes the chef, even with the base of a falling ingredient at his height', () => {
+    const sim = create({
+      structure: ['........', '.+======', '.H......', '.+======', '........', '.____...'],
+      ingredients: ['........', '.TTTT...', '........', '.LLLL...', '........', '........'],
+      actors: ['........', '......C.', '........', '........', '........', '........']
+    });
+    const events = run(sim, 90, { left: true });
+    expect(ofType(events, 'ingredientsTriggered').length).toBeGreaterThan(0);
+    let overlapped = false;
+    for (let i = 0; i < 120; i++) {
+      events.push(...run(sim, 1, { down: true }));
+      overlapped ||= isCrushedBy(sim.ingredients[0], sim.chef);
+    }
+    expect(overlapped).toBe(true);
+    expect(ofType(events, 'chefHit')).toEqual([]);
+    expect([sim.stats.lives, sim.phase]).toEqual([START_LIVES, 'playing']);
   });
 
   it('respawns the crushed enemies after the respawn delay at a spawn marker', () => {

@@ -1,7 +1,8 @@
 import { Chef, type ChefSnapshot } from './entities/Chef';
 import { createEnemy } from './entities/createEnemy';
 import type { Enemy, EnemySnapshot } from './entities/Enemy';
-import { type CrushTarget, IngredientField } from './entities/IngredientField';
+import { isCrushedBy } from './entities/crush';
+import { type EnemyRoster, IngredientField } from './entities/IngredientField';
 import type { IngredientSnapshot } from './entities/Ingredient';
 import { isHitByPepper, pepperCloudFor } from './entities/pepper';
 import type { PlateSnapshot } from './entities/Plate';
@@ -34,8 +35,8 @@ export class Simulation {
   readonly #enemies: readonly Enemy[];
   readonly #enemyPlaces: readonly NavPlace[];
   readonly #chefPlace: NavPlace;
-  readonly #crushTarget: CrushTarget = {
-    crush: (left, right, fromRow, toRow) => this.#crushEnemies(left, right, fromRow, toRow)
+  readonly #roster: EnemyRoster = {
+    crushUnder: (ingredient) => this.#crushUnder(ingredient)
   };
   readonly #phaseHost: PhaseHost = this.#createPhaseHost();
   #field: IngredientField;
@@ -133,7 +134,7 @@ export class Simulation {
   }
 
   #newField(): IngredientField {
-    return new IngredientField(this.#level, this.#events, this.#stats, this.#crushTarget);
+    return new IngredientField(this.#level, this.#events, this.#stats, this.#roster);
   }
 
   #resetPositions(): void {
@@ -141,11 +142,9 @@ export class Simulation {
     this.#enemies.forEach((enemy, index) => enemy.reset(this.#enemyPlaces[index], this.#rng));
   }
 
-  #crushEnemies(left: number, right: number, fromRow: number, toRow: number): void {
+  #crushUnder(ingredient: IngredientSnapshot): void {
     for (const enemy of this.#enemies) {
-      const inLane = enemy.x >= left && enemy.x <= right;
-      const inRange = enemy.row >= fromRow && enemy.row <= toRow;
-      if (!enemy.active || !inLane || !inRange) continue;
+      if (!enemy.active || !isCrushedBy(ingredient, enemy)) continue;
       enemy.squash();
       const points = this.#stats.registerCrush(SCORE.squashBase);
       this.#events.emit({

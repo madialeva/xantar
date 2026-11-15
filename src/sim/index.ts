@@ -1,5 +1,6 @@
 export * from './entities/Chef';
 export * from './entities/createEnemy';
+export * from './entities/crush';
 export * from './entities/Enemy';
 export * from './entities/EnemyBrain';
 export * from './entities/Ingredient';

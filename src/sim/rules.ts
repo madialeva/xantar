@@ -46,6 +46,9 @@ export const PEPPER_CLOUD_LIFT = fromPx(2);
 export const PEPPER_REACH_ALONG = fromPx(44);
 export const PEPPER_REACH_ACROSS = fromPx(26);
 
+/** How tall an enemy is for a falling ingredient to crush it. */
+export const ENEMY_HEIGHT = fromPx(32);
+
 export const CONTACT_X = fromPx(16);
 export const CONTACT_Y = fromPx(18);
 

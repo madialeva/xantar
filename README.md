@@ -128,8 +128,10 @@ disconnected. The pause menu lets you resume or quit to the main menu.
 - **Mr. Hot Dog**, **Mr. Pickle** and **Mr. Egg** roam the maze and chase you
   using the ladders, always taking the shortest way to you.
 - If they touch you, you **lose a life**.
-- You can **crush them** by dropping an ingredient on top of them. They respawn
-  after a few seconds.
+- You can **crush them** by dropping an ingredient on top of them. An enemy is
+  crushed when the falling ingredient reaches it: one that gets out of the way
+  in time escapes, and one that walks under a falling ingredient is crushed.
+  They respawn after a few seconds.
 - Crushing enemies in a row increases the scoring multiplier, which resets when
   you lose a life.
 

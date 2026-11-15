@@ -4,7 +4,7 @@ import { GameStats } from '../GameStats';
 import { INGREDIENT_THICKNESS, START_PEPPERS } from '../rules';
 import { chefAt } from '../testing/chef';
 import { type GridSpec, levelFromGrid } from '../testing/grids';
-import { type CrushTarget, IngredientField } from './IngredientField';
+import { type EnemyRoster, IngredientField } from './IngredientField';
 
 const columnGrid: GridSpec = {
   structure: [
@@ -46,10 +46,8 @@ const columnGrid: GridSpec = {
 };
 
 interface Crush {
-  left: number;
-  right: number;
-  fromRow: number;
-  toRow: number;
+  readonly id: number;
+  readonly y: number;
 }
 
 const create = (grid: GridSpec = columnGrid) => {
@@ -57,10 +55,10 @@ const create = (grid: GridSpec = columnGrid) => {
   const events = new EventQueue();
   const stats = new GameStats(events);
   const crushes: Crush[] = [];
-  const crush: CrushTarget = {
-    crush: (left, right, fromRow, toRow) => crushes.push({ left, right, fromRow, toRow })
+  const enemies: EnemyRoster = {
+    crushUnder: (ingredient) => crushes.push({ id: ingredient.id, y: ingredient.y })
   };
-  return { field: new IngredientField(level, events, stats, crush), events, stats, crushes };
+  return { field: new IngredientField(level, events, stats, enemies), events, stats, crushes };
 };
 
 type Context = ReturnType<typeof create>;
@@ -328,12 +326,23 @@ describe('IngredientField chain', () => {
     expect(triggered.filter((ids) => ids.includes(1))).toHaveLength(1);
   });
 
-  it('asks to crush the enemies between the origin and the landing rows', () => {
+  it('asks to crush under every ingredient in each tick it moves, and never under a resting one', () => {
     const context = create();
-    stompAll(context, 0);
-    settle(context);
-    expect(context.crushes).toContainEqual({ left: 1, right: 5, fromRow: 1, toRow: 3 });
-    expect(context.crushes).toContainEqual({ left: 1, right: 5, fromRow: 7, toRow: 9 });
+    settle(context, 20);
+    expect(context.crushes).toEqual([]);
+    const top = context.field.ingredients[0];
+    for (const x of [1.5, 2.5, 3.5]) context.field.step(chefAt(1, x));
+    let moving = 0;
+    for (let i = 0; i < 200; i++) {
+      const before = top.isMoving;
+      context.field.step(i === 0 ? chefAt(1, 4.5) : away);
+      if (before || top.isMoving) moving += 1;
+    }
+    const underTop = context.crushes.filter((crush) => crush.id === 0);
+    expect(underTop).toHaveLength(moving);
+    expect(underTop.every((crush) => crush.y > 1 && crush.y <= 3)).toBe(true);
+    expect(underTop.at(-1)?.y).toBe(3);
+    expect(context.crushes.some((crush) => crush.id === 3)).toBe(true);
   });
 
   it('stays in place and lifts its segments when there is nothing below an ingredient', () => {

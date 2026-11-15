@@ -644,8 +644,11 @@ En Xantar: [`classic.level.json`](../src/levels/classic.level.json),
   (`CONTACT_X`, `CONTACT_Y`).
 - **Efecto túnel** (*tunneling*): un objeto rápido avanza tanto en un paso que
   "salta" por encima de otro sin detectar el choque. Se evita con pasos
-  pequeños o con **colisión continua** (comprobar todo el recorrido), que es
-  lo que propone #18 para aplastar enemigos con ingredientes.
+  pequeños o con **colisión continua** (comprobar todo el recorrido). Xantar
+  comprueba en cada tick si la base de un ingrediente que cae está dentro de un
+  enemigo (`isCrushedBy`): como baja menos de 3 unidades por tick y un enemigo
+  mide 32, no puede atravesarlo sin que se note. Así se aplasta al enemigo
+  cuando el ingrediente le alcanza de verdad, no al empezar la caída.
 - **Motor de física**: una librería que simula gravedad, rebotes y fuerzas
   (Phaser incluye Arcade Physics y Matter.js). Es ideal para juegos donde
   importa la física realista; para un arcade de plataformas y escaleras como

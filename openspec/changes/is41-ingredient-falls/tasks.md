@@ -15,8 +15,8 @@
 
 ## 3. Aplastamiento por contacto
 
-- [ ] 3.1 Sustituir `CrushTarget` por la interfaz `EnemyRoster` con `crushUnder(ingredient)`, llamada en cada tick en que un ingrediente cae o rebota (enemigos activos con `x` en sus casillas y `y − ENEMY_HEIGHT < base ≤ y`), añadir `ENEMY_HEIGHT` y quitar el aplastamiento al empezar la caída; verificar con pruebas de reglas: un enemigo aturdido en la plataforma del soporte se aplasta al ser alcanzado y no al empezar la caída, el que sale a tiempo se salva, el que se mete debajo se aplasta, el de una escalera también, el chef no sufre nada y el combo sigue dando 100 y 200
-- [ ] 3.2 Documentar el aplastamiento por contacto en `README.md` ("Enemies"), `docs/MANUAL.md` (§8.5, punto 3 de la mecánica y `EnemyRoster`) y `docs/GAMEDEV_FUNDAMENTALS.md` (§13: colisión por tick con el ingrediente que cae, ya no pendiente de #18, y por qué no hay efecto túnel con estos pasos); verificar con `npm run format:check`, `grep` de los nombres citados y las comprobaciones de entrega
+- [x] 3.1 Sustituir `CrushTarget` por la interfaz `EnemyRoster` con `crushUnder(ingredient)`, llamada en cada tick en que un ingrediente cae o rebota (enemigos activos con `x` en sus casillas y `y − ENEMY_HEIGHT < base ≤ y`), añadir `ENEMY_HEIGHT` y quitar el aplastamiento al empezar la caída; verificar con pruebas de reglas: un enemigo aturdido en la plataforma del soporte se aplasta al ser alcanzado y no al empezar la caída, el que sale a tiempo se salva, el que se mete debajo se aplasta, el de una escalera también, el chef no sufre nada y el combo sigue dando 100 y 200
+- [x] 3.2 Documentar el aplastamiento por contacto en `README.md` ("Enemies"), `docs/MANUAL.md` (§8.5, punto 3 de la mecánica y `EnemyRoster`) y `docs/GAMEDEV_FUNDAMENTALS.md` (§13: colisión por tick con el ingrediente que cae, ya no pendiente de #18, y por qué no hay efecto túnel con estos pasos); verificar con `npm run format:check`, `grep` de los nombres citados y las comprobaciones de entrega
 
 ## 4. Enemigos montados
 
