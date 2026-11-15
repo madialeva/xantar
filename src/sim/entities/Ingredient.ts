@@ -6,11 +6,12 @@ import {
   BOUNCE_RISE_TICKS,
   FALL_SPEED,
   INGREDIENT_THICKNESS,
+  RIDER_STOP_TICKS,
   TICK_SECONDS
 } from '../rules';
 import { MovingEntity, type PositionSnapshot } from './MovingEntity';
 
-export type IngredientPhase = 'idle' | 'falling' | 'bouncing' | 'stacked';
+export type IngredientPhase = 'idle' | 'falling' | 'bouncing' | 'stopped' | 'stacked';
 
 /**
  * Where a falling ingredient comes to rest: a platform row, or its place in the burger of a
@@ -38,10 +39,11 @@ export interface IngredientSnapshot extends PositionSnapshot {
 }
 
 /**
- * What a falling ingredient asks of its surroundings: what it meets on its way down, and
- * telling them when it touches its support and when it comes to rest.
+ * What a falling ingredient asks of its surroundings: the support below it, what it meets on
+ * its way down, and telling them when it touches a support and when it comes to rest.
  */
 export interface IngredientHost {
+  supportBelow(ingredient: IngredientSnapshot): Support | undefined;
   /**
    * The height at which its base, going down to `toY`, meets another ingredient, if any. The
    * resting ingredients it meets are knocked down.
@@ -98,38 +100,56 @@ class IdleState implements IngredientState {
   }
 }
 
+/** Where a fall is heading and how many supports it still has to go down, this one included. */
+interface Descent {
+  readonly support: Support;
+  readonly supportsLeft: number;
+}
+
+const restAt = ({ ingredient, host, restOn }: StateContext, support: Support): IngredientState => {
+  restOn(support.row);
+  host.cameToRest(ingredient, support);
+  return support.plateId === null
+    ? new IdleState(ingredient.width)
+    : new StackedState(ingredient.width, support);
+};
+
 /**
  * Ingredient going down at a constant speed towards its support. Bound for a plate, it goes
- * down twice: onto the burger and, after bouncing on it, back to its place (`settling`).
+ * down twice: onto the burger and, after bouncing on it, back to its place (`settling`). With
+ * supports left (it carries enemies), it stops on each floor before going on.
  */
 class FallingState implements IngredientState {
   readonly phase = 'falling';
   readonly support: Support;
   readonly stomped: readonly boolean[];
+  readonly #descent: Descent;
   readonly #settling: boolean;
 
-  constructor(width: number, support: Support, settling = false) {
-    this.support = support;
+  constructor(width: number, descent: Descent, settling = false) {
+    this.support = descent.support;
     this.stomped = filled(width, true);
+    this.#descent = descent;
     this.#settling = settling;
   }
 
-  step({ ingredient, host, moveTo, restOn }: StateContext): IngredientState | undefined {
+  step(context: StateContext): IngredientState | undefined {
+    const { ingredient, host, moveTo, restOn } = context;
     const { support } = this;
     const toY = Math.min(ingredient.y + FALL_STEP, support.y);
     const contact = this.#settling ? undefined : host.strike(ingredient, toY);
     if (contact !== undefined) {
       moveTo(contact);
-      return new BouncingState(ingredient.width, support, false);
+      return new BouncingState(ingredient.width, this.#descent, false);
     }
     moveTo(toY);
     if (toY < support.y) return undefined;
-    const onPlate = support.plateId !== null;
-    if (!this.#settling) host.touchedDown(ingredient, support);
-    if (onPlate && !this.#settling) return new BouncingState(ingredient.width, support, true);
+    if (this.#settling) return restAt(context, support);
+    host.touchedDown(ingredient, support);
+    if (support.plateId !== null) return new BouncingState(ingredient.width, this.#descent, true);
+    if (this.#descent.supportsLeft <= 1) return restAt(context, support);
     restOn(support.row);
-    host.cameToRest(ingredient, support);
-    return onPlate ? new StackedState(ingredient.width, support) : new IdleState(ingredient.width);
+    return new StoppedState(ingredient.width, this.#descent.supportsLeft - 1);
   }
 }
 
@@ -141,12 +161,14 @@ class BouncingState implements IngredientState {
   readonly phase = 'bouncing';
   readonly support: Support;
   readonly stomped: readonly boolean[];
+  readonly #descent: Descent;
   readonly #thenSettle: boolean;
   #elapsed = 0;
 
-  constructor(width: number, support: Support, thenSettle: boolean) {
-    this.support = support;
+  constructor(width: number, descent: Descent, thenSettle: boolean) {
+    this.support = descent.support;
     this.stomped = filled(width, true);
+    this.#descent = descent;
     this.#thenSettle = thenSettle;
   }
 
@@ -154,7 +176,40 @@ class BouncingState implements IngredientState {
     this.#elapsed += 1;
     if (this.#elapsed <= BOUNCE_RISE_TICKS) moveTo(ingredient.y - RISE_STEP);
     if (this.#elapsed < BOUNCE_RISE_TICKS + BOUNCE_HOLD_TICKS) return undefined;
-    return new FallingState(ingredient.width, this.support, this.#thenSettle);
+    return new FallingState(ingredient.width, this.#descent, this.#thenSettle);
+  }
+}
+
+/**
+ * Ingredient that carries enemies, stopped for a moment on a floor it has reached before
+ * going on to the next support.
+ */
+class StoppedState implements IngredientState {
+  readonly phase = 'stopped';
+  readonly support = undefined;
+  readonly stomped: readonly boolean[];
+  readonly #supportsLeft: number;
+  #elapsed = 0;
+
+  constructor(width: number, supportsLeft: number) {
+    this.stomped = filled(width, true);
+    this.#supportsLeft = supportsLeft;
+  }
+
+  step(context: StateContext): IngredientState | undefined {
+    this.#elapsed += 1;
+    if (this.#elapsed < RIDER_STOP_TICKS) return undefined;
+    const { ingredient, host } = context;
+    const support = host.supportBelow(ingredient);
+    if (support === undefined) {
+      return restAt(context, {
+        row: ingredient.row,
+        y: ingredient.y,
+        plateId: null,
+        stackSlot: null
+      });
+    }
+    return new FallingState(ingredient.width, { support, supportsLeft: this.#supportsLeft });
   }
 }
 
@@ -260,8 +315,10 @@ export class Ingredient extends MovingEntity implements IngredientSnapshot {
     return this.#state instanceof IdleState && this.#state.stomp(segment);
   }
 
-  fall(support: Support): void {
-    if (this.isIdle) this.#state = new FallingState(this.width, support);
+  /** Starts falling to a support and, if it carries enemies, on down to the next ones. */
+  fall(support: Support, supports = 1): void {
+    if (this.isIdle)
+      this.#state = new FallingState(this.width, { support, supportsLeft: supports });
   }
 
   /** Lifts its stomped segments again; for an ingredient with nowhere to fall. */

@@ -55,10 +55,19 @@ const create = (grid: GridSpec = columnGrid) => {
   const events = new EventQueue();
   const stats = new GameStats(events);
   const crushes: Crush[] = [];
+  const boarded: number[] = [];
+  const released: number[] = [];
+  const roster = { riders: 0 };
   const enemies: EnemyRoster = {
-    crushUnder: (ingredient) => crushes.push({ id: ingredient.id, y: ingredient.y })
+    board: (ingredient) => {
+      boarded.push(ingredient.id);
+      return roster.riders;
+    },
+    crushUnder: (ingredient) => crushes.push({ id: ingredient.id, y: ingredient.y }),
+    release: (ingredient) => released.push(ingredient.id)
   };
-  return { field: new IngredientField(level, events, stats, enemies), events, stats, crushes };
+  const field = new IngredientField(level, events, stats, enemies);
+  return { field, events, stats, crushes, boarded, released, roster };
 };
 
 type Context = ReturnType<typeof create>;
@@ -454,5 +463,54 @@ describe('IngredientField plates', () => {
       actors: ['........', '......C.', '........', '........']
     });
     expect(empty.field.isComplete).toBe(false);
+  });
+});
+
+describe('IngredientField riders', () => {
+  it('takes enemies for a ride only on the ingredient the chef drops', () => {
+    const context = create();
+    stompAll(context, 0);
+    settle(context);
+    expect(context.boarded).toEqual([0]);
+  });
+
+  it('goes down one support plus two per rider, stopping on each floor and hitting again', () => {
+    const context = create();
+    context.roster.riders = 1;
+    const [top] = context.field.ingredients;
+    stompAll(context, 0);
+    const phases: string[] = [];
+    const events = [...context.events.drain()];
+    for (let i = 0; i < 400; i++) {
+      context.field.step(away);
+      events.push(...context.events.drain());
+      if (phases.at(-1) !== top.phase) phases.push(top.phase);
+    }
+    expect(phases.filter((phase) => phase === 'stopped')).toHaveLength(2);
+    expect([top.row, top.phase]).toEqual([7, 'idle']);
+    const triggered = ofType(events, 'ingredientsTriggered').map((event) => event.ingredientIds);
+    expect(triggered.filter((ids) => ids.includes(1))).toHaveLength(3);
+    expect(
+      ofType(events, 'ingredientLanded').filter((event) => event.ingredientId === 0)
+    ).toHaveLength(3);
+    expect(context.released.filter((id) => id === 0)).toHaveLength(1);
+  });
+
+  it('pays an ingredient each time it ends a fall, not when it stops on the way', () => {
+    const context = create();
+    context.roster.riders = 1;
+    stompAll(context, 0);
+    settle(context, 400);
+    expect(context.released).toHaveLength(7);
+    expect(context.stats.score).toBe(7 * 50);
+  });
+
+  it('goes on down to its plate with two riders', () => {
+    const context = create();
+    context.roster.riders = 2;
+    const [top] = context.field.ingredients;
+    stompAll(context, 0);
+    settle(context, 600);
+    expect([top.phase, top.row, top.stackSlot]).toEqual(['stacked', 9, 3]);
   });
 });

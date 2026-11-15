@@ -19,7 +19,7 @@ describe('chefAnimation', () => {
 });
 
 describe('enemyAnimation', () => {
-  const enemy = { active: true, stunned: false, isClimbing: false };
+  const enemy = { active: true, stunned: false, isClimbing: false, riding: false };
 
   it('walks on platforms and climbs on ladders', () => {
     expect(enemyAnimation(enemy)).toBe('walk');
@@ -28,6 +28,11 @@ describe('enemyAnimation', () => {
 
   it('is stunned while the simulation says so, even on a ladder', () => {
     expect(enemyAnimation({ ...enemy, stunned: true, isClimbing: true })).toBe('stunned');
+  });
+
+  it('rides standing still on an ingredient, even when stunned', () => {
+    expect(enemyAnimation({ ...enemy, riding: true })).toBe('ride');
+    expect(enemyAnimation({ ...enemy, riding: true, stunned: true })).toBe('ride');
   });
 
   it('is inactive when squashed or waiting to respawn', () => {

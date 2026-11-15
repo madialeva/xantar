@@ -8,6 +8,7 @@ export * from './entities/IngredientField';
 export * from './entities/MovingEntity';
 export * from './entities/pepper';
 export * from './entities/Plate';
+export * from './entities/riders';
 export * from './events';
 export * from './GameStats';
 export * from './geometry';

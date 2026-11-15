@@ -662,6 +662,11 @@ En Xantar: [`classic.level.json`](../src/levels/classic.level.json),
   original, y lo que pasa durante la caída (alcanzar a otro ingrediente,
   rebotar, llegar al plato) ocurre cuando la posición lo provoca, no en un
   instante fijado de antemano.
+- **Entidades que viajan con otra**: un enemigo montado en un ingrediente no
+  calcula su movimiento: en cada tick copia la altura del ingrediente que lo
+  lleva (en muchos motores se dice que es "hijo" de otro objeto). El orden de
+  actualización importa: el ingrediente se mueve antes que los enemigos, así
+  que el montado sigue su posición del mismo tick y no se queda un paso atrás.
 - **Movimiento sobre un grafo**: el chef y los enemigos no se mueven
   libremente, sino por tramos de plataforma y de escalera. Su posición es "en
   qué tramo estoy y a qué distancia del inicio", lo que permite, por ejemplo,

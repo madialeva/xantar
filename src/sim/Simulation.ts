@@ -2,6 +2,7 @@ import { Chef, type ChefSnapshot } from './entities/Chef';
 import { createEnemy } from './entities/createEnemy';
 import type { Enemy, EnemySnapshot } from './entities/Enemy';
 import { isCrushedBy } from './entities/crush';
+import { isStandingOn } from './entities/riders';
 import { type EnemyRoster, IngredientField } from './entities/IngredientField';
 import type { IngredientSnapshot } from './entities/Ingredient';
 import { isHitByPepper, pepperCloudFor } from './entities/pepper';
@@ -36,7 +37,9 @@ export class Simulation {
   readonly #enemyPlaces: readonly NavPlace[];
   readonly #chefPlace: NavPlace;
   readonly #roster: EnemyRoster = {
-    crushUnder: (ingredient) => this.#crushUnder(ingredient)
+    board: (ingredient) => this.#board(ingredient),
+    crushUnder: (ingredient) => this.#crushUnder(ingredient),
+    release: (ingredient) => this.#release(ingredient)
   };
   readonly #phaseHost: PhaseHost = this.#createPhaseHost();
   #field: IngredientField;
@@ -142,9 +145,28 @@ export class Simulation {
     this.#enemies.forEach((enemy, index) => enemy.reset(this.#enemyPlaces[index], this.#rng));
   }
 
+  #board(ingredient: IngredientSnapshot): number {
+    const riders = this.#enemies.filter((enemy) => isStandingOn(ingredient, enemy));
+    for (const enemy of riders) enemy.ride(ingredient);
+    return riders.length;
+  }
+
+  #release(ingredient: IngredientSnapshot): void {
+    const riders = this.#enemies.filter((enemy) => enemy.rides(ingredient));
+    if (riders.length === 0) return;
+    for (const enemy of riders) enemy.squash();
+    const points = this.#stats.registerRiders(SCORE.riders, riders.length);
+    this.#events.emit({
+      type: 'ridersDropped',
+      ingredientId: ingredient.id,
+      riders: riders.map((enemy) => ({ enemyId: enemy.id, x: enemy.x, y: ingredient.y })),
+      points
+    });
+  }
+
   #crushUnder(ingredient: IngredientSnapshot): void {
     for (const enemy of this.#enemies) {
-      if (!enemy.active || !isCrushedBy(ingredient, enemy)) continue;
+      if (!enemy.active || enemy.riding || !isCrushedBy(ingredient, enemy)) continue;
       enemy.squash();
       const points = this.#stats.registerCrush(SCORE.squashBase);
       this.#events.emit({
@@ -177,6 +199,7 @@ export class Simulation {
       (enemy) =>
         enemy.active &&
         !enemy.stunned &&
+        !enemy.riding &&
         Math.abs(enemy.x - this.#chef.x) < CONTACT_X &&
         Math.abs(enemy.y - this.#chef.y) < CONTACT_Y
     );

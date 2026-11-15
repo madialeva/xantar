@@ -45,7 +45,7 @@ comes next.
 |   ✅   | Modern vector visuals: SVG art and side panels                                                            |   —    |  #4   |
 |   ✅   | Rendered 3D art for the food and the characters, dancing enemies and a single look                        |   —    |  #37  |
 |   ✅   | Game state machine, pause, high score, Spanish and English                                                |   —    |  #5   |
-|   ⬜   | Enemies riding ingredients (an extra level per rider)                                                     | v1.0.0 |  #9   |
+|   ✅   | Ingredients fall like in the original, crush enemies on contact and carry riders two extra floors each    |   —    |  #41  |
 |   ✅   | Gamepad and touch controls, music and sound effects, CI and a hardened desktop app                        |   —    |  #6   |
 |   ✅   | Public web version at madialeva.github.io                                                                 |   —    |  #14  |
 |   ⬜   | Replay recording and debug tooling                                                                        | v1.0.0 |  #8   |
@@ -134,6 +134,12 @@ disconnected. The pause menu lets you resume or quit to the main menu.
   They respawn after a few seconds.
 - Crushing enemies in a row increases the scoring multiplier, which resets when
   you lose a life.
+- **Drop an ingredient with enemies standing on it** and they ride it down: it
+  falls two extra floors for every enemy on board (with one enemy, three
+  floors), stopping for a moment on each floor and knocking down what it meets.
+  While riding they cannot hurt you. When the ingredient lands they are gone
+  for a few seconds and you get a bonus. Stunned enemies ride too, so pepper
+  them on an ingredient and then drop it.
 
 ### Pepper
 
@@ -147,11 +153,12 @@ disconnected. The pause menu lets you resume or quit to the main menu.
 
 ### Scoring
 
-| Action             | Points      |
-| ------------------ | ----------- |
-| Drop an ingredient | 50          |
-| Complete a burger  | 400         |
-| Crush an enemy     | 100 × combo |
+| Action                                 | Points                                          |
+| -------------------------------------- | ----------------------------------------------- |
+| Drop an ingredient                     | 50                                              |
+| Complete a burger                      | 400                                             |
+| Crush an enemy                         | 100 × combo                                     |
+| Drop an ingredient with enemies riding | 500 for one, doubled for each extra one (1000…) |
 
 ### Lives and game over
 

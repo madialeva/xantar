@@ -22,6 +22,8 @@ export const FALL_SPEED = fromPx(170);
 export const BOUNCE_HEIGHT = fromPx(20);
 export const BOUNCE_RISE_TICKS = fromMs(80);
 export const BOUNCE_HOLD_TICKS = fromMs(220);
+export const RIDER_STOP_TICKS = fromMs(270);
+export const EXTRA_SUPPORTS_PER_RIDER = 2;
 
 /** How thick each ingredient is: where the next one rests on it, on a floor or in a burger. */
 export const INGREDIENT_THICKNESS: Readonly<Record<IngredientKind, number>> = {
@@ -58,5 +60,6 @@ export const START_PEPPERS = 5;
 export const SCORE = {
   ingredient: 50,
   burger: 400,
-  squashBase: 100
+  squashBase: 100,
+  riders: 500
 } as const;

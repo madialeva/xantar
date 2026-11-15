@@ -6,6 +6,7 @@ import {
   BOUNCE_RISE_TICKS,
   FALL_SPEED,
   INGREDIENT_THICKNESS,
+  RIDER_STOP_TICKS,
   TICK_SECONDS
 } from '../rules';
 import {
@@ -20,11 +21,19 @@ const FALL_STEP = FALL_SPEED * TICK_SECONDS;
 
 const spec = (width = 4): IngredientSpec => ({ id: 3, kind: 'patty', row: 5, col: 1, width });
 
-/** A host with, at most, one resting ingredient below whose top is at `restingTop`. */
+/**
+ * A host with, at most, one resting ingredient below whose top is at `restingTop`, and the
+ * supports `below` handed out in order to an ingredient that goes on after a stop.
+ */
 class FakeHost implements IngredientHost {
   readonly touches: Support[] = [];
   readonly rests: Support[] = [];
+  readonly below: Support[] = [];
   restingTop: number | undefined;
+
+  supportBelow(): Support | undefined {
+    return this.below.shift();
+  }
 
   strike(ingredient: IngredientSnapshot, toY: number): number | undefined {
     const top = this.restingTop;
@@ -225,5 +234,52 @@ describe('Ingredient fall', () => {
     tickWhile(ingredient, 'bouncing');
     tickWhile(ingredient, 'falling');
     expect(ingredient.stomp(0)).toBe(false);
+  });
+});
+
+describe('Ingredient carrying enemies', () => {
+  it('stops on each floor and goes on to the next support until it has gone down all of them', () => {
+    const host = new FakeHost();
+    host.below.push(floor(11), floor(14));
+    const ingredient = new Ingredient(spec(), host);
+    ingredient.fall(floor(8), 3);
+    tickWhile(ingredient, 'falling');
+    expect([ingredient.phase, ingredient.y, ingredient.row]).toEqual(['stopped', 8, 8]);
+    expect([host.touches, host.rests]).toEqual([[floor(8)], []]);
+    expect(ingredient.stomp(0)).toBe(false);
+    tick(ingredient, RIDER_STOP_TICKS - 1);
+    expect([ingredient.phase, ingredient.y]).toEqual(['stopped', 8]);
+    tick(ingredient);
+    expect([ingredient.phase, ingredient.y]).toEqual(['falling', 8]);
+    tick(ingredient);
+    expect(ingredient.y).toBeCloseTo(8 + FALL_STEP, 10);
+    tickWhile(ingredient, 'falling');
+    expect([ingredient.phase, ingredient.y]).toEqual(['stopped', 11]);
+    tickWhile(ingredient, 'stopped');
+    tickWhile(ingredient, 'falling');
+    expect([ingredient.phase, ingredient.y, ingredient.row]).toEqual(['idle', 14, 14]);
+    expect(host.touches).toEqual([floor(8), floor(11), floor(14)]);
+    expect(host.rests).toEqual([floor(14)]);
+  });
+
+  it('ends its fall on its plate even with supports left', () => {
+    const host = new FakeHost();
+    const ingredient = new Ingredient(spec(), host);
+    ingredient.fall(plate, 5);
+    tickWhile(ingredient, 'falling');
+    tickWhile(ingredient, 'bouncing');
+    tickWhile(ingredient, 'falling');
+    expect(ingredient.phase).toBe('stacked');
+    expect(host.rests).toEqual([plate]);
+  });
+
+  it('rests where it stopped when there is no support below', () => {
+    const host = new FakeHost();
+    const ingredient = new Ingredient(spec(), host);
+    ingredient.fall(floor(8), 3);
+    tickWhile(ingredient, 'falling');
+    tickWhile(ingredient, 'stopped');
+    expect([ingredient.phase, ingredient.y]).toEqual(['idle', 8]);
+    expect(host.rests).toEqual([floor(8)]);
   });
 });

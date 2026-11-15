@@ -228,6 +228,9 @@ export default class GameScene extends Phaser.Scene {
         case 'enemySquashed':
           this.#effects.squash(event.x * TILE, event.y * TILE);
           break;
+        case 'ridersDropped':
+          for (const rider of event.riders) this.#effects.squash(rider.x * TILE, rider.y * TILE);
+          break;
         case 'burgerDone': {
           const plate = this.#sim.level.plates.find((candidate) => candidate.id === event.plateId);
           if (plate) this.#effects.burgerDone(plate);

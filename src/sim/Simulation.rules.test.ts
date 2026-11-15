@@ -480,3 +480,104 @@ describe('Simulation: chain of falls', () => {
     expect(sim.ingredients[0].row).toBe(5);
   });
 });
+
+describe('Simulation: enemies riding an ingredient', () => {
+  const column = (actorsRow1: string): GridSpec => ({
+    structure: [
+      '............',
+      '============',
+      '............',
+      '============',
+      '............',
+      '============',
+      '............',
+      '============',
+      '............',
+      '.____.......'
+    ],
+    ingredients: [
+      '............',
+      '.TTTT.......',
+      '............',
+      '.LLLL.......',
+      '............',
+      '.PPPP.......',
+      '............',
+      '.BBBB.......',
+      '............',
+      '............'
+    ],
+    actors: [
+      '............',
+      actorsRow1,
+      '............',
+      '............',
+      '............',
+      '............',
+      '............',
+      '............',
+      '............',
+      '............'
+    ]
+  });
+
+  /** Stuns the enemy in front of the chef with pepper and drops the top bun with it on. */
+  const dropWithRider = (sim: Simulation): SimEvent[] => {
+    const events = [...run(sim, 1, { left: true }), ...run(sim, 1, { pepper: true })];
+    expect(sim.enemies[0].stunned).toBe(true);
+    for (let i = 0; i < 200 && ofType(events, 'ingredientsTriggered').length === 0; i++) {
+      events.push(...run(sim, 1, { left: true }));
+    }
+    return events;
+  };
+
+  const untilTopRests = (sim: Simulation): SimEvent[] => {
+    const events: SimEvent[] = [];
+    const [top] = sim.ingredients;
+    for (let i = 0; i < 2000 && !(top.phase === 'idle' && top.row === 7); i++) {
+      events.push(...run(sim, 1));
+    }
+    return events;
+  };
+
+  it('carries the enemy down three floors and drops it with a bonus', () => {
+    const sim = create(column('....h.C.....'));
+    dropWithRider(sim);
+    const [rider] = sim.enemies;
+    const [top] = sim.ingredients;
+    expect(rider.riding).toBe(true);
+    const x = rider.x;
+    const score = sim.stats.score;
+    const events: SimEvent[] = [];
+    let followed = true;
+    for (let i = 0; i < 2000 && !(top.phase === 'idle' && top.row === 7); i++) {
+      events.push(...run(sim, 1));
+      if (rider.riding) followed &&= rider.x === x && rider.y === top.y;
+    }
+    expect(followed).toBe(true);
+    expect([top.phase, top.row]).toEqual(['idle', 7]);
+    expect(ofType(events, 'ridersDropped')).toEqual([
+      { type: 'ridersDropped', ingredientId: 0, riders: [{ enemyId: 0, x, y: 7 }], points: 500 }
+    ]);
+    expect(ofType(events, 'enemySquashed')).toEqual([]);
+    expect([rider.active, rider.riding, sim.stats.combo]).toEqual([false, false, 0]);
+    const deltas = ofType(events, 'scoreChanged').map((event) => event.delta);
+    expect(deltas.filter((delta) => delta === 500)).toHaveLength(1);
+    expect(deltas.every((delta) => delta === 50 || delta === 500)).toBe(true);
+    expect(sim.stats.score - score).toBe(deltas.reduce((sum, delta) => sum + delta, 0));
+    const respawned = run(sim, 160);
+    expect(ofType(respawned, 'enemyRespawned')).toHaveLength(1);
+  });
+
+  it('gives no bonus when the chef loses a life during the ride', () => {
+    const sim = create(column('....h.C..p..'));
+    dropWithRider(sim);
+    const [rider] = sim.enemies;
+    expect(rider.riding).toBe(true);
+    const events = untilTopRests(sim);
+    expect(ofType(events, 'chefHit').length).toBeGreaterThan(0);
+    expect(rider.riding).toBe(false);
+    expect([sim.ingredients[0].phase, sim.ingredients[0].row]).toEqual(['idle', 7]);
+    expect(ofType(events, 'ridersDropped')).toEqual([]);
+  });
+});

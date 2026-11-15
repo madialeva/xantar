@@ -1,7 +1,7 @@
 import type { EventSink } from '../events';
 import type { GameStats } from '../GameStats';
 import type { Level } from '../level/Level';
-import { SCORE } from '../rules';
+import { EXTRA_SUPPORTS_PER_RIDER, SCORE } from '../rules';
 import type { ChefPosition } from './Chef';
 import {
   Ingredient,
@@ -16,8 +16,12 @@ import { Plate } from './Plate';
  * class.
  */
 export interface EnemyRoster {
+  /** Makes the enemies standing on an ingredient ride it, and tells how many they are. */
+  board(ingredient: IngredientSnapshot): number;
   /** Crushes the enemies the base of a moving ingredient is inside of. */
   crushUnder(ingredient: IngredientSnapshot): void;
+  /** Drops the enemies riding an ingredient that has come to rest: they leave the board. */
+  release(ingredient: IngredientSnapshot): void;
 }
 
 const overlap = (
@@ -28,7 +32,7 @@ const overlap = (
 /**
  * Coordinates all the ingredients and plates of a level: stomping from the chef's position,
  * the support of each fall, the ingredients a falling one meets and knocks down, the enemies
- * it crushes, landings and burger completion.
+ * it carries or crushes, landings and burger completion.
  */
 export class IngredientField implements IngredientHost {
   readonly ingredients: readonly Ingredient[];
@@ -97,8 +101,9 @@ export class IngredientField implements IngredientHost {
     });
   }
 
-  cameToRest(_ingredient: IngredientSnapshot, support: Support): void {
+  cameToRest(ingredient: IngredientSnapshot, support: Support): void {
     this.#stats.addScore(SCORE.ingredient);
+    this.#enemies.release(ingredient);
     if (support.plateId === null) return;
     if (this.plates[support.plateId].registerLanding()) {
       this.#stats.addScore(SCORE.burger);
@@ -112,7 +117,7 @@ export class IngredientField implements IngredientHost {
     const segment = ingredient.segmentAt(chef.x);
     if (segment === undefined || !ingredient.stomp(segment)) return;
     this.#events.emit({ type: 'segmentStomped', ingredientId: ingredient.id, segment });
-    if (ingredient.allStomped) this.#startFalls([ingredient]);
+    if (ingredient.allStomped) this.#startFalls([ingredient], true);
   }
 
   #knockDownStruck(): void {
@@ -122,15 +127,17 @@ export class IngredientField implements IngredientHost {
     this.#startFalls(struck);
   }
 
-  #startFalls(ingredients: readonly Ingredient[]): void {
+  /** Only an ingredient dropped by the chef takes the enemies on it for a ride. */
+  #startFalls(ingredients: readonly Ingredient[], dropped = false): void {
     const falling: Ingredient[] = [];
     for (const ingredient of ingredients) {
-      const support = this.#supportBelow(ingredient);
+      const support = this.supportBelow(ingredient);
       if (support === undefined) {
         ingredient.resetSegments();
         continue;
       }
-      ingredient.fall(support);
+      const riders = dropped ? this.#enemies.board(ingredient) : 0;
+      ingredient.fall(support, 1 + EXTRA_SUPPORTS_PER_RIDER * riders);
       falling.push(ingredient);
     }
     if (falling.length === 0) return;
@@ -140,7 +147,7 @@ export class IngredientField implements IngredientHost {
     });
   }
 
-  #supportBelow(ingredient: Ingredient): Support | undefined {
+  supportBelow(ingredient: IngredientSnapshot): Support | undefined {
     const landing = this.#level.landingBelow(ingredient.row, ingredient.left, ingredient.right);
     if (landing === undefined) return undefined;
     if (landing.plate === undefined) {

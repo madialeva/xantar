@@ -20,6 +20,15 @@ describe('eventCue', () => {
       [{ type: 'ingredientsTriggered', ingredientIds: [1] }, 'fall'],
       [{ type: 'ingredientLanded', ingredientId: 1, plateId: null, stackSlot: null }, 'land'],
       [{ type: 'enemySquashed', enemyId: 1, x: 0, y: 0, points: 100, combo: 1 }, 'squash'],
+      [
+        {
+          type: 'ridersDropped',
+          ingredientId: 1,
+          riders: [{ enemyId: 1, x: 3, y: 7 }],
+          points: 500
+        },
+        'squash'
+      ],
       [{ type: 'enemyStunned', enemyId: 1 }, 'stun'],
       [{ type: 'burgerDone', plateId: 1, points: 400 }, 'burger'],
       [{ type: 'chefHit', livesLeft: 2 }, 'hit'],

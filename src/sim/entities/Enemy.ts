@@ -18,6 +18,7 @@ export interface EnemySnapshot extends PositionSnapshot {
   readonly stunTicksLeft: number;
   readonly facing: 1 | -1;
   readonly isClimbing: boolean;
+  readonly riding: boolean;
   readonly place: NavPlace;
 }
 
@@ -27,8 +28,8 @@ interface Climb {
 }
 
 /**
- * A chasing enemy. Walks the navigation graph, climbs ladders, can be stunned or crushed
- * and respawns; where it goes is decided by its EnemyBrain.
+ * A chasing enemy. Walks the navigation graph, climbs ladders, can be stunned, crushed or
+ * carried down by an ingredient, and respawns; where it goes is decided by its EnemyBrain.
  */
 export class Enemy extends MovingEntity implements EnemySnapshot {
   readonly id: number;
@@ -46,6 +47,7 @@ export class Enemy extends MovingEntity implements EnemySnapshot {
   #decisionTicks = 0;
   #pending: LadderIntent | undefined;
   #climb: Climb | undefined;
+  #carrier: PositionSnapshot | undefined;
 
   constructor(
     id: number,
@@ -94,6 +96,20 @@ export class Enemy extends MovingEntity implements EnemySnapshot {
     return this.#climb !== undefined;
   }
 
+  get riding(): boolean {
+    return this.#carrier !== undefined;
+  }
+
+  /** Whether it is riding that ingredient. */
+  rides(carrier: PositionSnapshot): boolean {
+    return this.#carrier === carrier;
+  }
+
+  /** Rides an ingredient down: until it is dropped, it only follows the ingredient's height. */
+  ride(carrier: PositionSnapshot): void {
+    this.#carrier = carrier;
+  }
+
   reset(place: NavPlace, rng: Rng): void {
     this.#place = place;
     this.#row = place.platform?.row ?? this.#row;
@@ -104,6 +120,7 @@ export class Enemy extends MovingEntity implements EnemySnapshot {
     this.#decisionTicks = 0;
     this.#stunTicks = 0;
     this.#respawnTicks = 0;
+    this.#carrier = undefined;
     this.#active = true;
   }
 
@@ -115,11 +132,16 @@ export class Enemy extends MovingEntity implements EnemySnapshot {
   squash(): void {
     this.#active = false;
     this.#respawnTicks = RESPAWN_TICKS;
+    this.#carrier = undefined;
   }
 
   step(chef: ChefSnapshot, rng: Rng): void {
     if (!this.#active) {
       this.#stepRespawn(rng);
+      return;
+    }
+    if (this.#carrier !== undefined) {
+      this.moveTo(this.x, this.#carrier.y);
       return;
     }
     if (this.#stunTicks > 0) {

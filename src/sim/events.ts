@@ -1,6 +1,13 @@
 import type { ThrowDirection } from './entities/pepper';
 import type { GamePhaseName } from './phases/GamePhase';
 
+/** An enemy that leaves the board after riding an ingredient down, where it was. */
+export interface RiderDrop {
+  readonly enemyId: number;
+  readonly x: number;
+  readonly y: number;
+}
+
 export type SimEvent =
   | { readonly type: 'boardStarted' }
   | {
@@ -25,6 +32,12 @@ export type SimEvent =
       readonly y: number;
       readonly points: number;
       readonly combo: number;
+    }
+  | {
+      readonly type: 'ridersDropped';
+      readonly ingredientId: number;
+      readonly riders: readonly RiderDrop[];
+      readonly points: number;
     }
   | {
       readonly type: 'enemyRespawned';
