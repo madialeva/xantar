@@ -2,7 +2,7 @@ import type { ChefSnapshot, EnemySnapshot } from '../../sim';
 
 export type ChefAnimation = 'idle' | 'walk' | 'climbIdle' | 'climb' | 'hit';
 
-export type EnemyAnimation = 'walk' | 'climb' | 'stunned' | 'inactive';
+export type EnemyAnimation = 'walk' | 'climb' | 'stunned' | 'ride' | 'inactive';
 
 export function chefAnimation(
   chef: Pick<ChefSnapshot, 'isMoving' | 'isClimbing'>,
@@ -14,9 +14,10 @@ export function chefAnimation(
 }
 
 export function enemyAnimation(
-  enemy: Pick<EnemySnapshot, 'active' | 'stunned' | 'isClimbing'>
+  enemy: Pick<EnemySnapshot, 'active' | 'stunned' | 'isClimbing' | 'riding'>
 ): EnemyAnimation {
   if (!enemy.active) return 'inactive';
+  if (enemy.riding) return 'ride';
   if (enemy.stunned) return 'stunned';
   return enemy.isClimbing ? 'climb' : 'walk';
 }

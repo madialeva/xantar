@@ -45,7 +45,7 @@ const stateOf = (sim: Simulation): string =>
     ingredients: sim.ingredients.map((i) => [
       i.row,
       i.phase,
-      i.fallProgress,
+      i.y,
       i.stackSlot,
       i.stomped.map(Number).join('')
     ]),

@@ -90,6 +90,11 @@ const commonEnemyStates: Readonly<Record<EnemyAnimation, AnimationState>> = {
       motion.swing('eyes', { angle: -40, scaleY: 0.6 }, { angle: 40, scaleY: 0.6 }, 140);
     }
   },
+  ride: {
+    enter() {
+      // Nothing to animate: it goes down standing still on the ingredient, in its base pose.
+    }
+  },
   inactive: {
     enter() {
       // Nothing to animate: the view hides the enemy.

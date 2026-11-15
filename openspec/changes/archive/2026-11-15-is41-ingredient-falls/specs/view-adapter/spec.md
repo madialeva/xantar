@@ -1,0 +1,93 @@
+## MODIFIED Requirements
+
+### Requirement: Dibujo interpolado
+La vista SHALL dibujar chef, enemigos e ingredientes interpolando entre el estado
+de los dos últimos ticks según la fracción de tick acumulada, de modo que el
+movimiento sea continuo con independencia de la frecuencia del monitor. La
+vista SHALL convertir unidades lógicas a píxeles multiplicando por el tamaño de
+tile de la configuración. La altura de cada ingrediente SHALL ser la que da la
+simulación, sin aceleraciones ni curvas propias de la vista.
+
+#### Scenario: Movimiento suave
+- **WHEN** el chef camina y el monitor refresca más rápido que la simulación
+- **THEN** su posición dibujada cambia en cada fotograma
+
+#### Scenario: Ingrediente que cae
+- **WHEN** un ingrediente cae, rebota o se detiene en un piso intermedio
+- **THEN** la vista lo dibuja a la altura interpolada de la simulación, que baja
+  a velocidad constante mientras cae
+
+### Requirement: Eventos a efectos
+La vista SHALL reaccionar a los eventos de simulación para producir los efectos
+visuales y de interfaz del juego: destello de cámara al perder una vida, nube de
+pimienta, actualización de la puntuación, pimientas, vidas y nivel en los
+paneles laterales, mensaje de preparado durante `ready`, mensaje de nivel
+completado durante `levelClear` y pantalla de fin de partida. Además SHALL
+producir un adorno breve al pisar un segmento, al tocar un piso un ingrediente,
+al aplastar un enemigo, al soltar a los enemigos montados y al completar una
+hamburguesa. Todos los efectos SHALL dibujarse con los gráficos del juego y
+todos los textos SHALL mostrarse en el idioma activo.
+
+#### Scenario: Perder una vida
+- **WHEN** la simulación emite el evento de chef golpeado
+- **THEN** la vista muestra el destello de cámara, el chef mantiene la
+  animación de golpeado mientras dura `dying` y el contador de vidas del panel
+  se actualiza
+
+#### Scenario: Preparado
+- **WHEN** la fase pasa a `ready`
+- **THEN** la vista muestra el mensaje de preparado sobre el tablero hasta que
+  la fase pasa a `playing`
+
+#### Scenario: Fin de partida
+- **WHEN** la fase pasa a `gameOver`
+- **THEN** la vista muestra la pantalla de fin de partida con la puntuación
+  final y, al confirmar, vuelve al menú principal
+
+#### Scenario: Aplastar un enemigo
+- **WHEN** la simulación emite el evento de enemigo aplastado
+- **THEN** la vista muestra un efecto de aplastamiento en la posición del
+  evento, aunque el enemigo ya no esté activo
+
+#### Scenario: Soltar a los enemigos montados
+- **WHEN** la simulación emite el evento de enemigos montados que salen del
+  tablero
+- **THEN** la vista muestra el efecto de aplastamiento en la posición de cada
+  uno
+
+### Requirement: Apilado en el plato según el grosor
+La vista SHALL dibujar cada ingrediente que va hacia un plato, o que ya está en
+él, a la altura que le da la simulación, que en el plato es la suma de los
+grosores de los ingredientes que tiene debajo en ese mismo plato. En el plato,
+cada ingrediente SHALL dibujarse por encima de los que tiene debajo.
+
+#### Scenario: Hamburguesa completa
+- **WHEN** en un plato están, de abajo arriba, el pan de abajo, la carne, la
+  lechuga y el pan de arriba
+- **THEN** cada uno se dibuja apoyado sobre el anterior, sin huecos entre
+  ellos, y el pan de arriba tapa la parte de atrás de la lechuga
+
+#### Scenario: Otro plato
+- **WHEN** un ingrediente cae en un plato vacío mientras otro plato tiene ya
+  tres ingredientes
+- **THEN** el ingrediente se dibuja apoyado directamente sobre su plato
+
+### Requirement: Paridad jugable con el POC
+El juego SHALL mantener la jugabilidad del POC (mismas velocidades,
+puntuaciones, vidas, pimientas y comportamiento de enemigos), con las
+diferencias de redondeo a ticks documentadas, los cambios deliberados de flujo
+(fases de preparado y de muerte, continuación automática del fin de nivel y
+vuelta al menú desde el fin de partida) y los cambios deliberados de reglas
+para parecerse al juego original: la caída de los ingredientes, el
+aplastamiento por contacto y los enemigos montados.
+
+#### Scenario: Partida completa
+- **WHEN** un jugador completa un nivel y luego pierde todas las vidas
+- **THEN** se suceden el mensaje de nivel completado, el preparado del nivel
+  siguiente y la pantalla de fin de partida, y confirmar lleva al menú
+  principal, desde donde una partida nueva empieza en estado inicial
+
+#### Scenario: Velocidades del POC
+- **WHEN** el chef camina o trepa y los enemigos le persiguen
+- **THEN** lo hacen a las mismas velocidades que en el POC; solo la caída de los
+  ingredientes sigue la cadencia del original

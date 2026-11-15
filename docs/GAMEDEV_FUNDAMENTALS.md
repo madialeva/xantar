@@ -494,7 +494,8 @@ vigentes. Los más útiles en juegos:
 
 - **Squash & stretch** (aplastar y estirar): un objeto se aplasta al chocar y
   se estira al moverse rápido. Da sensación de peso y elasticidad. En Xantar,
-  los ingredientes al aterrizar y el chef al ser golpeado.
+  el chef al ser golpeado. Los ingredientes, como en el original, no se
+  aplastan: se hunden un instante al tocar un piso.
 - **Anticipación**: un pequeño movimiento previo que anuncia la acción.
 - **Acción secundaria**: detalles que acompañan a la principal (el gorro que
   salta cuando golpean al chef).
@@ -643,13 +644,29 @@ En Xantar: [`classic.level.json`](../src/levels/classic.level.json),
   (`CONTACT_X`, `CONTACT_Y`).
 - **Efecto túnel** (*tunneling*): un objeto rápido avanza tanto en un paso que
   "salta" por encima de otro sin detectar el choque. Se evita con pasos
-  pequeños o con **colisión continua** (comprobar todo el recorrido), que es
-  lo que propone #18 para aplastar enemigos con ingredientes.
+  pequeños o con **colisión continua** (comprobar todo el recorrido). Xantar
+  comprueba en cada tick si la base de un ingrediente que cae está dentro de un
+  enemigo (`isCrushedBy`): como baja menos de 3 unidades por tick y un enemigo
+  mide 32, no puede atravesarlo sin que se note. Así se aplasta al enemigo
+  cuando el ingrediente le alcanza de verdad, no al empezar la caída.
 - **Motor de física**: una librería que simula gravedad, rebotes y fuerzas
   (Phaser incluye Arcade Physics y Matter.js). Es ideal para juegos donde
   importa la física realista; para un arcade de plataformas y escaleras como
   este, un movimiento propio sobre la rejilla es más predecible y fácil de
   probar. Por eso Xantar **no usa motor de física**.
+- **Duración fija o velocidad constante**: una caída se puede programar como
+  "tarda 12 ticks" o como "baja tantas casillas por tick". Con duración fija,
+  una caída larga va más deprisa que una corta; con velocidad constante el
+  ritmo es siempre el mismo y lo que cambia es cuánto tarda. Xantar usa
+  velocidad constante para los ingredientes (`FALL_SPEED`), como el juego
+  original, y lo que pasa durante la caída (alcanzar a otro ingrediente,
+  rebotar, llegar al plato) ocurre cuando la posición lo provoca, no en un
+  instante fijado de antemano.
+- **Entidades que viajan con otra**: un enemigo montado en un ingrediente no
+  calcula su movimiento: en cada tick copia la altura del ingrediente que lo
+  lleva (en muchos motores se dice que es "hijo" de otro objeto). El orden de
+  actualización importa: el ingrediente se mueve antes que los enemigos, así
+  que el montado sigue su posición del mismo tick y no se queda un paso atrás.
 - **Movimiento sobre un grafo**: el chef y los enemigos no se mueven
   libremente, sino por tramos de plataforma y de escalera. Su posición es "en
   qué tramo estoy y a qué distancia del inicio", lo que permite, por ejemplo,
@@ -817,6 +834,17 @@ sensación.
   aplastar un enemigo o las chispas al completar una hamburguesa
   (`EventEffects`).
 - **Squash & stretch y easing** (apartado 9).
+- **La cadencia de un juego de referencia**: buena parte de la sensación de un
+  juego está en su ritmo: cuánto tarda algo en caer, cuánto espera, cómo
+  rebota. Si el juego se inspira en otro, ese ritmo se puede medir en una
+  grabación, fotograma a fotograma. Una técnica muy útil es la **kimografía**:
+  tomar la misma columna de píxeles de cada fotograma y ponerlas una junto a
+  otra. Lo que está quieto sale como una línea horizontal y lo que cae como una
+  diagonal, con su pendiente (la velocidad), sus mesetas (las esperas) y sus
+  picos (los rebotes) a la vista. Después se llevan las distancias a la escala
+  del tablero propio y se conservan los tiempos. Así se midió la caída de los
+  ingredientes de Xantar en una partida de BurgerTime, y una kimografía de la
+  simulación permite compararla con la del original.
 - **Tolerancia** (*forgiveness*): pequeñas ayudas invisibles, como permitir
   agarrar una escalera aunque el chef no esté exactamente alineado
   (`LADDER_GRAB_DISTANCE`).
@@ -946,6 +974,7 @@ sensación.
 | HUD | Información superpuesta durante la partida (vidas, puntos…) |
 | i18n | Internacionalización: preparar el juego para varios idiomas |
 | Interpolación | Dibujar un punto intermedio entre dos estados de la simulación |
+| Kimografía | Imagen con la misma línea de píxeles de cada fotograma de un vídeo, una junto a otra: muestra el movimiento a lo largo del tiempo |
 | Letterbox (bandas) | Franjas vacías cuando la proporción no coincide |
 | Mediador | Objeto por el que dos partes se comunican sin conocerse |
 | Nivel de escala (render tier) | Multiplicador entre tamaño lógico y píxeles reales |

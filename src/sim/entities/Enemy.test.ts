@@ -168,3 +168,34 @@ describe('Enemy squashing', () => {
     expect(enemy.x).toBe(1.5);
   });
 });
+
+describe('Enemy riding', () => {
+  const carrier = (y: number) => ({ x: 3, y, prevX: 3, prevY: y });
+
+  it('follows the height of the ingredient it rides, without walking or deciding', () => {
+    const { enemy } = spawn(tiny, 5, 1.5);
+    const ingredient = carrier(5);
+    enemy.ride(ingredient);
+    expect([enemy.riding, enemy.rides(ingredient), enemy.rides(carrier(5))]).toEqual([
+      true,
+      true,
+      false
+    ]);
+    for (const y of [5.2, 5.4, 5.1]) {
+      Object.assign(ingredient, { y });
+      run(enemy, chefAt(tiny, 5, 6.5), 1);
+      expect([enemy.x, enemy.y]).toEqual([1.5, y]);
+    }
+  });
+
+  it('stops riding when it is squashed or put back at the start', () => {
+    const { enemy } = spawn(tiny, 5, 1.5);
+    enemy.ride(carrier(5));
+    enemy.squash();
+    expect(enemy.riding).toBe(false);
+    enemy.reset(tiny.graph.placeAt(5, 1.5), rng);
+    enemy.ride(carrier(5));
+    enemy.reset(tiny.graph.placeAt(5, 1.5), rng);
+    expect(enemy.riding).toBe(false);
+  });
+});

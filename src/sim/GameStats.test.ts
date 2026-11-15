@@ -39,6 +39,14 @@ describe('GameStats', () => {
     expect(stats.score).toBe(300);
   });
 
+  it('doubles the bonus for the enemies dropped on an ingredient with each one, without combo', () => {
+    const { stats } = create();
+    expect([1, 2, 3, 4].map((riders) => stats.registerRiders(500, riders))).toEqual([
+      500, 1000, 2000, 4000
+    ]);
+    expect([stats.score, stats.combo]).toEqual([7500, 0]);
+  });
+
   it('consumes peppers until none is left', () => {
     const { stats } = create();
     for (let i = 0; i < START_PEPPERS; i++) expect(stats.consumePepper()).toBe(true);

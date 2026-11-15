@@ -17,6 +17,7 @@ const EVENT_CUES: { readonly [T in SimEventType]: CueOf<T> } = {
   ingredientsTriggered: () => 'fall',
   ingredientLanded: () => 'land',
   enemySquashed: () => 'squash',
+  ridersDropped: () => 'squash',
   enemyStunned: () => 'stun',
   burgerDone: () => 'burger',
   chefHit: () => 'hit',

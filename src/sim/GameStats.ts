@@ -57,6 +57,13 @@ export class GameStats implements StatsSnapshot {
     return points;
   }
 
+  /** Bonus for the enemies dropped riding an ingredient: doubles with each one; no combo. */
+  registerRiders(basePoints: number, riders: number): number {
+    const points = basePoints * 2 ** (riders - 1);
+    this.addScore(points);
+    return points;
+  }
+
   consumePepper(): boolean {
     if (this.#peppers <= 0) return false;
     this.#peppers -= 1;

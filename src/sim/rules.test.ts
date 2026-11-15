@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   ARRIVAL_THRESHOLD,
+  BOUNCE_HEIGHT,
+  BOUNCE_HOLD_TICKS,
+  BOUNCE_RISE_TICKS,
   CHEF_SPEED,
   CLIMB_SPEED,
   CONTACT_X,
@@ -9,8 +12,8 @@ import {
   DECISION_MIN_TICKS,
   EDGE_MARGIN,
   ENEMY_SPEED,
-  FALL_STAGGER_TICKS,
-  FALL_TICKS,
+  FALL_SPEED,
+  INGREDIENT_THICKNESS,
   PEPPER_CLOUD_OFFSET,
   PEPPER_REACH_ALONG,
   PEPPER_REACH_ACROSS,
@@ -45,10 +48,24 @@ describe('rules', () => {
     expect(TICK_MS).toBeCloseTo(16.667, 3);
     expect(STUN_TICKS).toBe(300);
     expect(RESPAWN_TICKS).toBe(150);
-    expect(FALL_TICKS).toBe(12);
-    expect(FALL_STAGGER_TICKS).toBe(7);
     expect(DECISION_MIN_TICKS).toBe(30);
     expect(DECISION_MAX_TICKS).toBe(66);
+  });
+
+  it('keeps the cadence of the falls measured in the original game', () => {
+    expect(FALL_SPEED * PX_PER_TILE).toBe(170);
+    expect(BOUNCE_HEIGHT * PX_PER_TILE).toBe(20);
+    expect([BOUNCE_RISE_TICKS, BOUNCE_HOLD_TICKS]).toEqual([5, 13]);
+  });
+
+  it('gives each ingredient the thickness of its art', () => {
+    const thickness = Object.fromEntries(
+      Object.entries(INGREDIENT_THICKNESS).map(([kind, rows]) => [kind, rows * PX_PER_TILE])
+    );
+    expect(thickness.bunTop).toBeCloseTo(13, 10);
+    expect(thickness.lettuce).toBeCloseTo(4.8, 10);
+    expect(thickness.patty).toBeCloseTo(8.3, 10);
+    expect(thickness.bunBottom).toBeCloseTo(7.4, 10);
   });
 
   it('advances less per tick than the alignment window, so ladders cannot be skipped', () => {

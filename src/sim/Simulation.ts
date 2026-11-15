@@ -1,7 +1,9 @@
 import { Chef, type ChefSnapshot } from './entities/Chef';
 import { createEnemy } from './entities/createEnemy';
 import type { Enemy, EnemySnapshot } from './entities/Enemy';
-import { type CrushTarget, IngredientField } from './entities/IngredientField';
+import { isCrushedBy } from './entities/crush';
+import { isStandingOn } from './entities/riders';
+import { type EnemyRoster, IngredientField } from './entities/IngredientField';
 import type { IngredientSnapshot } from './entities/Ingredient';
 import { isHitByPepper, pepperCloudFor } from './entities/pepper';
 import type { PlateSnapshot } from './entities/Plate';
@@ -34,8 +36,10 @@ export class Simulation {
   readonly #enemies: readonly Enemy[];
   readonly #enemyPlaces: readonly NavPlace[];
   readonly #chefPlace: NavPlace;
-  readonly #crushTarget: CrushTarget = {
-    crush: (left, right, fromRow, toRow) => this.#crushEnemies(left, right, fromRow, toRow)
+  readonly #roster: EnemyRoster = {
+    board: (ingredient) => this.#board(ingredient),
+    crushUnder: (ingredient) => this.#crushUnder(ingredient),
+    release: (ingredient) => this.#release(ingredient)
   };
   readonly #phaseHost: PhaseHost = this.#createPhaseHost();
   #field: IngredientField;
@@ -87,6 +91,7 @@ export class Simulation {
   step(input: SimInput): readonly SimEvent[] {
     this.#chef.beginTick();
     for (const enemy of this.#enemies) enemy.beginTick();
+    this.#field.beginTick();
     this.#enterPhase(this.#phase.step(input, this.#phaseHost));
     return this.#events.drain();
   }
@@ -132,7 +137,7 @@ export class Simulation {
   }
 
   #newField(): IngredientField {
-    return new IngredientField(this.#level, this.#events, this.#stats, this.#crushTarget);
+    return new IngredientField(this.#level, this.#events, this.#stats, this.#roster);
   }
 
   #resetPositions(): void {
@@ -140,11 +145,28 @@ export class Simulation {
     this.#enemies.forEach((enemy, index) => enemy.reset(this.#enemyPlaces[index], this.#rng));
   }
 
-  #crushEnemies(left: number, right: number, fromRow: number, toRow: number): void {
+  #board(ingredient: IngredientSnapshot): number {
+    const riders = this.#enemies.filter((enemy) => isStandingOn(ingredient, enemy));
+    for (const enemy of riders) enemy.ride(ingredient);
+    return riders.length;
+  }
+
+  #release(ingredient: IngredientSnapshot): void {
+    const riders = this.#enemies.filter((enemy) => enemy.rides(ingredient));
+    if (riders.length === 0) return;
+    for (const enemy of riders) enemy.squash();
+    const points = this.#stats.registerRiders(SCORE.riders, riders.length);
+    this.#events.emit({
+      type: 'ridersDropped',
+      ingredientId: ingredient.id,
+      riders: riders.map((enemy) => ({ enemyId: enemy.id, x: enemy.x, y: ingredient.y })),
+      points
+    });
+  }
+
+  #crushUnder(ingredient: IngredientSnapshot): void {
     for (const enemy of this.#enemies) {
-      const inLane = enemy.x >= left && enemy.x <= right;
-      const inRange = enemy.row >= fromRow && enemy.row <= toRow;
-      if (!enemy.active || !inLane || !inRange) continue;
+      if (!enemy.active || enemy.riding || !isCrushedBy(ingredient, enemy)) continue;
       enemy.squash();
       const points = this.#stats.registerCrush(SCORE.squashBase);
       this.#events.emit({
@@ -177,6 +199,7 @@ export class Simulation {
       (enemy) =>
         enemy.active &&
         !enemy.stunned &&
+        !enemy.riding &&
         Math.abs(enemy.x - this.#chef.x) < CONTACT_X &&
         Math.abs(enemy.y - this.#chef.y) < CONTACT_Y
     );

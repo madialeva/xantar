@@ -40,11 +40,17 @@ La vista SHALL dibujar chef, enemigos e ingredientes interpolando entre el estad
 de los dos últimos ticks según la fracción de tick acumulada, de modo que el
 movimiento sea continuo con independencia de la frecuencia del monitor. La
 vista SHALL convertir unidades lógicas a píxeles multiplicando por el tamaño de
-tile de la configuración.
+tile de la configuración. La altura de cada ingrediente SHALL ser la que da la
+simulación, sin aceleraciones ni curvas propias de la vista.
 
 #### Scenario: Movimiento suave
 - **WHEN** el chef camina y el monitor refresca más rápido que la simulación
 - **THEN** su posición dibujada cambia en cada fotograma
+
+#### Scenario: Ingrediente que cae
+- **WHEN** un ingrediente cae, rebota o se detiene en un piso intermedio
+- **THEN** la vista lo dibuja a la altura interpolada de la simulación, que baja
+  a velocidad constante mientras cae
 
 ### Requirement: Eventos a efectos
 La vista SHALL reaccionar a los eventos de simulación para producir los efectos
@@ -52,10 +58,10 @@ visuales y de interfaz del juego: destello de cámara al perder una vida, nube d
 pimienta, actualización de la puntuación, pimientas, vidas y nivel en los
 paneles laterales, mensaje de preparado durante `ready`, mensaje de nivel
 completado durante `levelClear` y pantalla de fin de partida. Además SHALL
-producir un adorno breve al pisar un segmento, al aterrizar un ingrediente, al
-aplastar un enemigo y al completar una hamburguesa. Todos los efectos SHALL
-dibujarse con los gráficos del juego y todos los textos SHALL mostrarse en el
-idioma activo.
+producir un adorno breve al pisar un segmento, al tocar un piso un ingrediente,
+al aplastar un enemigo, al soltar a los enemigos montados y al completar una
+hamburguesa. Todos los efectos SHALL dibujarse con los gráficos del juego y
+todos los textos SHALL mostrarse en el idioma activo.
 
 #### Scenario: Perder una vida
 - **WHEN** la simulación emite el evento de chef golpeado
@@ -78,6 +84,12 @@ idioma activo.
 - **THEN** la vista muestra un efecto de aplastamiento en la posición del
   evento, aunque el enemigo ya no esté activo
 
+#### Scenario: Soltar a los enemigos montados
+- **WHEN** la simulación emite el evento de enemigos montados que salen del
+  tablero
+- **THEN** la vista muestra el efecto de aplastamiento en la posición de cada
+  uno
+
 ### Requirement: Sin estado de juego persistente en temporizadores de Phaser
 La vista SHALL NOT delegar en tweens ni temporizadores de Phaser ningún estado
 del que dependan las reglas (caídas, aturdimiento, reapariciones). Las animaciones
@@ -91,15 +103,22 @@ simulación.
 ### Requirement: Paridad jugable con el POC
 El juego SHALL mantener la jugabilidad del POC (mismas velocidades,
 puntuaciones, vidas, pimientas y comportamiento de enemigos), con las
-diferencias de redondeo a ticks documentadas y los cambios deliberados de flujo:
-fases de preparado y de muerte, continuación automática del fin de nivel y
-vuelta al menú desde el fin de partida.
+diferencias de redondeo a ticks documentadas, los cambios deliberados de flujo
+(fases de preparado y de muerte, continuación automática del fin de nivel y
+vuelta al menú desde el fin de partida) y los cambios deliberados de reglas
+para parecerse al juego original: la caída de los ingredientes, el
+aplastamiento por contacto y los enemigos montados.
 
 #### Scenario: Partida completa
 - **WHEN** un jugador completa un nivel y luego pierde todas las vidas
 - **THEN** se suceden el mensaje de nivel completado, el preparado del nivel
   siguiente y la pantalla de fin de partida, y confirmar lleva al menú
   principal, desde donde una partida nueva empieza en estado inicial
+
+#### Scenario: Velocidades del POC
+- **WHEN** el chef camina o trepa y los enemigos le persiguen
+- **THEN** lo hacen a las mismas velocidades que en el POC; solo la caída de los
+  ingredientes sigue la cadencia del original
 
 ### Requirement: Segmentos de ingrediente
 La vista SHALL dibujar cada ingrediente con sus segmentos (2, 3 o 4 según el
@@ -134,12 +153,10 @@ tramo de plataforma y de cada plato SHALL dibujarse con su remate.
   que sin ese campo
 
 ### Requirement: Apilado en el plato según el grosor
-La vista SHALL colocar cada ingrediente que va hacia un plato, o que ya está en
-él, a una altura sobre el plato igual a la suma de los grosores visibles de los
-ingredientes que tiene debajo en ese mismo plato, siendo el grosor visible un
-valor fijo de cada tipo de ingrediente que corresponde a su arte. En el plato,
-cada ingrediente SHALL dibujarse por encima de los que tiene debajo. La
-simulación SHALL NOT verse afectada.
+La vista SHALL dibujar cada ingrediente que va hacia un plato, o que ya está en
+él, a la altura que le da la simulación, que en el plato es la suma de los
+grosores de los ingredientes que tiene debajo en ese mismo plato. En el plato,
+cada ingrediente SHALL dibujarse por encima de los que tiene debajo.
 
 #### Scenario: Hamburguesa completa
 - **WHEN** en un plato están, de abajo arriba, el pan de abajo, la carne, la

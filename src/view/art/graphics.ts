@@ -14,17 +14,6 @@ export const INGREDIENT_HEIGHTS: Readonly<Record<IngredientKind, number>> = {
   bunBottom: 14
 };
 
-/**
- * How far above an ingredient's bottom the next ingredient of a burger sits, which is how
- * thick it looks in the rendered art (seen slightly from above, the next one covers its top).
- */
-export const INGREDIENT_STACK_HEIGHTS: Readonly<Record<IngredientKind, number>> = {
-  bunTop: 13,
-  lettuce: 4.8,
-  patty: 8.3,
-  bunBottom: 7.4
-};
-
 const ingredient = <K extends IngredientKind>(kind: K) => {
   const box = size(32, INGREDIENT_HEIGHTS[kind]);
   return { [`${kind}.left`]: box, [`${kind}.mid`]: box, [`${kind}.right`]: box } as Record<

@@ -1,5 +1,6 @@
 export * from './entities/Chef';
 export * from './entities/createEnemy';
+export * from './entities/crush';
 export * from './entities/Enemy';
 export * from './entities/EnemyBrain';
 export * from './entities/Ingredient';
@@ -7,6 +8,7 @@ export * from './entities/IngredientField';
 export * from './entities/MovingEntity';
 export * from './entities/pepper';
 export * from './entities/Plate';
+export * from './entities/riders';
 export * from './events';
 export * from './GameStats';
 export * from './geometry';

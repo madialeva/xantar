@@ -45,7 +45,7 @@ comes next.
 |   ✅   | Modern vector visuals: SVG art and side panels                                                            |   —    |  #4   |
 |   ✅   | Rendered 3D art for the food and the characters, dancing enemies and a single look                        |   —    |  #37  |
 |   ✅   | Game state machine, pause, high score, Spanish and English                                                |   —    |  #5   |
-|   ⬜   | Enemies riding ingredients (an extra level per rider)                                                     | v1.0.0 |  #9   |
+|   ✅   | Ingredients fall like in the original, crush enemies on contact and carry riders two extra floors each    |   —    |  #41  |
 |   ✅   | Gamepad and touch controls, music and sound effects, CI and a hardened desktop app                        |   —    |  #6   |
 |   ✅   | Public web version at madialeva.github.io                                                                 |   —    |  #14  |
 |   ⬜   | Replay recording and debug tooling                                                                        | v1.0.0 |  #8   |
@@ -112,12 +112,15 @@ disconnected. The pause menu lets you resume or quit to the main menu.
 
 - Every ingredient is made of **segments** (four in the classic level). When the
   chef **steps on a segment** it is pressed down, and it stays pressed. Press all
-  the segments of an ingredient and it falls one platform down.
-- An ingredient that lands on another one **knocks it down too**: a chain
-  reaction that only affects the ingredients it actually hits.
-- The pieces stack on the plate in the order they land. By walking over them
-  again, each burger moves down level by level until it is complete.
-- Every piece that falls is worth **50 points**.
+  the segments of an ingredient and it falls one platform down, slowly and at a
+  steady pace, as in the original arcade game.
+- When a falling ingredient reaches another one, it **knocks it down too** and
+  bounces up for a moment before going on: a chain reaction from the top down
+  that only affects the ingredients it actually hits.
+- The pieces stack on the plate in the order they arrive, each one with a little
+  bounce. By walking over them again, each burger moves down level by level
+  until it is complete.
+- Every piece is worth **50 points** when it lands.
 - You cannot press segments while you are on a ladder.
 
 ### Enemies
@@ -125,10 +128,18 @@ disconnected. The pause menu lets you resume or quit to the main menu.
 - **Mr. Hot Dog**, **Mr. Pickle** and **Mr. Egg** roam the maze and chase you
   using the ladders, always taking the shortest way to you.
 - If they touch you, you **lose a life**.
-- You can **crush them** by dropping an ingredient on top of them. They respawn
-  after a few seconds.
+- You can **crush them** by dropping an ingredient on top of them. An enemy is
+  crushed when the falling ingredient reaches it: one that gets out of the way
+  in time escapes, and one that walks under a falling ingredient is crushed.
+  They respawn after a few seconds.
 - Crushing enemies in a row increases the scoring multiplier, which resets when
   you lose a life.
+- **Drop an ingredient with enemies standing on it** and they ride it down: it
+  falls two extra floors for every enemy on board (with one enemy, three
+  floors), stopping for a moment on each floor and knocking down what it meets.
+  While riding they cannot hurt you. When the ingredient lands they are gone
+  for a few seconds and you get a bonus. Stunned enemies ride too, so pepper
+  them on an ingredient and then drop it.
 
 ### Pepper
 
@@ -142,11 +153,12 @@ disconnected. The pause menu lets you resume or quit to the main menu.
 
 ### Scoring
 
-| Action             | Points      |
-| ------------------ | ----------- |
-| Drop an ingredient | 50          |
-| Complete a burger  | 400         |
-| Crush an enemy     | 100 × combo |
+| Action                                 | Points                                          |
+| -------------------------------------- | ----------------------------------------------- |
+| Drop an ingredient                     | 50                                              |
+| Complete a burger                      | 400                                             |
+| Crush an enemy                         | 100 × combo                                     |
+| Drop an ingredient with enemies riding | 500 for one, doubled for each extra one (1000…) |
 
 ### Lives and game over
 

@@ -69,9 +69,11 @@ Lo generan los scripts de `tools/blender/` (ver el manual del desarrollador,
   las ondas de la lechuga se repiten exactamente una vez por casilla.
 - Cada ingrediente se apoya en la base de su imagen, con un margen de 1 unidad
   para su sombra de contacto.
-- **Grosor visible** para el apilado en el plato (`INGREDIENT_STACK_HEIGHTS`):
-  pan de abajo 7,4, carne 8,3, lechuga 4,8 y pan de arriba 13. Si cambia la
-  forma de un ingrediente, se recalcula con `tmp/blender/metrics.json`.
+- **Grosor visible** para el apilado en el plato (`INGREDIENT_THICKNESS`, en
+  `src/sim/rules.ts`, porque la simulación lo usa para apilar y para saber
+  cuándo un ingrediente golpea a otro): pan de abajo 7,4, carne 8,3, lechuga 4,8
+  y pan de arriba 13. Si cambia la forma de un ingrediente, se recalcula con
+  `tmp/blender/metrics.json`.
 
 | Ingrediente | Imagen | Forma |
 |---|---|---|

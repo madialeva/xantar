@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 import type { SimEvent } from './events';
 import {
   DYING_TICKS,
+  ENEMY_HEIGHT,
   LEVEL_CLEAR_TICKS,
   READY_TICKS,
   START_LIVES,
   START_PEPPERS,
   STUN_TICKS
 } from './rules';
+import { isCrushedBy } from './entities/crush';
 import { NO_INPUT, type SimInput } from './SimInput';
 import { Simulation } from './Simulation';
 import { type GridSpec, levelFromGrid, tinyGrid, withGrid } from './testing/grids';
@@ -86,6 +88,74 @@ describe('Simulation: stomping and crushing enemies', () => {
     expect(crushed[0].y).toBeLessThanOrEqual(5);
     expect(sim.stats.combo).toBe(2);
     expect(sim.enemies.every((enemy) => !enemy.active)).toBe(true);
+  });
+
+  it('crushes an enemy when the falling ingredient reaches it, not when the fall starts', () => {
+    const sim = create({
+      structure: [
+        '........',
+        '........',
+        '========',
+        '........',
+        '........',
+        '...=....',
+        '........',
+        '.____...'
+      ],
+      ingredients: [
+        '........',
+        '........',
+        '.TTTT...',
+        '........',
+        '........',
+        '........',
+        '........',
+        '........'
+      ],
+      actors: [
+        '........',
+        '........',
+        '......C.',
+        '........',
+        '........',
+        '...h....',
+        '........',
+        '........'
+      ]
+    });
+    let tick = 0;
+    for (
+      ;
+      tick < 200 && ofType(run(sim, 1, { left: true }), 'ingredientsTriggered').length === 0;
+      tick++
+    );
+    expect(sim.enemies[0].active).toBe(true);
+    const enemyY = sim.enemies[0].y;
+    let squashed: SimEvent[] = [];
+    for (; tick < 400 && squashed.length === 0; tick++)
+      squashed = ofType(run(sim, 1), 'enemySquashed');
+    expect(squashed).toHaveLength(1);
+    const [top] = sim.ingredients;
+    expect(top.y).toBeGreaterThan(enemyY - ENEMY_HEIGHT);
+    expect(top.prevY).toBeLessThanOrEqual(enemyY - ENEMY_HEIGHT);
+  });
+
+  it('never crushes the chef, even with the base of a falling ingredient at his height', () => {
+    const sim = create({
+      structure: ['........', '.+======', '.H......', '.+======', '........', '.____...'],
+      ingredients: ['........', '.TTTT...', '........', '.LLLL...', '........', '........'],
+      actors: ['........', '......C.', '........', '........', '........', '........']
+    });
+    const events = run(sim, 90, { left: true });
+    expect(ofType(events, 'ingredientsTriggered').length).toBeGreaterThan(0);
+    let overlapped = false;
+    for (let i = 0; i < 120; i++) {
+      events.push(...run(sim, 1, { down: true }));
+      overlapped ||= isCrushedBy(sim.ingredients[0], sim.chef);
+    }
+    expect(overlapped).toBe(true);
+    expect(ofType(events, 'chefHit')).toEqual([]);
+    expect([sim.stats.lives, sim.phase]).toEqual([START_LIVES, 'playing']);
   });
 
   it('respawns the crushed enemies after the respawn delay at a spawn marker', () => {
@@ -318,6 +388,18 @@ describe('Simulation: clearing a level', () => {
     expect(sim.stats.score).toBe(450);
   });
 
+  it('waits for the last ingredient to bounce on its plate and rest before clearing', () => {
+    const sim = create(singleBurger);
+    let touched = false;
+    for (let i = 0; i < 200 && !touched; i++) {
+      touched = ofType(run(sim, 1, { left: true }), 'ingredientLanded').length > 0;
+    }
+    expect(touched).toBe(true);
+    expect([sim.phase, sim.ingredients[0].phase]).toEqual(['playing', 'bouncing']);
+    untilPhase(sim, 'levelClear');
+    expect(sim.ingredients[0].phase).toBe('stacked');
+  });
+
   it('continues on its own to the next level keeping score, lives and peppers', () => {
     const sim = create(singleBurger);
     untilPhase(sim, 'levelClear', { left: true });
@@ -388,10 +470,114 @@ describe('Simulation: chain of falls', () => {
         ]
       })
     );
-    const events = run(sim, 160, { left: true });
-    expect(ofType(events, 'ingredientsTriggered')[0].ingredientIds).toEqual([1, 0]);
+    const events = run(sim, 240, { left: true });
+    expect(ofType(events, 'ingredientsTriggered').map((event) => event.ingredientIds)).toEqual([
+      [0],
+      [1]
+    ]);
     expect(sim.stats.score).toBe(100);
     expect(sim.ingredients[1].phase).toBe('stacked');
     expect(sim.ingredients[0].row).toBe(5);
+  });
+});
+
+describe('Simulation: enemies riding an ingredient', () => {
+  const column = (actorsRow1: string): GridSpec => ({
+    structure: [
+      '............',
+      '============',
+      '............',
+      '============',
+      '............',
+      '============',
+      '............',
+      '============',
+      '............',
+      '.____.......'
+    ],
+    ingredients: [
+      '............',
+      '.TTTT.......',
+      '............',
+      '.LLLL.......',
+      '............',
+      '.PPPP.......',
+      '............',
+      '.BBBB.......',
+      '............',
+      '............'
+    ],
+    actors: [
+      '............',
+      actorsRow1,
+      '............',
+      '............',
+      '............',
+      '............',
+      '............',
+      '............',
+      '............',
+      '............'
+    ]
+  });
+
+  /** Stuns the enemy in front of the chef with pepper and drops the top bun with it on. */
+  const dropWithRider = (sim: Simulation): SimEvent[] => {
+    const events = [...run(sim, 1, { left: true }), ...run(sim, 1, { pepper: true })];
+    expect(sim.enemies[0].stunned).toBe(true);
+    for (let i = 0; i < 200 && ofType(events, 'ingredientsTriggered').length === 0; i++) {
+      events.push(...run(sim, 1, { left: true }));
+    }
+    return events;
+  };
+
+  const untilTopRests = (sim: Simulation): SimEvent[] => {
+    const events: SimEvent[] = [];
+    const [top] = sim.ingredients;
+    for (let i = 0; i < 2000 && !(top.phase === 'idle' && top.row === 7); i++) {
+      events.push(...run(sim, 1));
+    }
+    return events;
+  };
+
+  it('carries the enemy down three floors and drops it with a bonus', () => {
+    const sim = create(column('....h.C.....'));
+    dropWithRider(sim);
+    const [rider] = sim.enemies;
+    const [top] = sim.ingredients;
+    expect(rider.riding).toBe(true);
+    const x = rider.x;
+    const score = sim.stats.score;
+    const events: SimEvent[] = [];
+    let followed = true;
+    for (let i = 0; i < 2000 && !(top.phase === 'idle' && top.row === 7); i++) {
+      events.push(...run(sim, 1));
+      if (rider.riding) followed &&= rider.x === x && rider.y === top.y;
+    }
+    expect(followed).toBe(true);
+    expect([top.phase, top.row]).toEqual(['idle', 7]);
+    expect(ofType(events, 'ridersDropped')).toEqual([
+      { type: 'ridersDropped', ingredientId: 0, riders: [{ enemyId: 0, x, y: 7 }], points: 500 }
+    ]);
+    expect(ofType(events, 'enemySquashed')).toEqual([]);
+    expect([rider.active, rider.riding, sim.stats.combo]).toEqual([false, false, 0]);
+    const deltas = ofType(events, 'scoreChanged').map((event) => event.delta);
+    expect(deltas.filter((delta) => delta === 500)).toHaveLength(1);
+    expect(deltas.every((delta) => delta === 50 || delta === 500)).toBe(true);
+    expect(sim.stats.score - score).toBe(deltas.reduce((sum, delta) => sum + delta, 0));
+    const respawned = run(sim, 160);
+    expect(ofType(respawned, 'enemyRespawned')).toHaveLength(1);
+  });
+
+  it('gives no bonus when the chef loses a life during the ride', () => {
+    const sim = create(column('....h.C..p..'));
+    dropWithRider(sim);
+    const [rider] = sim.enemies;
+    expect(rider.riding).toBe(true);
+    const events = untilTopRests(sim);
+    expect(ofType(events, 'chefHit').length).toBeGreaterThan(0);
+    expect(rider.riding).toBe(false);
+    expect([sim.ingredients[0].phase, sim.ingredients[0].row]).toEqual(['idle', 7]);
+    expect(ofType(events, 'ridersDropped')).toEqual([]);
   });
 });
