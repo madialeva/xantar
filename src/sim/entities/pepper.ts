@@ -1,30 +1,56 @@
-import { PEPPER_CLOUD_LIFT, PEPPER_CLOUD_OFFSET, PEPPER_REACH_X, PEPPER_REACH_Y } from '../rules';
+import {
+  PEPPER_CLOUD_LIFT,
+  PEPPER_CLOUD_OFFSET,
+  PEPPER_REACH_ACROSS,
+  PEPPER_REACH_ALONG
+} from '../rules';
 import type { EnemySnapshot } from './Enemy';
+
+export type ThrowDirection = 'left' | 'right' | 'up' | 'down';
+
+export interface ThrowVector {
+  readonly dx: -1 | 0 | 1;
+  readonly dy: -1 | 0 | 1;
+}
+
+export const THROW_VECTORS: Readonly<Record<ThrowDirection, ThrowVector>> = {
+  left: { dx: -1, dy: 0 },
+  right: { dx: 1, dy: 0 },
+  up: { dx: 0, dy: -1 },
+  down: { dx: 0, dy: 1 }
+};
 
 export interface PepperSource {
   readonly x: number;
   readonly y: number;
-  readonly facing: 1 | -1;
+  readonly throwDirection: ThrowDirection;
 }
 
 export interface PepperCloud {
   readonly x: number;
   readonly y: number;
-  readonly direction: 1 | -1;
+  readonly direction: ThrowDirection;
 }
 
-export const pepperCloudFor = (chef: PepperSource): PepperCloud => ({
-  x: chef.x + chef.facing * PEPPER_CLOUD_OFFSET,
-  y: chef.y - PEPPER_CLOUD_LIFT,
-  direction: chef.facing
-});
+export const pepperCloudFor = (chef: PepperSource): PepperCloud => {
+  const { dx, dy } = THROW_VECTORS[chef.throwDirection];
+  return {
+    x: chef.x + dx * PEPPER_CLOUD_OFFSET,
+    y: chef.y + dy * PEPPER_CLOUD_OFFSET - PEPPER_CLOUD_LIFT,
+    direction: chef.throwDirection
+  };
+};
 
-export const isHitByPepper = (
-  cloud: PepperCloud,
-  chef: PepperSource,
-  enemy: EnemySnapshot
-): boolean =>
-  enemy.active &&
-  Math.sign(enemy.x - chef.x) === cloud.direction &&
-  Math.abs(enemy.x - cloud.x) < PEPPER_REACH_X &&
-  Math.abs(enemy.y - chef.y) < PEPPER_REACH_Y;
+export const isHitByPepper = (chef: PepperSource, enemy: EnemySnapshot): boolean => {
+  const { dx, dy } = THROW_VECTORS[chef.throwDirection];
+  const offsetX = enemy.x - chef.x;
+  const offsetY = enemy.y - chef.y;
+  const ahead = offsetX * dx + offsetY * dy;
+  const aside = Math.abs(offsetX * dy) + Math.abs(offsetY * dx);
+  return (
+    enemy.active &&
+    ahead > 0 &&
+    Math.abs(ahead - PEPPER_CLOUD_OFFSET) < PEPPER_REACH_ALONG &&
+    aside < PEPPER_REACH_ACROSS
+  );
+};

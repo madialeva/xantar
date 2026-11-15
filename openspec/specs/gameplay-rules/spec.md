@@ -234,16 +234,45 @@ el sentido anterior. Un enemigo aturdido SHALL permanecer inmóvil.
 ### Requirement: Pimienta
 El chef SHALL comenzar cada partida con 5 pimientas. Lanzar una pimienta con al
 menos una disponible SHALL restarla, crear una nube a 24/32 tiles por delante
-del chef y aturdir a todo enemigo activo que esté por delante del chef, a menos
-de 44/32 tiles horizontales de la nube y a menos de 26/32 tiles verticales del
-chef. El aturdimiento SHALL durar 300 ticks. Sin pimientas disponibles, la
-acción no tiene efecto.
+del chef en la dirección de lanzamiento y aturdir a todo enemigo activo que esté
+por delante del chef en esa dirección, a menos de 44/32 tiles de la nube a lo
+largo de la dirección de lanzamiento y a menos de 26/32 tiles del chef en el eje
+perpendicular. El aturdimiento SHALL durar 300 ticks. Sin pimientas
+disponibles, la acción no tiene efecto.
+
+La dirección de lanzamiento SHALL ser horizontal, hacia donde mira el chef,
+cuando está sobre una plataforma, y vertical cuando está en una escalera: hacia
+arriba o hacia abajo según su último movimiento vertical, que al agarrar la
+escalera es el sentido con el que la agarró. El estado del chef y el evento de
+pimienta lanzada SHALL exponer esa dirección (`left`, `right`, `up`, `down`).
 
 #### Scenario: Aturdir a un enemigo cercano
 - **WHEN** el chef lanza pimienta con un enemigo a 1 tile por delante en la
   misma fila
 - **THEN** la pimienta disponible disminuye en uno y el enemigo queda aturdido
   300 ticks
+
+#### Scenario: Lanzar hacia arriba en una escalera
+- **WHEN** el chef ha subido por una escalera y lanza pimienta con un enemigo
+  bajando por ella a 1 tile por encima
+- **THEN** la nube aparece por encima del chef, el evento indica la dirección
+  `up` y el enemigo queda aturdido
+
+#### Scenario: Lanzar hacia abajo en una escalera
+- **WHEN** el chef ha bajado por una escalera y lanza pimienta con un enemigo
+  esperando en la plataforma del pie de la escalera a menos de 1 tile
+- **THEN** la nube aparece por debajo del chef, el evento indica la dirección
+  `down` y el enemigo queda aturdido
+
+#### Scenario: Enemigo detrás en la escalera
+- **WHEN** el chef ha subido por una escalera y lanza pimienta con un enemigo
+  justo por debajo de él
+- **THEN** el enemigo no queda aturdido
+
+#### Scenario: Agarrar la escalera sin moverse todavía
+- **WHEN** el chef acaba de agarrar una escalera pulsando abajo y aún no se ha
+  desplazado por ella
+- **THEN** la dirección de lanzamiento es `down`
 
 #### Scenario: Sin pimienta
 - **WHEN** el chef no tiene pimientas y pulsa lanzar

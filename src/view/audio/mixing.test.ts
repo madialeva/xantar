@@ -15,7 +15,7 @@ describe('busGain', () => {
 describe('eventCue', () => {
   it('gives each game event its sound', () => {
     const cases: [SimEvent, string | null][] = [
-      [{ type: 'pepperThrown', x: 1, y: 1, direction: 1 }, 'pepper'],
+      [{ type: 'pepperThrown', x: 1, y: 1, direction: 'right' }, 'pepper'],
       [{ type: 'segmentStomped', ingredientId: 1, segment: 0 }, 'step'],
       [{ type: 'ingredientsTriggered', ingredientIds: [1] }, 'fall'],
       [{ type: 'ingredientLanded', ingredientId: 1, plateId: null, stackSlot: null }, 'land'],

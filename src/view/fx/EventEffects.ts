@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { TILE, platformY } from '../../config';
-import type { PlateSpec } from '../../sim';
+import { THROW_VECTORS, type PlateSpec, type ThrowDirection } from '../../sim';
 import type { ArtFactory } from '../raster/ArtFactory';
 
 const PEPPER_MS = 400;
@@ -29,10 +29,12 @@ export class EventEffects {
     scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.clear());
   }
 
-  pepper(x: number, y: number, direction: 1 | -1): void {
+  pepper(x: number, y: number, direction: ThrowDirection): void {
+    const { dx, dy } = THROW_VECTORS[direction];
     const cloud = this.#spawn('fx.pepper', x, y);
     this.#play(cloud, {
-      x: x + direction * PEPPER_REACH,
+      x: x + dx * PEPPER_REACH,
+      y: y + dy * PEPPER_REACH,
       alpha: 0,
       scale: cloud.scale * 2,
       duration: PEPPER_MS

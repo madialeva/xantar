@@ -168,7 +168,7 @@ export class Simulation {
       direction: cloud.direction
     });
     this.#enemies
-      .filter((enemy) => isHitByPepper(cloud, this.#chef, enemy))
+      .filter((enemy) => isHitByPepper(this.#chef, enemy))
       .forEach((enemy) => enemy.stun());
   }
 

@@ -31,8 +31,8 @@ export const ENEMY_REVERSE_CHANCE = 0.2;
 
 export const PEPPER_CLOUD_OFFSET = fromPx(24);
 export const PEPPER_CLOUD_LIFT = fromPx(2);
-export const PEPPER_REACH_X = fromPx(44);
-export const PEPPER_REACH_Y = fromPx(26);
+export const PEPPER_REACH_ALONG = fromPx(44);
+export const PEPPER_REACH_ACROSS = fromPx(26);
 
 export const CONTACT_X = fromPx(16);
 export const CONTACT_Y = fromPx(18);

@@ -228,6 +228,49 @@ describe('Chef stepping off a ladder', () => {
   });
 });
 
+describe('Chef throw direction', () => {
+  it('throws where it faces while on a platform', () => {
+    const chef = chefAt(5, 4);
+    expect(chef.throwDirection).toBe('right');
+    run(chef, press({ left: true }), 1);
+    expect(chef.throwDirection).toBe('left');
+  });
+
+  it('throws up as soon as it grabs a ladder going up, before moving', () => {
+    const chef = chefAt(5, 3.5);
+    run(chef, press({ up: true }), 1);
+    expect([chef.isClimbing, chef.y, chef.throwDirection]).toEqual([true, 5, 'up']);
+  });
+
+  it('throws down as soon as it grabs a ladder going down, before moving', () => {
+    const chef = chefAt(2, 3.5);
+    run(chef, press({ down: true }), 1);
+    expect([chef.isClimbing, chef.y, chef.throwDirection]).toEqual([true, 2, 'down']);
+  });
+
+  it('keeps the last climbing direction after stopping on the ladder', () => {
+    const chef = chefAt(5, 3.5);
+    run(chef, press({ up: true }), 30);
+    run(chef, press({ down: true }), 5);
+    run(chef, NO_INPUT, 10);
+    expect([chef.isClimbing, chef.throwDirection]).toEqual([true, 'down']);
+  });
+
+  it('ignores lateral input on the ladder', () => {
+    const chef = chefAt(5, 3.5);
+    run(chef, press({ up: true }), 20);
+    run(chef, press({ left: true }), 1);
+    expect(chef.throwDirection).toBe('up');
+  });
+
+  it('goes back to the facing direction when it reaches a platform', () => {
+    const chef = chefAt(5, 3.5);
+    run(chef, press({ left: true }), 1);
+    run(chef, press({ up: true }), 200);
+    expect([chef.onPlatform, chef.row, chef.throwDirection]).toEqual([true, 2, 'left']);
+  });
+});
+
 describe('Chef reset', () => {
   it('returns to the given place without an interpolation streak', () => {
     const chef = chefAt(5, 6);
@@ -235,5 +278,6 @@ describe('Chef reset', () => {
     chef.reset(graph.placeAt(5, 6.5));
     expect([chef.x, chef.y, chef.prevX, chef.prevY]).toEqual([6.5, 5, 6.5, 5]);
     expect([chef.facing, chef.isClimbing, chef.row]).toEqual([1, false, 5]);
+    expect(chef.throwDirection).toBe('right');
   });
 });
