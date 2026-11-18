@@ -5,8 +5,8 @@ import type { ArtFactory } from '../raster/ArtFactory';
 import { segmentParts } from '../art/graphics';
 
 /**
- * Static drawing of a level with the game graphics: backdrop, ladders, platform runs
- * with their end caps, crossings and plates.
+ * Static drawing of a level with the game graphics: backdrop, entry walkways, ladders,
+ * platform runs with their end caps, crossings and plates.
  */
 export class MazeView extends Phaser.GameObjects.Container {
   readonly #art: ArtFactory;
@@ -15,11 +15,22 @@ export class MazeView extends Phaser.GameObjects.Container {
     super(scene, 0, 0);
     this.#art = art;
     this.add(art.image('board.backdrop', GAME_WIDTH / 2, GAME_HEIGHT / 2));
+    this.#drawWalkways(level);
     this.#drawLadders(level);
     this.#drawPlatforms(level);
     this.#drawCrossings(level);
     this.#drawPlates(level);
     scene.add.existing(this);
+  }
+
+  #drawWalkways({ terrain }: Level): void {
+    for (let row = 0; row < terrain.rows; row++) {
+      for (let col = 0; col < terrain.cols; col++) {
+        if (terrain.hasWalkway(row, col)) {
+          this.add(this.#art.image('walkway', (col + 0.5) * TILE, platformY(row)));
+        }
+      }
+    }
   }
 
   #drawLadders({ terrain }: Level): void {

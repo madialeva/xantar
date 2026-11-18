@@ -19,8 +19,8 @@
 
 ## 4. Pasarela en pantalla
 
-- [ ] 4.1 Añadir el gráfico `walkway` (SVG 16×12 con la forma del tramo central en `f-platformEdge`, sin brillo) al catálogo y dibujarlo en `MazeView` en cada casilla de pasarela; verificar con las pruebas del arte, `npm run smoke` y la hoja de arte en `/tools/art-sheet.html`
-- [ ] 4.2 Documentar la pasarela en `docs/STYLE_GUIDE.md` (tabla de encaje de piezas); verificar con `npm run format:check`
+- [x] 4.1 Añadir el gráfico `walkway` (SVG 16×12 con la forma del tramo central en `f-platformEdge`, sin brillo) al catálogo y dibujarlo en `MazeView` en cada casilla de pasarela; verificar con las pruebas del arte, `npm run smoke` y la hoja de arte en `/tools/art-sheet.html`
+- [x] 4.2 Documentar la pasarela en `docs/STYLE_GUIDE.md` (tabla de encaje de piezas); verificar con `npm run format:check`
 
 ## 5. Nivel clásico con los enemigos del original
 

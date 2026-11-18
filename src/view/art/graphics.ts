@@ -28,6 +28,7 @@ export const GRAPHICS = {
   'platform.mid': size(16, 12),
   'platform.right': size(16, 12),
   crossing: size(16, 12),
+  walkway: size(16, 12),
   ladder: size(16, 16),
   'plate.left': size(16, 10),
   'plate.mid': size(16, 10),

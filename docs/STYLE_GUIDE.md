@@ -31,6 +31,7 @@ en español de forma provisional; se traducirá al inglés más adelante.
 | Elemento | Tamaño | Cómo se coloca |
 |---|---|---|
 | Tramo de plataforma (`platform.left/mid/right`), cruce (`crossing`) | 16×12 | centrado en la línea de la plataforma; la cara superior (línea − 6) es el suelo |
+| Pasarela de entrada (`walkway`) | 16×12 | una por casilla de pasarela, centrada en la línea del piso; más fina y oscura que la plataforma (`platformEdge`, sin brillo) para que se lea como prolongación del piso por la que entran los enemigos y no como suelo del chef |
 | Escalera (`ladder`) | 16×16 | una por fila, desde la línea de un piso hasta la del siguiente, detrás de las plataformas; dos peldaños por fila |
 | Plato (`plate.left/mid/right`) | 16×10 | centrado en la línea del plato |
 | Segmento de ingrediente (`<tipo>.left/mid/right`) | 16×(12–18) | apoyado sobre el suelo de la plataforma |

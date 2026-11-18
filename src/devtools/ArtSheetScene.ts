@@ -173,6 +173,7 @@ export default class ArtSheetScene extends Phaser.Scene {
     for (const row of [0, 1, 2, 3]) {
       maze.add(this.#art.image('ladder', 1.5 * TILE, platformY(row)).setOrigin(0.5, 0));
     }
+    for (const col of [8, 9]) tile('walkway', col, platformY(4));
     for (const row of [0, 4]) {
       segmentParts(8).forEach((part, col) => tile(`platform.${part}`, col, platformY(row)));
       tile('crossing', 1, platformY(row));
