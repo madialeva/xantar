@@ -12,12 +12,12 @@ const tiny = levelFromGrid(tinyGrid);
 describe('graph derivation', () => {
   it('has four platform edges and twelve ladder edges in the classic level', () => {
     expect(classic.graph.platforms.map((p) => [p.row, p.left, p.right])).toEqual(
-      [3, 6, 9, 12].map((row) => [row, 0, 20])
+      [6, 12, 18, 24].map((row) => [row, 0, 39])
     );
     expect(classic.graph.ladders).toHaveLength(12);
     expect(classic.graph.dangling).toEqual([]);
     const first = classic.graph.ladders[0];
-    expect([first.col, first.topRow, first.bottomRow, first.length]).toEqual([0, 3, 6, 3]);
+    expect([first.col, first.topRow, first.bottomRow, first.length]).toEqual([0, 6, 12, 6]);
     expect(first.x).toBe(0.5);
   });
 
@@ -95,9 +95,9 @@ describe('platform and ladder lookup', () => {
   });
 
   it('honors the grabbing distance', () => {
-    expect(graph.ladderNear(lower, 4.1, true)).toBeDefined();
-    expect(graph.ladderNear(lower, 4.2, true)).toBeUndefined();
-    expect(graph.ladderNear(lower, 4.2, true, 1)).toBeDefined();
+    expect(graph.ladderNear(lower, 4.6, true)).toBeDefined();
+    expect(graph.ladderNear(lower, 4.8, true)).toBeUndefined();
+    expect(graph.ladderNear(lower, 4.8, true, 1.5)).toBeDefined();
   });
 
   it('prefers the nearest of two ladders within reach', () => {

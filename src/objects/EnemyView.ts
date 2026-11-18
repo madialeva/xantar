@@ -7,7 +7,8 @@ import { RigAnimator } from '../view/rigs/RigAnimator';
 import { RigMotion } from '../view/rigs/RigMotion';
 import { enemyRigs } from '../view/rigs/rigs';
 import { enemyStates } from '../view/rigs/states';
-import { interpolatedX, interpolatedY } from './interpolation';
+import { characterY } from '../config';
+import { interpolatedRow, interpolatedX } from './interpolation';
 
 const STUNNED_ALPHA = 0.6;
 
@@ -28,7 +29,7 @@ export default class EnemyView extends Phaser.GameObjects.Container {
 
   sync(enemy: EnemySnapshot, alpha: number): void {
     this.setVisible(enemy.active);
-    this.setPosition(interpolatedX(enemy, alpha), interpolatedY(enemy, alpha));
+    this.setPosition(interpolatedX(enemy, alpha), characterY(interpolatedRow(enemy, alpha)));
     this.setScale(enemy.isClimbing ? 1 : enemy.facing, 1);
     this.setAlpha(enemy.stunned ? STUNNED_ALPHA : 1);
     this.#animator.show(enemyAnimation(enemy));

@@ -15,10 +15,12 @@ en español de forma provisional; se traducirá al inglés más adelante.
 
 ## 1. Unidades y rejilla
 
-- Todo se mide en **unidades lógicas**: una casilla del tablero mide 32×32 y el
-  tablero 640×480 (20×15 casillas). El juego dibuja cada gráfico a su tamaño
+- Todo se mide en **unidades lógicas**: una casilla del tablero mide 16×16 (un
+  carácter de la pantalla del original a escala ×2, medio cocinero) y el
+  tablero 624×480 (39×30 casillas). El chef mide 2×2 casillas y un ingrediente
+  de cuatro trozos, 64 de ancho. El juego dibuja cada gráfico a su tamaño
   lógico multiplicado por el nivel de escala (4 en esta versión): un gráfico de
-  32×32 acaba siendo una textura de 128×128 píxeles. El objetivo son pantallas
+  16×16 acaba siendo una textura de 64×64 píxeles. El objetivo son pantallas
   Full HD o mayores.
 - El tamaño lógico de cada gráfico lo fija el catálogo; los SVG lo repiten en
   su `viewBox` y los PNG miden exactamente ese tamaño × 4. La prueba de arte
@@ -33,7 +35,7 @@ en español de forma provisional; se traducirá al inglés más adelante.
 | Plato (`plate.left/mid/right`) | 32×10 | centrado en la línea del plato |
 | Segmento de ingrediente (`<tipo>.left/mid/right`) | 32×(12–18) | apoyado sobre el suelo de la plataforma |
 | Partes de personaje | según el rig | el punto de anclaje es el centro de su casilla; los pies tocan el suelo (+10 respecto al anclaje) |
-| Fondo del tablero (`board.backdrop`) | 640×480 | detrás de todo |
+| Fondo del tablero (`board.backdrop`) | 624×480 | detrás de todo |
 
 Un tramo de 2 casillas usa `left` + `right`; de 3, `left` + `mid` + `right`; de
 4 o más, `mid` repetido entre los extremos. Un tramo de una sola casilla usa

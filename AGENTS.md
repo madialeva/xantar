@@ -20,9 +20,11 @@ roadmap lives in the GitHub issues and in the README.
   Oxlint (+ tsgolint) for linting, Prettier for formatting, Electron `^44`,
   electron-builder `^26`. Node `>=22.12` (development on Node 24, see
   `.nvmrc`).
-- The board has a fixed logical size of **640×480**, built on a **32 px grid**
-  (20×15), centred in a play area 480 high and 832–1152 wide whose sides hold
-  the HUD panels (`computeLayout`). The canvas is that area times the render
+- The board has a fixed logical size of **624×480**, built on a **16-unit grid**
+  (39×30 cells; a cell is one character of the original screen at ×2, half the
+  height of the chef), centred in a play area 480 high and 816–1152 wide whose
+  sides hold the HUD panels (`computeLayout`). The simulation owns the cell size
+  (`CELL_UNITS` in `src/sim/rules.ts`) and `src/config.ts` derives `TILE` from it. The canvas is that area times the render
   tier (`RENDER_TIER`) and cameras zoom by it, so code works in logical units.
   Keep coordinates tied to `src/config.ts`; do not hardcode screen positions.
 - Movement is **custom** (platform/ladder grid), not Arcade Physics. There is

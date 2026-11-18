@@ -5,10 +5,10 @@ const fills = (layout: { width: number; height: number }, w: number, h: number):
   Math.abs(layout.width / layout.height - w / h) < 0.01;
 
 describe('computeLayout', () => {
-  it('fills a 16:9 window with a 853-wide area and panels of about 106', () => {
+  it('fills a 16:9 window with a 853-wide area and panels of about 114', () => {
     const layout = computeLayout(1920, 1080);
     expect(layout).toMatchObject({ width: 853, height: 480 });
-    expect(layout.leftPanel.width).toBeCloseTo(106.5);
+    expect(layout.leftPanel.width).toBeCloseTo(114.5);
     expect(fills(layout, 1920, 1080)).toBe(true);
   });
 
@@ -27,7 +27,7 @@ describe('computeLayout', () => {
 
   it('keeps the minimum width on a 4:3 window, leaving bands above and below', () => {
     const layout = computeLayout(1024, 768);
-    expect(layout.width).toBe(832);
+    expect(layout.width).toBe(816);
     expect(layout.leftPanel.width).toBe(96);
     expect(fills(layout, 1024, 768)).toBe(false);
   });
@@ -37,17 +37,17 @@ describe('computeLayout', () => {
   });
 
   it('copes with tiny or empty windows', () => {
-    expect(computeLayout(1, 1).width).toBe(832);
-    expect(computeLayout(0, 0).width).toBe(832);
-    expect(computeLayout(300, 0).width).toBe(832);
+    expect(computeLayout(1, 1).width).toBe(816);
+    expect(computeLayout(0, 0).width).toBe(816);
+    expect(computeLayout(300, 0).width).toBe(816);
   });
 });
 
 describe('layoutForWidth', () => {
   it('centres the board between two equal panels', () => {
     const layout = layoutForWidth(900);
-    expect(layout.board).toEqual({ x: 0, y: 0, width: 640, height: 480 });
-    expect(layout.leftPanel).toEqual({ x: -130, y: 0, width: 130, height: 480 });
-    expect(layout.rightPanel).toEqual({ x: 640, y: 0, width: 130, height: 480 });
+    expect(layout.board).toEqual({ x: 0, y: 0, width: 624, height: 480 });
+    expect(layout.leftPanel).toEqual({ x: -138, y: 0, width: 138, height: 480 });
+    expect(layout.rightPanel).toEqual({ x: 624, y: 0, width: 138, height: 480 });
   });
 });

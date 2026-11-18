@@ -308,8 +308,8 @@ Conceptos de Phaser que aparecen en el proyecto:
 - **Coordenadas de mundo**: dónde están las cosas en el juego.
 - **Coordenadas de pantalla**: en qué píxel del monitor se dibujan.
 - **Unidades lógicas**: una unidad de medida propia del juego,
-  independiente del monitor. En Xantar una casilla (*tile*) mide 32 unidades y
-  el tablero mide 640×480 (20×15 casillas). La simulación va todavía más allá
+  independiente del monitor. En Xantar una casilla (*tile*) mide 16 unidades y
+  el tablero mide 624×480 (39×30 casillas). La simulación va todavía más allá
   y trabaja directamente en casillas.
 
 La cámara es la que traduce del mundo a la pantalla. Así, el código de juego
@@ -320,9 +320,19 @@ nunca piensa en píxeles reales.
 Muchos juegos clásicos se construyen sobre una **rejilla** (*grid*) de
 casillas (*tiles*): el escenario es una matriz de piezas (plataforma,
 escalera, vacío) y los objetos se alinean a ella. Simplifica el diseño de
-niveles, las colisiones y la búsqueda de caminos. Xantar usa una rejilla de 32
+niveles, las colisiones y la búsqueda de caminos. Xantar usa una rejilla de 16
 unidades ([`src/config.ts`](../src/config.ts)) y la regla del proyecto es no
 "inventar" posiciones de pantalla a mano, sino calcularlas desde la rejilla.
+
+El tamaño de la casilla no es arbitrario: copia la rejilla del juego original.
+BurgerTime dibuja su pantalla con **caracteres** de 8×8 píxeles (32×30 en
+total), y todo encaja en ellos: el cocinero ocupa 2×2 caracteres, cada trozo de
+ingrediente uno y los pisos están siempre a un número par de caracteres, así
+que las escaleras miden cocineros enteros. Xantar usa esa misma rejilla al
+doble de tamaño: una casilla de 16 unidades es un carácter y medio cocinero.
+Elegir la unidad de la rejilla a partir del personaje hace que las proporciones
+salgan solas: si la casilla y el personaje no encajan, ningún nivel quedará
+bien por mucho que se retoque.
 
 ### 7.3 Resolución, proporción y escalado
 
@@ -339,8 +349,8 @@ unidades ([`src/config.ts`](../src/config.ts)) y la regla del proyecto es no
   - **Escalado entero** (×2, ×3…): típico del pixel art para que cada píxel se
     vea nítido.
 
-**En Xantar** el tablero es siempre 640×480 lógico y está centrado. El área de
-juego mide 480 de alto y entre 832 y 1152 de ancho según la proporción de la
+**En Xantar** el tablero es siempre 624×480 lógico y está centrado. El área de
+juego mide 480 de alto y entre 816 y 1152 de ancho según la proporción de la
 ventana ([`computeLayout`](../src/view/layout/computeLayout.ts)); el espacio de
 los lados son los **paneles laterales** del HUD. Así, en 16:9 y en móviles en
 horizontal no hay bandas negras; en 4:3 sí aparecen arriba y abajo.

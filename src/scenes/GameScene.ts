@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { type RenderTier, TILE } from '../config';
+import { type RenderTier, TILE, characterY } from '../config';
 import classicDocument from '../levels/classic.level.json';
 import ChefView from '../objects/ChefView';
 import EnemyView from '../objects/EnemyView';
@@ -207,7 +207,7 @@ export default class GameScene extends Phaser.Scene {
           this.#rebuildIngredients();
           break;
         case 'pepperThrown':
-          this.#effects.pepper(event.x * TILE, event.y * TILE, event.direction);
+          this.#effects.pepper(event.x * TILE, characterY(event.y), event.direction);
           break;
         case 'chefHit':
           this.cameras.main.flash(CAMERA_FLASH_MS, 255, 60, 60);
@@ -226,10 +226,12 @@ export default class GameScene extends Phaser.Scene {
           break;
         }
         case 'enemySquashed':
-          this.#effects.squash(event.x * TILE, event.y * TILE);
+          this.#effects.squash(event.x * TILE, characterY(event.y));
           break;
         case 'ridersDropped':
-          for (const rider of event.riders) this.#effects.squash(rider.x * TILE, rider.y * TILE);
+          for (const rider of event.riders) {
+            this.#effects.squash(rider.x * TILE, characterY(rider.y));
+          }
           break;
         case 'burgerDone': {
           const plate = this.#sim.level.plates.find((candidate) => candidate.id === event.plateId);

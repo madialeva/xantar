@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EventQueue } from '../events';
 import { NavPlace } from '../nav/NavPlace';
+import { CELL_UNITS } from '../rules';
 import { levelFromGrid, tinyGrid } from '../testing/grids';
 import { StubRng } from '../testing/rng';
 import { createEnemy } from './createEnemy';
@@ -31,8 +32,8 @@ const chef = (x: number, y: number, throwDirection: ThrowDirection = 'right'): P
 describe('pepper on a platform', () => {
   it('places the cloud in front of the chef', () => {
     const cloud = pepperCloudFor(chef(4, 5, 'left'));
-    expect(cloud.x).toBeCloseTo(4 - 24 / 32, 10);
-    expect(cloud.y).toBeCloseTo(5 - 2 / 32, 10);
+    expect(cloud.x).toBeCloseTo(4 - 24 / CELL_UNITS, 10);
+    expect(cloud.y).toBeCloseTo(5 - 2 / CELL_UNITS, 10);
     expect(cloud.direction).toBe('left');
   });
 
@@ -61,14 +62,14 @@ describe('pepper on a ladder', () => {
   it('places the cloud above the chef when thrown up', () => {
     const cloud = pepperCloudFor(chef(3.5, 4, 'up'));
     expect(cloud.x).toBe(3.5);
-    expect(cloud.y).toBeCloseTo(4 - 24 / 32 - 2 / 32, 10);
+    expect(cloud.y).toBeCloseTo(4 - 24 / CELL_UNITS - 2 / CELL_UNITS, 10);
     expect(cloud.direction).toBe('up');
   });
 
   it('places the cloud below the chef when thrown down', () => {
     const cloud = pepperCloudFor(chef(3.5, 3, 'down'));
     expect(cloud.x).toBe(3.5);
-    expect(cloud.y).toBeCloseTo(3 + 24 / 32 - 2 / 32, 10);
+    expect(cloud.y).toBeCloseTo(3 + 24 / CELL_UNITS - 2 / CELL_UNITS, 10);
   });
 
   it('hits an enemy climbing the same ladder above', () => {
@@ -93,10 +94,18 @@ describe('pepper on a ladder', () => {
   });
 
   it('misses an enemy that is too far along the ladder', () => {
-    expect(isHitByPepper(chef(3.5, 4.9, 'up'), enemyAt(2, 3.5))).toBe(false);
+    const tall = levelFromGrid({
+      structure: ['===+====', ...Array.from({ length: 8 }, () => '...H....'), '===+===='],
+      actors: [...Array.from({ length: 9 }, () => '........'), 'C.......']
+    });
+    const far = createEnemy(0, 'pickle', new EventQueue(), tall.graph, [
+      tall.graph.placeAt(0, 3.5)
+    ]);
+    far.reset(tall.graph.placeAt(0, 3.5), rng);
+    expect(isHitByPepper(chef(3.5, 8.9, 'up'), far)).toBe(false);
   });
 
   it('misses an enemy on the platform away from the ladder', () => {
-    expect(isHitByPepper(chef(3.5, 3, 'up'), enemyAt(2, 5))).toBe(false);
+    expect(isHitByPepper(chef(3.5, 3, 'up'), enemyAt(2, 6))).toBe(false);
   });
 });

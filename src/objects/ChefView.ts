@@ -7,7 +7,8 @@ import { RigAnimator } from '../view/rigs/RigAnimator';
 import { RigMotion } from '../view/rigs/RigMotion';
 import { chefRig } from '../view/rigs/rigs';
 import { chefStates } from '../view/rigs/states';
-import { interpolatedX, interpolatedY } from './interpolation';
+import { characterY } from '../config';
+import { interpolatedRow, interpolatedX } from './interpolation';
 
 /**
  * Phaser view of the chef: a rig of parts that follows the simulation snapshot,
@@ -25,7 +26,7 @@ export default class ChefView extends Phaser.GameObjects.Container {
   }
 
   sync(chef: ChefSnapshot, alpha: number, dying: boolean): void {
-    this.setPosition(interpolatedX(chef, alpha), interpolatedY(chef, alpha));
+    this.setPosition(interpolatedX(chef, alpha), characterY(interpolatedRow(chef, alpha)));
     this.setScale(chef.isClimbing ? 1 : chef.facing, 1);
     this.#animator.show(chefAnimation(chef, dying));
   }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EventQueue } from '../events';
 import type { Level } from '../level/Level';
-import { ENEMY_SPEED, RESPAWN_TICKS, STUN_TICKS } from '../rules';
+import { EDGE_MARGIN, ENEMY_SPEED, RESPAWN_TICKS, STUN_TICKS } from '../rules';
 import { levelFromGrid, tinyGrid } from '../testing/grids';
 import { StubRng } from '../testing/rng';
 import { levelFromShape } from '../testing/shapes';
@@ -119,7 +119,7 @@ describe('Enemy chasing', () => {
   it('stays within its platform', () => {
     const { enemy } = spawn(tiny, 5, 6.5);
     run(enemy, chefAt(tiny, 5, 7.6), 600);
-    expect(enemy.x).toBeLessThanOrEqual(8 - 12 / 32 + 1e-9);
+    expect(enemy.x).toBeLessThanOrEqual(8 - EDGE_MARGIN + 1e-9);
   });
 });
 

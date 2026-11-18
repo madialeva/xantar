@@ -9,6 +9,7 @@ const DUST_MS = 260;
 const SQUASH_MS = 450;
 const SPARKLE_MS = 700;
 const SPARKLES_PER_PLATE = 6;
+const SPARKLE_RISE = 64;
 
 type Effect = Phaser.GameObjects.Image;
 
@@ -60,12 +61,12 @@ export class EventEffects {
 
   burgerDone(plate: PlateSpec): void {
     const centre = (plate.col + plate.width / 2) * TILE;
-    const top = platformY(plate.row) - 3 * TILE;
+    const top = platformY(plate.row) - SPARKLE_RISE;
     for (let index = 0; index < SPARKLES_PER_PLATE; index++) {
       const angle = (index / SPARKLES_PER_PLATE) * Math.PI * 2;
       const sparkle = this.#spawn('fx.sparkle', centre, top).setScale(this.#art.scale * 0.2);
       this.#play(sparkle, {
-        x: centre + Math.cos(angle) * plate.width * 10,
+        x: centre + Math.cos(angle) * plate.width * TILE * 0.3,
         y: top + Math.sin(angle) * 24,
         scale: this.#art.scale,
         angle: 180,

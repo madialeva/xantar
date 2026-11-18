@@ -18,10 +18,10 @@ const run = (chef: Chef, input: SimInput, ticks: number, nav = graph): void => {
 };
 
 describe('Chef walking', () => {
-  it('advances 115/32 casillas in 60 ticks and faces right', () => {
+  it('advances a third of its speed in 20 ticks and faces right', () => {
     const chef = chefAt(5, 1);
-    run(chef, press({ right: true }), 60);
-    expect(chef.x).toBeCloseTo(1 + CHEF_SPEED, 9);
+    run(chef, press({ right: true }), 20);
+    expect(chef.x).toBeCloseTo(1 + CHEF_SPEED / 3, 9);
     expect(chef.facing).toBe(1);
     expect(chef.isMoving).toBe(true);
   });
@@ -120,8 +120,8 @@ describe('Chef on ladders', () => {
 
   it('ignores lateral input while on the ladder', () => {
     const chef = chefAt(5, 3.5);
-    run(chef, press({ up: true }), 20);
-    run(chef, press({ left: true, up: true }), 20);
+    run(chef, press({ up: true }), 15);
+    run(chef, press({ left: true, up: true }), 10);
     expect(chef.x).toBe(3.5);
     expect(chef.isClimbing).toBe(true);
   });
@@ -208,7 +208,7 @@ describe('Chef stepping off a ladder', () => {
   it('ignores lateral input far from a platform', () => {
     const chef = onFloors(5, 3.5);
     run(chef, press({ up: true }), 1, nav);
-    run(chef, press({ up: true }), 30, nav);
+    run(chef, press({ up: true }), 12, nav);
     const y = chef.y;
     run(chef, press({ left: true }), 10, nav);
     expect([chef.x, chef.y, chef.isClimbing]).toEqual([3.5, y, true]);

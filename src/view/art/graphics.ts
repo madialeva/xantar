@@ -23,7 +23,7 @@ const ingredient = <K extends IngredientKind>(kind: K) => {
 };
 
 export const GRAPHICS = {
-  'board.backdrop': size(640, 480),
+  'board.backdrop': size(624, 480),
   'platform.left': size(32, 12),
   'platform.mid': size(32, 12),
   'platform.right': size(32, 12),

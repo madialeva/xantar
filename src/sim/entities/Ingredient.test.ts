@@ -148,11 +148,11 @@ describe('Ingredient position', () => {
 });
 
 describe('Ingredient fall', () => {
-  it('goes down the same amount every tick and reaches a floor three rows below in 34 ticks', () => {
+  it('goes down the same amount every tick and reaches a floor 96 units below in 34 ticks', () => {
     const host = new FakeHost();
     const ingredient = new Ingredient(spec(), host);
     stompAll(ingredient);
-    ingredient.fall(floor(8));
+    ingredient.fall(floor(11));
     const heights: number[] = [];
     for (let i = 0; i < 33; i++) {
       tick(ingredient);
@@ -163,10 +163,10 @@ describe('Ingredient fall', () => {
     heights.forEach((y, index) => expect(y).toBeCloseTo(5 + (index + 1) * FALL_STEP, 10));
     expect(host.touches).toEqual([]);
     tick(ingredient);
-    expect([ingredient.y, ingredient.phase, ingredient.row]).toEqual([8, 'idle', 8]);
+    expect([ingredient.y, ingredient.phase, ingredient.row]).toEqual([11, 'idle', 11]);
     expect(ingredient.stomped).toEqual([false, false, false, false]);
-    expect(host.touches).toEqual([floor(8)]);
-    expect(host.rests).toEqual([floor(8)]);
+    expect(host.touches).toEqual([floor(11)]);
+    expect(host.rests).toEqual([floor(11)]);
   });
 
   it('keeps the previous height for the view to interpolate', () => {

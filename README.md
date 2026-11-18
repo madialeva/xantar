@@ -184,7 +184,7 @@ while the game is in the background.
 
 ### Screen and looks
 
-- The 20×15 board sits in the middle of the screen, and the score, level, lives
+- The board sits in the middle of the screen, and the score, level, lives
   and pepper shots are shown in **side panels**. On widescreen monitors and on
   phones held sideways the game fills the whole screen; narrower screens show
   bars above and below. The left panel also shows your best score.
