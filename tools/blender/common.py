@@ -11,7 +11,7 @@ from mathutils import Vector
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 ART_DIR = os.path.join(ROOT, "src", "view", "art", "sources")
 PREVIEW_DIR = os.path.join(ROOT, "tmp", "blender")
-TILE = 32
+TILE = 16
 TIER = 4
 SUPERSAMPLE = 2
 LIFT = 0.02

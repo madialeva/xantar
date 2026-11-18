@@ -33,7 +33,7 @@ en español de forma provisional; se traducirá al inglés más adelante.
 | Tramo de plataforma (`platform.left/mid/right`), cruce (`crossing`) | 16×12 | centrado en la línea de la plataforma; la cara superior (línea − 6) es el suelo |
 | Escalera (`ladder`) | 16×16 | una por fila, desde la línea de un piso hasta la del siguiente, detrás de las plataformas; dos peldaños por fila |
 | Plato (`plate.left/mid/right`) | 16×10 | centrado en la línea del plato |
-| Segmento de ingrediente (`<tipo>.left/mid/right`) | 32×(12–18) | apoyado sobre el suelo de la plataforma |
+| Segmento de ingrediente (`<tipo>.left/mid/right`) | 16×(12–18) | apoyado sobre el suelo de la plataforma |
 | Partes de personaje | según el rig | el punto de anclaje está 16 por encima de la línea de la plataforma (`characterY`); los pies tocan el suelo (+10 respecto al anclaje) |
 | Fondo del tablero (`board.backdrop`) | 624×480 | detrás de todo |
 
@@ -75,14 +75,18 @@ Lo generan los scripts de `tools/blender/` (ver el manual del desarrollador,
   `src/sim/rules.ts`, porque la simulación lo usa para apilar y para saber
   cuándo un ingrediente golpea a otro): pan de abajo 7,4, carne 8,3, lechuga 4,8
   y pan de arriba 13. Si cambia la forma de un ingrediente, se recalcula con
-  `tmp/blender/metrics.json`.
+  `tmp/blender/metrics.json`. Al pasar a casillas de 16 el ingrediente es menos
+  profundo, pero su cara delantera mide lo mismo, así que estos grosores no
+  cambian.
+- Un ingrediente mide 64 de ancho (cuatro casillas, dos cocineros, como en el
+  original) y sus extremos redondeados caben en el primer y el último tramo.
 
 | Ingrediente | Imagen | Forma |
 |---|---|---|
-| `bunTop` | 32×18 | cúpula de 13,5 de alto con unas 125 semillas de sésamo |
-| `lettuce` | 32×12 | dos hojas posadas con el borde rizado colgando |
-| `patty` | 32×14 | disco de 9,2 de alto con borde irregular y marcas de parrilla |
-| `bunBottom` | 32×14 | base más ancha en el corte, con la miga a la vista |
+| `bunTop` | 16×18 | cúpula de 13,5 de alto con semillas de sésamo |
+| `lettuce` | 16×12 | dos hojas posadas con el borde rizado colgando |
+| `patty` | 16×14 | disco de 9,2 de alto con borde irregular y marcas de parrilla |
+| `bunBottom` | 16×14 | base más ancha en el corte, con la miga a la vista |
 
 ### 2.3 Personajes
 

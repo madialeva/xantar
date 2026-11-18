@@ -18,8 +18,8 @@
 
 ## 4. Ingredientes renderizados a 16 de ancho
 
-- [ ] 4.1 Poner `TILE = 16` en `tools/blender/common.py`, ajustar en `tools/blender/ingredients.py` lo que dependa de la casilla de 32 (patrones, semillas y encuadre) y renderizar los cuatro ingredientes con `/home/arume/software/blender/blender-5.2.2-linux-x64/blender -b --factory-startup --python tools/blender/ingredients.py --`; cambiar sus tamaños en el catálogo a 16×(12–18); verificar con las pruebas del arte, las vistas previas de `tmp/blender/` y la hoja de arte (ingrediente continuo sin costuras y hamburguesa apilada como antes)
-- [ ] 4.2 Si el render cambia los grosores de `tmp/blender/metrics.json`, actualizar `INGREDIENT_THICKNESS`, sus pruebas y el requisito "Grosor de los ingredientes" del delta de `gameplay-rules`; documentar el ancho de 16 en `docs/STYLE_GUIDE.md` (tabla de ingredientes) y en `docs/MANUAL.md` (§8.7); verificar con `npm run test`, `openspec validate is45-board-proportions --strict` y las comprobaciones de entrega
+- [x] 4.1 Poner `TILE = 16` en `tools/blender/common.py`, ajustar en `tools/blender/ingredients.py` lo que dependa de la casilla de 32 (patrones, semillas y encuadre) y renderizar los cuatro ingredientes con `blender -b --factory-startup --python tools/blender/ingredients.py --`; cambiar sus tamaños en el catálogo a 16×(12–18); verificar con las pruebas del arte, las vistas previas de `tmp/blender/` y la hoja de arte (ingrediente continuo sin costuras y hamburguesa apilada como antes)
+- [x] 4.2 Si el render cambia los grosores de `tmp/blender/metrics.json`, actualizar `INGREDIENT_THICKNESS`, sus pruebas y el requisito "Grosor de los ingredientes" del delta de `gameplay-rules`; documentar el ancho de 16 en `docs/STYLE_GUIDE.md` (tabla de ingredientes) y en `docs/MANUAL.md` (§8.7); verificar con `npm run test`, `openspec validate is45-board-proportions --strict` y las comprobaciones de entrega
 
 ## 5. Personajes de 2×2 casillas
 

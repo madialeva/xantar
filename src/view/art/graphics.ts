@@ -15,7 +15,7 @@ export const INGREDIENT_HEIGHTS: Readonly<Record<IngredientKind, number>> = {
 };
 
 const ingredient = <K extends IngredientKind>(kind: K) => {
-  const box = size(32, INGREDIENT_HEIGHTS[kind]);
+  const box = size(16, INGREDIENT_HEIGHTS[kind]);
   return { [`${kind}.left`]: box, [`${kind}.mid`]: box, [`${kind}.right`]: box } as Record<
     `${K}.${SegmentPart}`,
     GraphicSize

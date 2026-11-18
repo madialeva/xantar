@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { TILE } from '../../config';
 import { GRAPHICS, GRAPHIC_IDS, isGraphicId, segmentParts } from './graphics';
 
 describe('graphics catalogue', () => {
@@ -7,7 +8,7 @@ describe('graphics catalogue', () => {
       for (const part of ['left', 'mid', 'right']) {
         const id = `${kind}.${part}`;
         expect(isGraphicId(id)).toBe(true);
-        if (isGraphicId(id)) expect(GRAPHICS[id].width).toBe(32);
+        if (isGraphicId(id)) expect(GRAPHICS[id].width).toBe(TILE);
       }
     }
   });
