@@ -42,7 +42,7 @@
 
 ## 8. Integración
 
-- [ ] 8.1 Ejecutar las comprobaciones de entrega completas (`npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build`, `npm run smoke`) y `openspec validate is45-board-proportions --strict`; verificar que todo termina sin errores y revisar la hoja de arte en `/tools/art-sheet.html`
+- [x] 8.1 Ejecutar las comprobaciones de entrega completas (`npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build`, `npm run smoke`) y `openspec validate is45-board-proportions --strict`; verificar que todo termina sin errores y revisar la hoja de arte en `/tools/art-sheet.html`
 - [ ] 8.2 Jugar en `npm run dev` y en `npm run dev:desktop` comparando con la grabación del original: misma estructura de pisos y escaleras, chef de dos casillas de alto, hamburguesas de dos cocineros de ancho, escaleras de 1 a 9 cocineros, caída de un piso de dos cocineros en ≈ 0,57 s y personajes legibles en un móvil apaisado (lo verifica el autor)
 
 ## Workflow follow-up
