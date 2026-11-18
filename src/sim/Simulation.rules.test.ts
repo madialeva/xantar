@@ -168,6 +168,19 @@ describe('Simulation: stomping and crushing enemies', () => {
   });
 });
 
+describe('Simulation: climbing through a crossing', () => {
+  it('does not stomp an ingredient over a crossing it climbs straight through', () => {
+    const sim = create({
+      structure: ['........', '===+====', '...H....', '===+====', '...H....', '===+===='],
+      ingredients: ['........', '........', '........', '..TTTT..', '........', '........'],
+      actors: ['........', '........', '........', '........', '........', '...C....']
+    });
+    const events = run(sim, 120, { up: true });
+    expect(sim.chef.row).toBe(1);
+    expect(ofType(events, 'segmentStomped')).toEqual([]);
+  });
+});
+
 describe('Simulation: pepper', () => {
   it('stuns a nearby enemy in front and consumes a pepper', () => {
     const sim = create(chefAndEnemyOnRow5);

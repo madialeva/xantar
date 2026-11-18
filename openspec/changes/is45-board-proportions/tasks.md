@@ -40,10 +40,15 @@
 - [x] 7.4 Probar en `npm run dev` que todo el nivel es jugable: el chef llega a todos los pisos, cada hamburguesa se completa en su plato, un enemigo montado en el pan de la calle 3 baja tres pisos y el nivel termina; verificar con `npm run smoke` (captura de la partida en 16:9, 4:3 y 19,5:9)
 - [x] 7.5 Documentar la nueva primera pantalla en `README.md` (pisos a varias alturas, hamburguesas separadas por escaleras), `docs/MANUAL.md` (§8.5 y §8.6: nivel clásico, casillas de medio cocinero y aviso `ladder-odd-span`; receta §9.7) y `docs/GAMEDEV_FUNDAMENTALS.md` (medir las proporciones de un juego de referencia en una grabación: rejilla de caracteres y mapa por mayoría de fotogramas); verificar con `npm run format:check`, `grep` de los nombres citados y las comprobaciones de entrega
 
-## 8. Integración
+## 8. Trepar sin trompicones entre escaleras consecutivas
 
-- [x] 8.1 Ejecutar las comprobaciones de entrega completas (`npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build`, `npm run smoke`) y `openspec validate is45-board-proportions --strict`; verificar que todo termina sin errores y revisar la hoja de arte en `/tools/art-sheet.html`
-- [ ] 8.2 Jugar en `npm run dev` y en `npm run dev:desktop` comparando con la grabación del original: misma estructura de pisos y escaleras, chef de dos casillas de alto, hamburguesas de dos cocineros de ancho, escaleras de 1 a 9 cocineros, caída de un piso de dos cocineros en ≈ 0,57 s y personajes legibles en un móvil apaisado (lo verifica el autor)
+- [x] 8.1 En `Chef`, al trepar, buscar la escalera que continúa en la misma columna y sentido y pasar a ella en el mismo tick con lo que sobre del paso, sin umbral de llegada ni tick sobre la plataforma; verificar con pruebas de `Chef` (cada tick baja o sube lo mismo al cruzar, nunca queda en la plataforma intermedia, llega y se para al final de la última escalera, y puede bajarse en el cruce con la entrada lateral) y de reglas (al cruzar bajo un ingrediente no pisa sus segmentos), con `npm run test`
+- [x] 8.2 Documentar el cruce sin detenerse en `docs/MANUAL.md` (§8.5, `Chef`) y en `README.md` si describe las escaleras; verificar con `npm run format:check`, `openspec validate is45-board-proportions --strict` y las comprobaciones de entrega, más `npm run smoke`
+
+## 9. Integración
+
+- [ ] 9.1 Ejecutar las comprobaciones de entrega completas (`npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build`, `npm run smoke`) y `openspec validate is45-board-proportions --strict`; verificar que todo termina sin errores y revisar la hoja de arte en `/tools/art-sheet.html`
+- [ ] 9.2 Jugar en `npm run dev` y en `npm run dev:desktop` comparando con la grabación del original: misma estructura de pisos y escaleras, chef de dos casillas de alto, hamburguesas de dos cocineros de ancho, escaleras de 1 a 9 cocineros recorridas sin trompicones, caída de un piso de dos cocineros en ≈ 0,57 s y personajes legibles en un móvil apaisado (lo verifica el autor)
 
 ## Workflow follow-up
 

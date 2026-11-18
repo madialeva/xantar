@@ -109,7 +109,8 @@ it works even with the screen rotation locked.
 
 On a ladder you only move while you hold up or down, so you can stop and turn
 around anywhere on it. When you reach the height of a platform, press left or
-right to step onto it.
+right to step onto it; keep holding up or down and you climb straight on to the
+next ladder without stopping.
 
 The game also pauses on its own when its window loses the focus or a gamepad is
 disconnected. The pause menu lets you resume or quit to the main menu.

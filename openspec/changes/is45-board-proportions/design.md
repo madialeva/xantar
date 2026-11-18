@@ -247,7 +247,32 @@ de por 3. Los tiempos no cambian:
 | `BOUNCE_HEIGHT` | 6–7 px | `fromPx(20)` | `fromPx(13)` |
 | Hundimiento al tocar un piso (`TOUCH_DOWN`) | 4–5 px | 12 | 8 |
 
-### 8. Pruebas
+### 8. Cruce sin detenerse entre escaleras consecutivas
+
+Al jugar con la rejilla nueva, el chef daba un tirón en cada cruce al trepar
+recto. La simulación lo explica: al quedarle menos de `ARRIVAL_THRESHOLD` (3
+unidades) se le coloca en la plataforma, un salto de hasta 4 unidades (el
+triple de un paso), y en el tick siguiente se engancha a la escalera de arriba
+sin moverse. Además, la vista cambia de trepar a estar en la plataforma y
+vuelta a trepar, y la animación se reinicia. Ya pasaba antes, pero cada 72
+ticks; ahora, con pisos a dos cocineros, cada 46 o incluso cada 23.
+
+`Chef` busca, al trepar, la escalera que continúa en la misma columna y en el
+mismo sentido (`graph.ladderNear(extremo, x, sentido, 0)`). Si existe, cuando
+el paso llega al cruce pasa a ella en el mismo tick con lo que sobra, sin el
+umbral de llegada; si no, llega a la plataforma como hasta ahora. Bajarse a
+la plataforma del cruce sigue funcionando con la entrada lateral
+(`STEP_OFF_DISTANCE`). Como el chef nunca queda sobre esa plataforma, ya no
+pisa el segmento de un ingrediente que esté encima del cruce, como pide la
+regla de no pisar desde una escalera.
+
+Alternativa descartada: quitar solo el tick parado. El salto del umbral y el
+cambio de animación seguirían produciendo el tirón.
+
+Los enemigos tienen su propio movimiento y deciden al final de cada escalera;
+quedan como están.
+
+### 9. Pruebas
 
 - Las pruebas de la simulación usan sus propias cuadrículas
   (`src/sim/testing`), que siguen valiendo en casillas. Cambian las que fijan
@@ -258,7 +283,8 @@ de por 3. Los tiempos no cambian:
 - `computeLayout.test.ts`: tablero de 624, mínimo de 816 y paneles de 114,5 en
   16:9.
 - Pruebas nuevas: la regla `ladder-odd-span`, la escala del rig con los pies
-  fijos y la altura del chef y de los enemigos.
+  fijos, la altura del chef y de los enemigos, y el cruce sin detenerse entre
+  escaleras consecutivas.
 
 ## Risks / Trade-offs
 

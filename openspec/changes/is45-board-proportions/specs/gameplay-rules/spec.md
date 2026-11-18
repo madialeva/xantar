@@ -35,9 +35,12 @@ o menos de uno de los extremos de la escalera (la altura de una plataforma), la
 entrada lateral SHALL hacerle pasar a la plataforma de ese extremo y caminar en
 ese sentido; en el resto de la escalera la entrada lateral SHALL ignorarse. Al
 alcanzar uno de sus extremos, el chef SHALL quedar sobre la plataforma de ese
-extremo, desde la que puede caminar o engancharse a otra escalera. Sobre una
-plataforma, la entrada lateral SHALL tener prioridad sobre la vertical: con
-entrada lateral el chef camina y no se engancha a una escalera.
+extremo, desde la que puede caminar o engancharse a otra escalera; pero si en
+ese cruce la escalera sigue en la misma columna y en el mismo sentido, SHALL
+pasar a la escalera siguiente en ese mismo tick, con lo que le quede del paso,
+sin detenerse ni quedar sobre la plataforma. Sobre una plataforma, la entrada
+lateral SHALL tener prioridad sobre la vertical: con entrada lateral el chef
+camina y no se engancha a una escalera.
 
 #### Scenario: Subir por una escalera cercana
 - **WHEN** el chef está a 9,6 unidades de una escalera que sube y mantiene
@@ -82,7 +85,13 @@ entrada lateral el chef camina y no se engancha a una escalera.
 #### Scenario: Escaleras consecutivas
 - **WHEN** el chef llega a una plataforma que tiene otra escalera en la misma
   columna y mantiene la misma dirección
-- **THEN** se engancha a la escalera siguiente y continúa
+- **THEN** pasa a la escalera siguiente en ese mismo tick y sigue a 80
+  unidades por segundo, sin detenerse en el cruce
+
+#### Scenario: Cruce bajo un ingrediente
+- **WHEN** el chef sube sin parar por escaleras consecutivas cuya columna pasa
+  bajo un ingrediente quieto
+- **THEN** no pisa ningún segmento de ese ingrediente
 
 ### Requirement: Apilado en el plato
 Un ingrediente cuyo soporte es un plato SHALL apilarse sobre él, cada pieza

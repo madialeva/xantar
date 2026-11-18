@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { levelFromGrid, tinyGrid } from '../testing/grids';
-import { CHEF_SPEED, EDGE_MARGIN } from '../rules';
+import { CHEF_SPEED, CLIMB_SPEED, EDGE_MARGIN, TICK_SECONDS } from '../rules';
 import { NO_INPUT, type SimInput } from '../SimInput';
 import { Chef } from './Chef';
 
@@ -212,6 +212,33 @@ describe('Chef stepping off a ladder', () => {
     const y = chef.y;
     run(chef, press({ left: true }), 10, nav);
     expect([chef.x, chef.y, chef.isClimbing]).toEqual([3.5, y, true]);
+  });
+
+  it('climbs through a crossing at the same pace, without snapping or stopping on it', () => {
+    const chef = onFloors(5, 3.5);
+    run(chef, press({ up: true }), 1, nav);
+    const steps: number[] = [];
+    let stoppedOnCrossing = false;
+    while (chef.isClimbing) {
+      run(chef, press({ up: true }), 1, nav);
+      steps.push(chef.prevY - chef.y);
+      stoppedOnCrossing ||= chef.onPlatform && chef.row === 3;
+    }
+    expect(stoppedOnCrossing).toBe(false);
+    expect([chef.row, chef.onPlatform]).toEqual([1, true]);
+    steps.slice(0, -1).forEach((step) => expect(step).toBeCloseTo(CLIMB_SPEED * TICK_SECONDS, 10));
+  });
+
+  it('goes down through a crossing the same way', () => {
+    const chef = onFloors(1, 3.5);
+    run(chef, press({ down: true }), 1, nav);
+    const steps: number[] = [];
+    while (chef.isClimbing) {
+      run(chef, press({ down: true }), 1, nav);
+      steps.push(chef.y - chef.prevY);
+    }
+    expect([chef.row, chef.onPlatform]).toEqual([5, true]);
+    steps.slice(0, -1).forEach((step) => expect(step).toBeCloseTo(CLIMB_SPEED * TICK_SECONDS, 10));
   });
 
   it('keeps going through the platform when only up is held', () => {

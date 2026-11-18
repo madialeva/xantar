@@ -53,6 +53,11 @@ como referencia.
   - cuatro hamburguesas separadas por escaleras, con sus ingredientes en pisos
     distintos, y los platos abajo;
   - el chef en el centro del piso inferior y los tres enemigos en el superior.
+- **Trepar sin trompicones.** Al subir o bajar recto por escaleras
+  consecutivas, el chef pasa de una a la siguiente sin saltar ni pararse un
+  tick en el cruce. Con pisos más juntos, ese tirón se notaba cada pocos
+  pasos. Al cruzar así una plataforma tampoco pisa el ingrediente que haya
+  encima.
 - **Medidas de las specs en unidades.** Los requisitos que hoy dan distancias y
   velocidades en treintaidosavos de casilla las dan en unidades lógicas, con
   los mismos valores, para que no dependan del tamaño de la casilla.
@@ -76,7 +81,8 @@ Ninguna.
   del nuevo nivel clásico: 10 de plataforma y 29 de escalera). "Posición sobre
   el grafo" (margen de 12 unidades).
 - `gameplay-rules`: medidas en unidades en "Movimiento horizontal del chef",
-  "Escaleras del chef", "Aplastamiento de enemigos", "Comportamiento de los
+  "Escaleras del chef" (que además cruza sin detenerse entre escaleras
+  consecutivas), "Aplastamiento de enemigos", "Comportamiento de los
   enemigos", "Pimienta", "Contacto con enemigos y vidas" y "Grosor de los
   ingredientes". Caída a 113 unidades por segundo y rebote de 13 en "Velocidad
   y rebote de la caída" y "Apilado en el plato".
