@@ -127,8 +127,9 @@ montado fuera con su retraso, como a los demás.
 Reglas nuevas: `walkway-detached` (error, pasarela sin plataforma al lado) y
 `entry-without-enemy` (error, elemento de `entries` sin marcador). La comprobación
 de aparición alcanzable (`spawn-unreachable`) usa la plataforma de destino de
-las entradas. La pasarela suelta también se comprueba al ensamblar, porque sin
-destino la entrada no tiene sentido.
+las entradas. Al ensamblar solo se rechaza un marcador de enemigo sobre una
+pasarela suelta, porque esa entrada no lleva a ningún sitio; una pasarela
+suelta sin marcador llega al validador, que la informa como error.
 
 ### 6. La pasarela en pantalla
 

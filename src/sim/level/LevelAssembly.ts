@@ -1,14 +1,17 @@
 import { columnCenter } from '../geometry';
+import { EDGE_MARGIN, TICKS_PER_SECOND } from '../rules';
 import { buildNavigationGraph } from '../nav/buildNavigationGraph';
 import type { EnemyKind, IngredientKind } from './kinds';
 import {
   destinationPlateId,
   type EnemySpawn,
+  type EntryDelay,
   type IngredientSpec,
   Level,
   type PlateSpec,
   type Spawn
 } from './Level';
+import type { LevelEntry } from './LevelDocument';
 import { LevelError } from './LevelError';
 import type { LevelBuilder, Placement } from './pieces/PieceDefinition';
 import { Terrain } from './Terrain';
@@ -29,16 +32,29 @@ export class LevelAssembly implements LevelBuilder {
   readonly #segments: number;
   readonly #platforms = new Set<number>();
   readonly #ladders = new Set<number>();
+  readonly #walkways = new Set<number>();
   readonly #plates: Placement[] = [];
   readonly #ingredients: Anchored<IngredientKind>[] = [];
   readonly #chefStarts: Placement[] = [];
   readonly #enemies: Anchored<EnemyKind>[] = [];
+  readonly #entries: readonly EntryDelay[];
 
-  constructor(name: string, cols: number, rows: number, segments: number) {
+  constructor(
+    name: string,
+    cols: number,
+    rows: number,
+    segments: number,
+    entries: readonly LevelEntry[] = []
+  ) {
     this.#name = name;
     this.#cols = cols;
     this.#rows = rows;
     this.#segments = segments;
+    this.#entries = entries.map(({ row, col, delayMs }) => ({
+      row,
+      col,
+      delayTicks: Math.round((delayMs * TICKS_PER_SECOND) / 1000)
+    }));
   }
 
   addPlatform(row: number, col: number): void {
@@ -47,6 +63,10 @@ export class LevelAssembly implements LevelBuilder {
 
   addLadder(row: number, col: number): void {
     this.#ladders.add(row * this.#cols + col);
+  }
+
+  addWalkway(row: number, col: number): void {
+    this.#walkways.add(row * this.#cols + col);
   }
 
   addPlate(placement: Placement): void {
@@ -68,14 +88,20 @@ export class LevelAssembly implements LevelBuilder {
   build(): Level {
     const chef = this.#requireChefStart();
     this.#requireSupport('Chef start', chef);
-    for (const { placement } of this.#enemies) this.#requireSupport('Enemy spawn', placement);
     for (const { placement } of this.#ingredients) this.#requireIngredientSupport(placement);
 
     const plateIds = new Map<number, number>();
     this.#plates.forEach(({ row, col, width }, id) => {
       for (let c = col; c < col + width; c++) plateIds.set(row * this.#cols + c, id);
     });
-    const terrain = new Terrain(this.#cols, this.#rows, this.#platforms, this.#ladders, plateIds);
+    const terrain = new Terrain(
+      this.#cols,
+      this.#rows,
+      this.#platforms,
+      this.#ladders,
+      plateIds,
+      this.#walkways
+    );
 
     const ingredients: IngredientSpec[] = this.#ingredients.map(({ value, placement }, id) => ({
       id,
@@ -107,10 +133,10 @@ export class LevelAssembly implements LevelBuilder {
       ingredients,
       plates,
       chefStart: this.#spawnOf(chef),
-      enemySpawns: this.#enemies.map(({ value, placement }): EnemySpawn => ({
-        kind: value,
-        ...this.#spawnOf(placement)
-      }))
+      enemySpawns: this.#enemies.map(({ value, placement }) =>
+        this.#enemySpawnOf(value, placement, terrain)
+      ),
+      entries: this.#entries
     });
   }
 
@@ -151,6 +177,32 @@ export class LevelAssembly implements LevelBuilder {
         });
       }
     }
+  }
+
+  #enemySpawnOf(kind: EnemyKind, placement: Placement, terrain: Terrain): EnemySpawn {
+    const delayTicks =
+      this.#entries.find((entry) => entry.row === placement.row && entry.col === placement.col)
+        ?.delayTicks ?? 0;
+    const spawn = { kind, delayTicks, ...this.#spawnOf(placement) };
+    if (terrain.hasPlatform(placement.row, placement.col)) return spawn;
+    const joinX = this.#joinOf(placement, terrain);
+    if (joinX === undefined) {
+      throw new LevelError('Enemy spawn is not on a platform tile or on a walkway next to one', {
+        layer: 'actors',
+        row: placement.row,
+        col: placement.col
+      });
+    }
+    return { ...spawn, joinX };
+  }
+
+  /** Where an enemy coming in along the walkway of a tile steps onto the platform it leads to. */
+  #joinOf({ row, col }: Placement, terrain: Terrain): number | undefined {
+    const run = terrain.walkwayRunAt(row, col);
+    if (run === undefined) return undefined;
+    if (terrain.hasPlatform(row, run.right + 1)) return run.right + 1 + EDGE_MARGIN;
+    if (terrain.hasPlatform(row, run.left - 1)) return run.left - EDGE_MARGIN;
+    return undefined;
   }
 
   #spawnOf(placement: Placement): Spawn {

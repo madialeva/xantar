@@ -65,6 +65,51 @@ export const laddersSpanWholeChefs: LevelRule = {
   }
 };
 
+/** An entry walkway must lead to the end of a platform of its row. */
+export const walkwaysLeadToPlatforms: LevelRule = {
+  check({ terrain }) {
+    const issues: LevelIssue[] = [];
+    for (let row = 0; row < terrain.rows; row++) {
+      for (let col = 0; col < terrain.cols; col++) {
+        const run = terrain.walkwayRunAt(row, col);
+        if (run === undefined || run.left !== col) continue;
+        const leads =
+          terrain.hasPlatform(row, run.left - 1) || terrain.hasPlatform(row, run.right + 1);
+        if (!leads) {
+          issues.push({
+            severity: 'error',
+            code: 'walkway-detached',
+            message: 'This entry walkway does not lead to a platform',
+            row,
+            col
+          });
+        }
+      }
+    }
+    return issues;
+  }
+};
+
+/** Every entry delay must belong to an enemy marker. */
+export const entriesHaveEnemies: LevelRule = {
+  check(level) {
+    return level.entries
+      .filter(
+        (entry) =>
+          !level.enemySpawns.some(
+            (spawn) => spawn.row === entry.row && Math.floor(spawn.x) === entry.col
+          )
+      )
+      .map((entry): LevelIssue => ({
+        severity: 'error',
+        code: 'entry-without-enemy',
+        message: 'This entry delay names a tile with no enemy marker',
+        row: entry.row,
+        col: entry.col
+      }));
+  }
+};
+
 export const hasIngredients: LevelRule = {
   check(level) {
     return level.ingredients.length > 0
@@ -106,7 +151,7 @@ export const spawnsReachable: LevelRule = {
   check(level) {
     const { platforms } = reachableOf(level);
     return level.enemySpawns.flatMap((spawn): LevelIssue[] => {
-      const platform = level.graph.platformAt(spawn.row, spawn.x);
+      const platform = level.graph.platformAt(spawn.row, spawn.joinX ?? spawn.x);
       return platform !== undefined && platforms.has(platform)
         ? []
         : [
@@ -128,6 +173,8 @@ export const defaultRules: readonly LevelRule[] = [
   ingredientsEndOnAPlate,
   noDanglingLadders,
   laddersSpanWholeChefs,
+  walkwaysLeadToPlatforms,
+  entriesHaveEnemies,
   platesReceiveIngredients,
   platformsReachable,
   spawnsReachable

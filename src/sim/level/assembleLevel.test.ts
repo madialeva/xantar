@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { levelFromGrid, tinyGrid, withGrid } from '../testing/grids';
+import { documentFromGrid, levelFromGrid, tinyGrid, withGrid } from '../testing/grids';
+import { assembleLevel } from './assembleLevel';
 import { LevelError } from './LevelError';
 import { PieceRegistry } from './pieces/PieceRegistry';
 
@@ -152,7 +153,7 @@ describe('assembleLevel', () => {
     const actors = [...(tinyGrid.actors ?? [])];
     actors[2] = '.X......';
     const level = levelFromGrid(withGrid({ actors }), registry);
-    expect(level.enemySpawns).toEqual([{ kind: 'hotdog', row: 2, x: 1.5 }]);
+    expect(level.enemySpawns).toEqual([{ kind: 'hotdog', row: 2, x: 1.5, delayTicks: 0 }]);
   });
 
   it('rejects a piece that is not registered', () => {
@@ -205,5 +206,49 @@ describe('Level landing and destinations', () => {
       actors: ['..........', '..........', '..........', '.......C..', '..........']
     });
     expect(level.plates.map((plate) => plate.expected)).toEqual([2, 0]);
+  });
+
+  describe('entry walkways', () => {
+    const walkways = {
+      structure: ['........', '----====', '........', '====----'],
+      actors: ['........', 'h.......', '........', '.C.....e']
+    };
+
+    it('keeps a walkway out of the platforms and the navigation graph', () => {
+      const level = levelFromGrid(walkways);
+      expect(level.terrain.hasWalkway(1, 0)).toBe(true);
+      expect(level.terrain.hasPlatform(1, 0)).toBe(false);
+      expect(level.graph.platforms.map((p) => [p.row, p.left, p.right])).toEqual([
+        [1, 4, 8],
+        [3, 0, 4]
+      ]);
+    });
+
+    it('lets an enemy on a walkway come in to the end of the platform it leads to', () => {
+      const [hotdog, egg] = levelFromGrid(walkways).enemySpawns;
+      expect([hotdog.x, hotdog.joinX]).toEqual([0.5, 4 + 12 / 16]);
+      expect([egg.x, egg.joinX]).toEqual([7.5, 4 - 12 / 16]);
+    });
+
+    it('leaves an enemy on a platform without a walk in', () => {
+      const [spawn] = levelFromGrid({ structure: ['========'], actors: ['C..h....'] }).enemySpawns;
+      expect([spawn.x, spawn.joinX]).toEqual([3.5, undefined]);
+    });
+
+    it('rejects an enemy on a walkway that leads to no platform', () => {
+      const error = capture(() =>
+        levelFromGrid({ ...walkways, structure: ['........', '--..====', '........', '====----'] })
+      );
+      expect([error.layer, error.row, error.col]).toEqual(['actors', 1, 0]);
+    });
+
+    it('gives each enemy the delay of its entry in ticks, and 0 without one', () => {
+      const level = assembleLevel({
+        ...documentFromGrid(walkways),
+        entries: [{ row: 3, col: 7, delayMs: 1000 }]
+      });
+      expect(level.enemySpawns.map((spawn) => spawn.delayTicks)).toEqual([0, 60]);
+      expect(level.entries).toEqual([{ row: 3, col: 7, delayTicks: 60 }]);
+    });
   });
 });

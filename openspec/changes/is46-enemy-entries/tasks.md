@@ -6,10 +6,10 @@
 
 ## 2. Pasarelas y entradas en el nivel
 
-- [ ] 2.1 Añadir la pieza `walkway` (`-`, capa `structure`) a `defaultPieces.ts`, guardarla en `LevelAssembly`/`Terrain` (`hasWalkway`) fuera de los tramos de plataforma, y rechazar al ensamblar una pasarela sin plataforma al lado; verificar con pruebas de `assembleLevel` y del grafo (la pasarela no crea tramo de plataforma ni la pisa el chef) y `npm run test`
-- [ ] 2.2 Leer y escribir `entries` en `levelJson.ts` (`LevelDocument`, validación de tipos y de casillas dentro del tablero, `serializeLevel` solo si existe) y dar en `Level.enemySpawns` `delayTicks` y, para los marcadores sobre una pasarela, `joinX`; verificar con pruebas de `levelJson` (ida y vuelta con y sin `entries`, errores de formato) y de `assembleLevel` (retraso en ticks, `joinX` a izquierda y derecha)
-- [ ] 2.3 Añadir al validador `walkway-detached` y `entry-without-enemy` (errores) y hacer que `spawn-unreachable` use la plataforma de destino de las entradas; verificar con pruebas de `validateLevel` (los tres casos de la spec) y `npm run lint`
-- [ ] 2.4 Documentar la pasarela y `entries` en `docs/MANUAL.md` (§8.6: tabla de símbolos, campo `entries`, reglas del validador; receta §9.7); verificar con `npm run format:check` y las comprobaciones de entrega
+- [x] 2.1 Añadir la pieza `walkway` (`-`, capa `structure`) a `defaultPieces.ts`, guardarla en `LevelAssembly`/`Terrain` (`hasWalkway`) fuera de los tramos de plataforma, y rechazar al ensamblar un marcador de enemigo sobre una pasarela sin plataforma al lado; verificar con pruebas de `assembleLevel` y del grafo (la pasarela no crea tramo de plataforma ni la pisa el chef) y `npm run test`
+- [x] 2.2 Leer y escribir `entries` en `levelJson.ts` (`LevelDocument`, validación de tipos y de casillas dentro del tablero, `serializeLevel` solo si existe) y dar en `Level.enemySpawns` `delayTicks` y, para los marcadores sobre una pasarela, `joinX`; verificar con pruebas de `levelJson` (ida y vuelta con y sin `entries`, errores de formato) y de `assembleLevel` (retraso en ticks, `joinX` a izquierda y derecha)
+- [x] 2.3 Añadir al validador `walkway-detached` y `entry-without-enemy` (errores) y hacer que `spawn-unreachable` use la plataforma de destino de las entradas; verificar con pruebas de `validateLevel` (los tres casos de la spec) y `npm run lint`
+- [x] 2.4 Documentar la pasarela y `entries` en `docs/MANUAL.md` (§8.6: tabla de símbolos, campo `entries`, reglas del validador; receta §9.7); verificar con `npm run format:check` y las comprobaciones de entrega
 
 ## 3. Entrada y vuelta de los enemigos
 

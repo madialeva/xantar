@@ -435,15 +435,17 @@ Un nivel es un documento JSON versionado (`src/sim/level/`). Se lee con `parseLe
 
 (Ejemplo abreviado: cada capa tiene `rows` cadenas de `cols` caracteres.) `segments` es opcional (2, 3 o 4; 4 por defecto): fija el número de segmentos de cada ingrediente y el ancho en casillas de ingredientes y platos, para pantallas de minihamburguesas.
 
+`entries` también es opcional: una lista de `{ "row": 23, "col": 38, "delayMs": 500 }` con el retraso de cada marcador de enemigo, contado desde que empieza la fase `playing` (se pasa a ticks al cargar, en `EnemySpawn.delayTicks`). Un marcador sin entrada tiene retraso 0. `serializeLevel` solo escribe el campo si el documento lo tiene.
+
 Los ficheros de nivel de versiones anteriores pueden traer un campo `theme`: se ignora al leer y `serializeLevel` ya no lo escribe.
 
 | Capa | Símbolo | Pieza |
 |------|---------|-------|
-| `structure` | `.` `=` `H` `+` `_` | vacío, plataforma, escalera, cruce (plataforma con escalera), plato |
+| `structure` | `.` `=` `H` `+` `_` `-` | vacío, plataforma, escalera, cruce (plataforma con escalera), plato, pasarela de entrada |
 | `ingredients` | `T` `L` `P` `B` | pan superior, lechuga, carne, pan inferior |
 | `actors` | `C` `h` `p` `e` | inicio del chef, aparición de perrito, pepinillo y huevo |
 
-Reglas: una racha de casillas iguales de una pieza ancha (ingredientes y platos) se divide en unidades del tamaño `segments`; un segmento de ingrediente necesita casilla de plataforma debajo; los marcadores de enemigo son también los puntos de reaparición. Los errores estructurales lanzan `LevelError` con capa, fila y columna. Además, `validateLevel` informa de incidencias de jugabilidad (`ingredient-unreachable`, `ingredient-no-plate`, `ladder-dangling`, `no-ingredients` como errores; `ladder-odd-span`, `plate-empty`, `platform-unreachable`, `spawn-unreachable` como avisos) y `loadLevel` rechaza por defecto los niveles con errores (`requirePlayable: false` los acepta, para el futuro editor).
+Reglas: una racha de casillas iguales de una pieza ancha (ingredientes y platos) se divide en unidades del tamaño `segments`; un segmento de ingrediente necesita casilla de plataforma debajo; los marcadores de enemigo son también los puntos de reaparición. Una **pasarela de entrada** (`-`) es una racha pegada, en su fila, al extremo de una plataforma: no es plataforma (`Terrain.hasWalkway`, fuera del grafo de navegación, el chef no la pisa) y solo la recorren los enemigos al entrar. Un marcador de enemigo sobre una pasarela es una entrada: el enemigo aparece en él y entra andando hasta `joinX`, el extremo de la plataforma respetando `EDGE_MARGIN`; un marcador sobre una pasarela suelta se rechaza al ensamblar. Los errores estructurales lanzan `LevelError` con capa, fila y columna. Además, `validateLevel` informa de incidencias de jugabilidad (`ingredient-unreachable`, `ingredient-no-plate`, `ladder-dangling`, `no-ingredients`, `walkway-detached`, `entry-without-enemy` como errores; `ladder-odd-span`, `plate-empty`, `platform-unreachable`, `spawn-unreachable` como avisos) y `loadLevel` rechaza por defecto los niveles con errores (`requirePlayable: false` los acepta, para el futuro editor).
 
 Una casilla mide medio cocinero (el chef ocupa 2×2): para que las escaleras midan cocineros enteros, como en el original, los pisos unidos por una escalera van a un número par de filas; `ladder-odd-span` avisa de los tramos de escalera de un número impar de filas.
 
@@ -644,7 +646,7 @@ El script no hace commit ni push. Un workflow de GitHub Actions que publicara au
 
 ### 9.7 Crear un nivel a mano y validarlo
 
-1. Copia `src/levels/classic.level.json` y edita las tres capas (todas con `rows` filas de `cols` caracteres). Usa `+` donde una escalera toca una plataforma, `H` entre los cruces, y grupos de `segments` casillas iguales para ingredientes y platos. Separa los pisos unidos por escaleras un número par de filas (dos filas son un cocinero) y deja al menos una casilla libre a cada lado de las escaleras que separan dos ingredientes.
+1. Copia `src/levels/classic.level.json` y edita las tres capas (todas con `rows` filas de `cols` caracteres). Usa `+` donde una escalera toca una plataforma, `H` entre los cruces, y grupos de `segments` casillas iguales para ingredientes y platos. Separa los pisos unidos por escaleras un número par de filas (dos filas son un cocinero) y deja al menos una casilla libre a cada lado de las escaleras que separan dos ingredientes. Para que un enemigo entre desde el borde, pon una pasarela `-` desde el borde hasta el extremo de un piso, su marcador en la casilla exterior y su retraso en `entries`.
 2. Escribe una prueba (o un script) que lo cargue: `loadLevel(parseLevelJson(texto))` lanza `LevelError` si es estructuralmente incorrecto o `UnplayableLevelError` (con `issues`) si no se puede jugar; `validateLevel(loadLevel(doc, { requirePlayable: false }))` devuelve todas las incidencias, avisos incluidos.
 3. Para usarlo en el juego, carga el documento en `GameScene` en lugar del clásico (la selección de niveles llegará con el editor).
 

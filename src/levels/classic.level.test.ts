@@ -95,9 +95,9 @@ describe('classic level', () => {
   it('puts the chef in the middle of the bottom floor and the enemies on the top one', () => {
     expect(level.chefStart).toEqual({ row: 23, x: 19.5 });
     expect(level.enemySpawns).toEqual([
-      { kind: 'hotdog', row: 5, x: 5.5 },
-      { kind: 'pickle', row: 5, x: 19.5 },
-      { kind: 'egg', row: 5, x: 33.5 }
+      { kind: 'hotdog', row: 5, x: 5.5, delayTicks: 0 },
+      { kind: 'pickle', row: 5, x: 19.5, delayTicks: 0 },
+      { kind: 'egg', row: 5, x: 33.5, delayTicks: 0 }
     ]);
   });
 

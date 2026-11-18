@@ -12,7 +12,8 @@ export function assembleLevel(
     document.name,
     document.cols,
     document.rows,
-    document.segments
+    document.segments,
+    document.entries
   );
   for (const layer of LAYER_IDS) {
     document.layers[layer].forEach((line, row) => {

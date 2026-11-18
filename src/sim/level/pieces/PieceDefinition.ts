@@ -13,6 +13,7 @@ export interface Placement {
 export interface LevelBuilder {
   addPlatform(row: number, col: number): void;
   addLadder(row: number, col: number): void;
+  addWalkway(row: number, col: number): void;
   addPlate(placement: Placement): void;
   addIngredient(kind: IngredientKind, placement: Placement): void;
   setChefStart(placement: Placement): void;
