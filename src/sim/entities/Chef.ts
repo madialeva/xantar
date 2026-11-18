@@ -86,7 +86,7 @@ export class Chef extends MovingEntity implements ChefSnapshot {
   }
 
   step(input: SimInput, graph: NavigationGraph): void {
-    if (this.#place.ladder !== undefined) this.#stepLadder(this.#place.ladder, input);
+    if (this.#place.ladder !== undefined) this.#stepLadder(this.#place.ladder, input, graph);
     else this.#stepPlatform(input, graph);
     this.moveTo(this.#place.point.x, this.#place.point.y);
   }
@@ -109,7 +109,7 @@ export class Chef extends MovingEntity implements ChefSnapshot {
     this.#climbing = vertical;
   }
 
-  #stepLadder(ladder: LadderEdge, input: SimInput): void {
+  #stepLadder(ladder: LadderEdge, input: SimInput, graph: NavigationGraph): void {
     const direction = axis(input.right, input.left);
     if (direction !== 0 && this.#stepOff(ladder, direction)) return;
 
@@ -118,6 +118,7 @@ export class Chef extends MovingEntity implements ChefSnapshot {
     if (vertical === 0) return;
     this.#climbing = vertical;
     const along = this.#place.along + vertical * CLIMB_SPEED * TICK_SECONDS;
+    if (this.#climbOn(ladder, along, vertical < 0, graph)) return;
     if (vertical < 0 && along <= ARRIVAL_THRESHOLD) {
       this.#arriveAt(ladder.top, ladder.topRow, ladder.x);
     } else if (vertical > 0 && along >= ladder.length - ARRIVAL_THRESHOLD) {
@@ -125,6 +126,24 @@ export class Chef extends MovingEntity implements ChefSnapshot {
     } else {
       this.#place = NavPlace.onLadder(ladder, along);
     }
+  }
+
+  /**
+   * Keeps climbing through a crossing when the ladder goes on in the same column and
+   * direction: the step carries over into the next ladder, so the chef neither snaps to the
+   * platform nor stops on it.
+   */
+  #climbOn(ladder: LadderEdge, along: number, goingUp: boolean, graph: NavigationGraph): boolean {
+    const next = graph.ladderNear(goingUp ? ladder.top : ladder.bottom, ladder.x, goingUp, 0);
+    if (next === undefined) return false;
+    const overshoot = goingUp ? -along : along - ladder.length;
+    if (overshoot < 0) {
+      this.#place = NavPlace.onLadder(ladder, along);
+    } else {
+      this.#row = goingUp ? ladder.topRow : ladder.bottomRow;
+      this.#place = NavPlace.onLadder(next, goingUp ? next.length - overshoot : overshoot);
+    }
+    return true;
   }
 
   #stepOff(ladder: LadderEdge, direction: -1 | 1): boolean {

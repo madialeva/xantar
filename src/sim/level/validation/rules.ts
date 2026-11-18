@@ -50,6 +50,21 @@ export const noDanglingLadders: LevelRule = {
   }
 };
 
+/** A ladder an odd number of rows long is not a whole number of chefs tall. */
+export const laddersSpanWholeChefs: LevelRule = {
+  check(level) {
+    return level.graph.ladders
+      .filter((ladder) => (ladder.bottomRow - ladder.topRow) % 2 !== 0)
+      .map((ladder): LevelIssue => ({
+        severity: 'warning',
+        code: 'ladder-odd-span',
+        message: 'This ladder is not a whole number of chefs tall (an odd number of rows)',
+        row: ladder.topRow,
+        col: ladder.col
+      }));
+  }
+};
+
 export const hasIngredients: LevelRule = {
   check(level) {
     return level.ingredients.length > 0
@@ -112,6 +127,7 @@ export const defaultRules: readonly LevelRule[] = [
   ingredientsReachable,
   ingredientsEndOnAPlate,
   noDanglingLadders,
+  laddersSpanWholeChefs,
   platesReceiveIngredients,
   platformsReachable,
   spawnsReachable

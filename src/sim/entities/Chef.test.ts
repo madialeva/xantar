@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { levelFromGrid, tinyGrid } from '../testing/grids';
-import { CHEF_SPEED, EDGE_MARGIN } from '../rules';
+import { CHEF_SPEED, CLIMB_SPEED, EDGE_MARGIN, TICK_SECONDS } from '../rules';
 import { NO_INPUT, type SimInput } from '../SimInput';
 import { Chef } from './Chef';
 
@@ -18,10 +18,10 @@ const run = (chef: Chef, input: SimInput, ticks: number, nav = graph): void => {
 };
 
 describe('Chef walking', () => {
-  it('advances 115/32 casillas in 60 ticks and faces right', () => {
+  it('advances a third of its speed in 20 ticks and faces right', () => {
     const chef = chefAt(5, 1);
-    run(chef, press({ right: true }), 60);
-    expect(chef.x).toBeCloseTo(1 + CHEF_SPEED, 9);
+    run(chef, press({ right: true }), 20);
+    expect(chef.x).toBeCloseTo(1 + CHEF_SPEED / 3, 9);
     expect(chef.facing).toBe(1);
     expect(chef.isMoving).toBe(true);
   });
@@ -120,8 +120,8 @@ describe('Chef on ladders', () => {
 
   it('ignores lateral input while on the ladder', () => {
     const chef = chefAt(5, 3.5);
-    run(chef, press({ up: true }), 20);
-    run(chef, press({ left: true, up: true }), 20);
+    run(chef, press({ up: true }), 15);
+    run(chef, press({ left: true, up: true }), 10);
     expect(chef.x).toBe(3.5);
     expect(chef.isClimbing).toBe(true);
   });
@@ -208,10 +208,37 @@ describe('Chef stepping off a ladder', () => {
   it('ignores lateral input far from a platform', () => {
     const chef = onFloors(5, 3.5);
     run(chef, press({ up: true }), 1, nav);
-    run(chef, press({ up: true }), 30, nav);
+    run(chef, press({ up: true }), 12, nav);
     const y = chef.y;
     run(chef, press({ left: true }), 10, nav);
     expect([chef.x, chef.y, chef.isClimbing]).toEqual([3.5, y, true]);
+  });
+
+  it('climbs through a crossing at the same pace, without snapping or stopping on it', () => {
+    const chef = onFloors(5, 3.5);
+    run(chef, press({ up: true }), 1, nav);
+    const steps: number[] = [];
+    let stoppedOnCrossing = false;
+    while (chef.isClimbing) {
+      run(chef, press({ up: true }), 1, nav);
+      steps.push(chef.prevY - chef.y);
+      stoppedOnCrossing ||= chef.onPlatform && chef.row === 3;
+    }
+    expect(stoppedOnCrossing).toBe(false);
+    expect([chef.row, chef.onPlatform]).toEqual([1, true]);
+    steps.slice(0, -1).forEach((step) => expect(step).toBeCloseTo(CLIMB_SPEED * TICK_SECONDS, 10));
+  });
+
+  it('goes down through a crossing the same way', () => {
+    const chef = onFloors(1, 3.5);
+    run(chef, press({ down: true }), 1, nav);
+    const steps: number[] = [];
+    while (chef.isClimbing) {
+      run(chef, press({ down: true }), 1, nav);
+      steps.push(chef.y - chef.prevY);
+    }
+    expect([chef.row, chef.onPlatform]).toEqual([5, true]);
+    steps.slice(0, -1).forEach((step) => expect(step).toBeCloseTo(CLIMB_SPEED * TICK_SECONDS, 10));
   });
 
   it('keeps going through the platform when only up is held', () => {

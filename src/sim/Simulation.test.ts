@@ -8,17 +8,16 @@ import { NO_INPUT } from './SimInput';
 import { Simulation } from './Simulation';
 import { skipReady } from './testing/simulation';
 
-const create = (): Simulation =>
-  new Simulation({
-    level: loadLevel(parseLevelDocument(classicDocument)),
-    rng: new SeededRng(1)
-  });
+const classic = loadLevel(parseLevelDocument(classicDocument));
+const start = classic.chefStart;
+
+const create = (): Simulation => new Simulation({ level: classic, rng: new SeededRng(1) });
 
 describe('Simulation', () => {
   it('starts getting ready with the chef at the level start and announces the board', () => {
     const sim = create();
     expect(sim.phase).toBe('ready');
-    expect([sim.chef.x, sim.chef.row]).toEqual([10.5, 12]);
+    expect([sim.chef.x, sim.chef.row]).toEqual([start.x, start.row]);
     expect(sim.step(NO_INPUT)).toEqual([{ type: 'boardStarted' }]);
   });
 
@@ -29,7 +28,7 @@ describe('Simulation', () => {
     for (let i = 0; i < READY_TICKS - 1; i++)
       events.push(...sim.step({ ...NO_INPUT, right: true }));
     expect(sim.phase).toBe('ready');
-    expect(sim.chef.x).toBe(10.5);
+    expect(sim.chef.x).toBe(start.x);
     expect(sim.enemies.map((enemy) => enemy.x)).toEqual(enemies);
     expect(sim.step(NO_INPUT)).toEqual([{ type: 'phaseChanged', from: 'ready', to: 'playing' }]);
     expect(sim.phase).toBe('playing');
@@ -59,7 +58,7 @@ describe('Simulation', () => {
     const sim = skipReady(create());
     for (let i = 0; i < 30; i++) sim.step({ ...NO_INPUT, left: true });
     sim.startBoard();
-    expect([sim.chef.x, sim.chef.prevX]).toEqual([10.5, 10.5]);
+    expect([sim.chef.x, sim.chef.prevX]).toEqual([start.x, start.x]);
     expect(sim.step(NO_INPUT)).toEqual([
       { type: 'boardStarted' },
       { type: 'phaseChanged', from: 'playing', to: 'ready' }
@@ -68,9 +67,9 @@ describe('Simulation', () => {
 
   it('restores the ingredients when the board restarts', () => {
     const sim = skipReady(create());
-    const lane = sim.ingredients.find(
-      (ingredient) => ingredient.col === 11 && ingredient.row === 12
-    );
+    const lane = sim.ingredients
+      .filter((ingredient) => ingredient.row === start.row && ingredient.col > start.x)
+      .sort((a, b) => a.col - b.col)[0];
     for (let i = 0; i < 30; i++) sim.step({ ...NO_INPUT, right: true });
     expect(lane?.stomped.some(Boolean)).toBe(true);
     sim.startBoard();

@@ -15,10 +15,12 @@ en español de forma provisional; se traducirá al inglés más adelante.
 
 ## 1. Unidades y rejilla
 
-- Todo se mide en **unidades lógicas**: una casilla del tablero mide 32×32 y el
-  tablero 640×480 (20×15 casillas). El juego dibuja cada gráfico a su tamaño
+- Todo se mide en **unidades lógicas**: una casilla del tablero mide 16×16 (un
+  carácter de la pantalla del original a escala ×2, medio cocinero) y el
+  tablero 624×480 (39×30 casillas). El chef mide 2×2 casillas y un ingrediente
+  de cuatro trozos, 64 de ancho. El juego dibuja cada gráfico a su tamaño
   lógico multiplicado por el nivel de escala (4 en esta versión): un gráfico de
-  32×32 acaba siendo una textura de 128×128 píxeles. El objetivo son pantallas
+  16×16 acaba siendo una textura de 64×64 píxeles. El objetivo son pantallas
   Full HD o mayores.
 - El tamaño lógico de cada gráfico lo fija el catálogo; los SVG lo repiten en
   su `viewBox` y los PNG miden exactamente ese tamaño × 4. La prueba de arte
@@ -28,12 +30,12 @@ en español de forma provisional; se traducirá al inglés más adelante.
 
 | Elemento | Tamaño | Cómo se coloca |
 |---|---|---|
-| Tramo de plataforma (`platform.left/mid/right`), cruce (`crossing`) | 32×12 | centrado en la línea de la plataforma; la cara superior (línea − 6) es el suelo |
-| Escalera (`ladder`) | 32×32 | una por fila, desde la línea de un piso hasta la del siguiente, detrás de las plataformas |
-| Plato (`plate.left/mid/right`) | 32×10 | centrado en la línea del plato |
-| Segmento de ingrediente (`<tipo>.left/mid/right`) | 32×(12–18) | apoyado sobre el suelo de la plataforma |
-| Partes de personaje | según el rig | el punto de anclaje es el centro de su casilla; los pies tocan el suelo (+10 respecto al anclaje) |
-| Fondo del tablero (`board.backdrop`) | 640×480 | detrás de todo |
+| Tramo de plataforma (`platform.left/mid/right`), cruce (`crossing`) | 16×12 | centrado en la línea de la plataforma; la cara superior (línea − 6) es el suelo |
+| Escalera (`ladder`) | 16×16 | una por fila, desde la línea de un piso hasta la del siguiente, detrás de las plataformas; dos peldaños por fila |
+| Plato (`plate.left/mid/right`) | 16×10 | centrado en la línea del plato |
+| Segmento de ingrediente (`<tipo>.left/mid/right`) | 16×(12–18) | apoyado sobre el suelo de la plataforma |
+| Partes de personaje | según el rig | el punto de anclaje está 16 por encima de la línea de la plataforma (`characterY`); los pies tocan el suelo (+10 respecto al anclaje) |
+| Fondo del tablero (`board.backdrop`) | 624×480 | detrás de todo |
 
 Un tramo de 2 casillas usa `left` + `right`; de 3, `left` + `mid` + `right`; de
 4 o más, `mid` repetido entre los extremos. Un tramo de una sola casilla usa
@@ -73,14 +75,18 @@ Lo generan los scripts de `tools/blender/` (ver el manual del desarrollador,
   `src/sim/rules.ts`, porque la simulación lo usa para apilar y para saber
   cuándo un ingrediente golpea a otro): pan de abajo 7,4, carne 8,3, lechuga 4,8
   y pan de arriba 13. Si cambia la forma de un ingrediente, se recalcula con
-  `tmp/blender/metrics.json`.
+  `tmp/blender/metrics.json`. Al pasar a casillas de 16 el ingrediente es menos
+  profundo, pero su cara delantera mide lo mismo, así que estos grosores no
+  cambian.
+- Un ingrediente mide 64 de ancho (cuatro casillas, dos cocineros, como en el
+  original) y sus extremos redondeados caben en el primer y el último tramo.
 
 | Ingrediente | Imagen | Forma |
 |---|---|---|
-| `bunTop` | 32×18 | cúpula de 13,5 de alto con unas 125 semillas de sésamo |
-| `lettuce` | 32×12 | dos hojas posadas con el borde rizado colgando |
-| `patty` | 32×14 | disco de 9,2 de alto con borde irregular y marcas de parrilla |
-| `bunBottom` | 32×14 | base más ancha en el corte, con la miga a la vista |
+| `bunTop` | 16×18 | cúpula de 13,5 de alto con semillas de sésamo |
+| `lettuce` | 16×12 | dos hojas posadas con el borde rizado colgando |
+| `patty` | 16×14 | disco de 9,2 de alto con borde irregular y marcas de parrilla |
+| `bunBottom` | 16×14 | base más ancha en el corte, con la miga a la vista |
 
 ### 2.3 Personajes
 
@@ -91,8 +97,13 @@ Lo generan los scripts de `tools/blender/` (ver el manual del desarrollador,
   botones y pañuelo rojo, pantalón azul y zapatos negros. Partes: `body`,
   `head`, `eyes`, `hat`, `ponytail`, `armLeft`/`armRight` (con el hombro
   incluido, para que el brazo gire unido al cuerpo) y `legLeft`/`legRight`.
-- **Enemigos**: de la altura del chef (unas 38 unidades de los pies a la
-  cabeza), con piernas de su color y zapatillas blancas, ojos grandes con cejas
+- **Tamaño en el juego**: las partes se renderizan para un personaje de unas 38
+  unidades de los pies a la cabeza, y cada rig lleva una escala (`scale` en
+  `src/view/rigs/rigs.ts`) que lo deja en **32 unidades**, dos casillas: el chef
+  a 0,82 y los enemigos entre 30 y 33 (salchicha y pepinillo a 0,82; el huevo,
+  más bajo, a 0,9). La escala se aplica alrededor de los pies, que siguen en el
+  suelo. `rigHeights.test.ts` mide la altura con los píxeles opacos.
+- **Enemigos**: de la altura del chef, con piernas de su color y zapatillas blancas, ojos grandes con cejas
   de enfadado. Partes: `body`, `eyes` y `leg` (una imagen para las dos piernas).
 - **Bailes**: cada enemigo tiene cinco imágenes de su cuerpo, del mismo tamaño,
   de un extremo a otro de su baile con `body` en el centro:
@@ -149,9 +160,9 @@ Para añadir un token hay que añadirlo a `PALETTE_TOKENS` y darle color en
 ### 3.3 Convención de autoría de los SVG
 
 ```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 10" width="32" height="10">
-  <rect class="f-shadow" x="1" y="2.5" width="30" height="7" rx="3" opacity="0.25"/>
-  <rect class="f-plate s-outline" x="1" y="1" width="30" height="7" rx="3" stroke-width="1.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 10" width="16" height="10">
+  <rect class="f-shadow" x="1" y="2.5" width="14" height="7" rx="3" opacity="0.25"/>
+  <rect class="f-plate s-outline" x="1" y="1" width="14" height="7" rx="3" stroke-width="1.5"/>
 </svg>
 ```
 

@@ -14,7 +14,7 @@ fije el aspecto del arte renderizado (vista, iluminación, materiales y tamaños
 de ingredientes y personajes) y, para el arte que sigue siendo vectorial, la
 paleta como tokens con nombre, el grosor de trazo, los radios de esquina, el
 tratamiento de sombras y brillos, la tipografía del HUD y las reglas de encaje
-en la rejilla de 32 unidades lógicas. Todas las fuentes SVG del juego SHALL
+en la rejilla de 16 unidades lógicas. Todas las fuentes SVG del juego SHALL
 colorearse solo con tokens de esa paleta.
 
 #### Scenario: Revisar un SVG nuevo
@@ -57,8 +57,8 @@ cualquier nivel de escala.
 #### Scenario: Nivel de escala 2
 - **WHEN** se rasteriza un segmento de plataforma de una casilla con nivel de
   escala 2
-- **THEN** la textura resultante mide 64 píxeles de ancho y ocupa 32 unidades
-  lógicas en el tablero, igual que con la escala 4 de esta versión, que da 128
+- **THEN** la textura resultante mide 32 píxeles de ancho y ocupa 16 unidades
+  lógicas en el tablero, igual que con la escala 4 de esta versión, que da 64
   píxeles
 
 #### Scenario: Pantalla de alta densidad

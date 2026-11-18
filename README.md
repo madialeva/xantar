@@ -46,6 +46,7 @@ comes next.
 |   ✅   | Rendered 3D art for the food and the characters, dancing enemies and a single look                        |   —    |  #37  |
 |   ✅   | Game state machine, pause, high score, Spanish and English                                                |   —    |  #5   |
 |   ✅   | Ingredients fall like in the original, crush enemies on contact and carry riders two extra floors each    |   —    |  #41  |
+|   ✅   | The grid and the first screen of the original: half-chef cells, two-chef burgers, ladders on every side   |   —    |  #45  |
 |   ✅   | Gamepad and touch controls, music and sound effects, CI and a hardened desktop app                        |   —    |  #6   |
 |   ✅   | Public web version at madialeva.github.io                                                                 |   —    |  #14  |
 |   ⬜   | Replay recording and debug tooling                                                                        | v1.0.0 |  #8   |
@@ -61,6 +62,11 @@ comes next.
 Assemble **every burger** on the screen. Each burger has four pieces: bottom
 bun, patty, lettuce and top bun. They start spread over the platforms and you
 must bring them all the way down to the plate.
+
+The first screen follows the first screen of the original arcade game: eight
+floors at different heights, linked by ladders one to several chefs tall, and
+four burgers that never stand side by side: there is always a ladder on each
+side of a burger, and another one running under it.
 
 ### Starting a game
 
@@ -103,7 +109,8 @@ it works even with the screen rotation locked.
 
 On a ladder you only move while you hold up or down, so you can stop and turn
 around anywhere on it. When you reach the height of a platform, press left or
-right to step onto it.
+right to step onto it; keep holding up or down and you climb straight on to the
+next ladder without stopping.
 
 The game also pauses on its own when its window loses the focus or a gamepad is
 disconnected. The pause menu lets you resume or quit to the main menu.
@@ -184,7 +191,7 @@ while the game is in the background.
 
 ### Screen and looks
 
-- The 20×15 board sits in the middle of the screen, and the score, level, lives
+- The board sits in the middle of the screen, and the score, level, lives
   and pepper shots are shown in **side panels**. On widescreen monitors and on
   phones held sideways the game fills the whole screen; narrower screens show
   bars above and below. The left panel also shows your best score.

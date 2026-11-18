@@ -4,8 +4,9 @@ export const TICKS_PER_SECOND = 60;
 export const TICK_SECONDS = 1 / TICKS_PER_SECOND;
 export const TICK_MS = 1000 / TICKS_PER_SECOND;
 
-const POC_TILE_PX = 32;
-const fromPx = (pixels: number): number => pixels / POC_TILE_PX;
+/** Size of a cell in logical units: one character of the original screen at ×2, half a chef. */
+export const CELL_UNITS = 16;
+const fromPx = (pixels: number): number => pixels / CELL_UNITS;
 const fromMs = (milliseconds: number): number =>
   Math.round((milliseconds * TICKS_PER_SECOND) / 1000);
 
@@ -15,11 +16,11 @@ export const ENEMY_SPEED = fromPx(68);
 
 export const ARRIVAL_THRESHOLD = fromPx(3);
 export const EDGE_MARGIN = fromPx(12);
-export const LADDER_GRAB_DISTANCE = 0.6;
-export const STEP_OFF_DISTANCE = 0.4;
+export const LADDER_GRAB_DISTANCE = fromPx(19.2);
+export const STEP_OFF_DISTANCE = fromPx(12.8);
 
-export const FALL_SPEED = fromPx(170);
-export const BOUNCE_HEIGHT = fromPx(20);
+export const FALL_SPEED = fromPx(113);
+export const BOUNCE_HEIGHT = fromPx(13);
 export const BOUNCE_RISE_TICKS = fromMs(80);
 export const BOUNCE_HOLD_TICKS = fromMs(220);
 export const RIDER_STOP_TICKS = fromMs(270);

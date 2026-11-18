@@ -2,6 +2,7 @@ import type { EnemyKind } from '../../sim';
 import type { RigDefinition } from './RigDefinition';
 
 export const chefRig: RigDefinition = {
+  scale: 0.82,
   parts: [
     { name: 'armLeft', graphic: 'chef.armLeft', x: -4, y: -7.2, originY: 0.18 },
     { name: 'legLeft', graphic: 'chef.legLeft', x: -2, y: 1, originY: 0 },
@@ -17,6 +18,7 @@ export const chefRig: RigDefinition = {
 
 export const enemyRigs: Readonly<Record<EnemyKind, RigDefinition>> = {
   hotdog: {
+    scale: 0.82,
     parts: [
       { name: 'legLeft', graphic: 'hotdog.leg', x: -2.2, y: 2, originY: 0 },
       { name: 'legRight', graphic: 'hotdog.leg', x: 2.6, y: 2, originY: 0 },
@@ -38,6 +40,7 @@ export const enemyRigs: Readonly<Record<EnemyKind, RigDefinition>> = {
     ]
   },
   pickle: {
+    scale: 0.82,
     parts: [
       { name: 'legLeft', graphic: 'pickle.leg', x: -2.2, y: 2, originY: 0 },
       { name: 'legRight', graphic: 'pickle.leg', x: 2.6, y: 2, originY: 0 },
@@ -59,6 +62,7 @@ export const enemyRigs: Readonly<Record<EnemyKind, RigDefinition>> = {
     ]
   },
   egg: {
+    scale: 0.9,
     parts: [
       { name: 'legLeft', graphic: 'egg.leg', x: -2.2, y: 2, originY: 0 },
       { name: 'legRight', graphic: 'egg.leg', x: 2.6, y: 2, originY: 0 },

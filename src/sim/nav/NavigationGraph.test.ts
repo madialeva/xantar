@@ -10,15 +10,24 @@ const classic = assembleLevel(parseLevelDocument(classicDocument));
 const tiny = levelFromGrid(tinyGrid);
 
 describe('graph derivation', () => {
-  it('has four platform edges and twelve ladder edges in the classic level', () => {
-    expect(classic.graph.platforms.map((p) => [p.row, p.left, p.right])).toEqual(
-      [3, 6, 9, 12].map((row) => [row, 0, 20])
-    );
-    expect(classic.graph.ladders).toHaveLength(12);
+  it('has ten platform edges and twenty-nine ladder edges in the classic level', () => {
+    expect(classic.graph.platforms.map((p) => [p.row, p.left, p.right])).toEqual([
+      [5, 4, 35],
+      [9, 4, 14],
+      [9, 18, 35],
+      [11, 11, 21],
+      [13, 4, 14],
+      [13, 25, 35],
+      [15, 11, 28],
+      [17, 25, 35],
+      [19, 4, 28],
+      [23, 4, 35]
+    ]);
+    expect(classic.graph.ladders).toHaveLength(29);
     expect(classic.graph.dangling).toEqual([]);
     const first = classic.graph.ladders[0];
-    expect([first.col, first.topRow, first.bottomRow, first.length]).toEqual([0, 3, 6, 3]);
-    expect(first.x).toBe(0.5);
+    expect([first.col, first.topRow, first.bottomRow, first.length]).toEqual([5, 5, 9, 4]);
+    expect(first.x).toBe(5.5);
   });
 
   it('splits a platform row with a gap into two edges', () => {
@@ -95,9 +104,9 @@ describe('platform and ladder lookup', () => {
   });
 
   it('honors the grabbing distance', () => {
-    expect(graph.ladderNear(lower, 4.1, true)).toBeDefined();
-    expect(graph.ladderNear(lower, 4.2, true)).toBeUndefined();
-    expect(graph.ladderNear(lower, 4.2, true, 1)).toBeDefined();
+    expect(graph.ladderNear(lower, 4.6, true)).toBeDefined();
+    expect(graph.ladderNear(lower, 4.8, true)).toBeUndefined();
+    expect(graph.ladderNear(lower, 4.8, true, 1.5)).toBeDefined();
   });
 
   it('prefers the nearest of two ladders within reach', () => {
@@ -154,8 +163,8 @@ describe('reachability', () => {
   it('reaches every platform and ladder of the classic level from the chef start', () => {
     const start = classic.graph.placeAt(classic.chefStart.row, classic.chefStart.x);
     const reachable = classic.graph.reachableFrom(start);
-    expect(reachable.platforms.size).toBe(4);
-    expect(reachable.ladders.size).toBe(12);
+    expect(reachable.platforms.size).toBe(10);
+    expect(reachable.ladders.size).toBe(29);
   });
 
   it('does not reach a platform that no ladder connects', () => {

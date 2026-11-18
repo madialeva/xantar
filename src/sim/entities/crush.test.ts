@@ -28,6 +28,6 @@ describe('isCrushedBy', () => {
 
   it('crushes an enemy on a ladder inside the casillas when the base reaches its height', () => {
     expect(isCrushedBy(ingredient(3.2), { x: 3.5, y: 3.7 })).toBe(true);
-    expect(isCrushedBy(ingredient(2.6), { x: 3.5, y: 3.7 })).toBe(false);
+    expect(isCrushedBy(ingredient(3.6 - ENEMY_HEIGHT), { x: 3.5, y: 3.7 })).toBe(false);
   });
 });

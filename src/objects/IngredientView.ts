@@ -1,14 +1,13 @@
 import Phaser from 'phaser';
-import { TILE } from '../config';
+import { PLATFORM_TOP, TILE, platformY } from '../config';
 import type { IngredientSnapshot } from '../sim';
 import type { ArtFactory } from '../view/raster/ArtFactory';
 import { INGREDIENT_HEIGHTS, segmentParts } from '../view/art/graphics';
-import { interpolatedY } from './interpolation';
+import { interpolatedRow } from './interpolation';
 
-const PLATFORM_TOP = 6;
 const PLATE_TOP = 5;
 const STOMP_DEPTH = 3;
-const TOUCH_DOWN = { depth: 12, ms: 60 };
+const TOUCH_DOWN = { depth: 8, ms: 60 };
 
 /**
  * Phaser view of an ingredient: draws its segments with the game graphics (lowered when
@@ -39,7 +38,7 @@ export default class IngredientView extends Phaser.GameObjects.Container {
 
   sync(ingredient: IngredientSnapshot, alpha: number): void {
     const surface = ingredient.stackSlot === null ? PLATFORM_TOP : PLATE_TOP;
-    this.setY(interpolatedY(ingredient, alpha) + TILE / 2 - surface);
+    this.setY(platformY(interpolatedRow(ingredient, alpha)) - surface);
     this.#segments.forEach((segment, index) => {
       segment.setY(-this.#height / 2 + (ingredient.stomped[index] ? STOMP_DEPTH : 0));
     });

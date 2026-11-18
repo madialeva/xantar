@@ -36,8 +36,8 @@ compartir la misma iluminación, con la luz principal desde arriba a la
 izquierda, para que el conjunto sea coherente.
 
 #### Scenario: Segmento de pan
-- **WHEN** se genera un segmento del pan de arriba, de tamaño lógico 32×18
-- **THEN** la imagen mide 128×72 píxeles y el pan se apoya en su borde
+- **WHEN** se genera un segmento del pan de arriba, de tamaño lógico 16×18
+- **THEN** la imagen mide 64×72 píxeles y el pan se apoya en su borde
   inferior
 
 #### Scenario: Pierna de un enemigo

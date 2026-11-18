@@ -6,5 +6,6 @@ const lerp = (from: number, to: number, alpha: number): number => from + (to - f
 export const interpolatedX = (entity: PositionSnapshot, alpha: number): number =>
   lerp(entity.prevX, entity.x, alpha) * TILE;
 
-export const interpolatedY = (entity: PositionSnapshot, alpha: number): number =>
-  lerp(entity.prevY, entity.y, alpha) * TILE;
+/** The height of the entity in rows, interpolated between ticks. */
+export const interpolatedRow = (entity: PositionSnapshot, alpha: number): number =>
+  lerp(entity.prevY, entity.y, alpha);

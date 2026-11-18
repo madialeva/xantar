@@ -15,7 +15,7 @@ export const INGREDIENT_HEIGHTS: Readonly<Record<IngredientKind, number>> = {
 };
 
 const ingredient = <K extends IngredientKind>(kind: K) => {
-  const box = size(32, INGREDIENT_HEIGHTS[kind]);
+  const box = size(16, INGREDIENT_HEIGHTS[kind]);
   return { [`${kind}.left`]: box, [`${kind}.mid`]: box, [`${kind}.right`]: box } as Record<
     `${K}.${SegmentPart}`,
     GraphicSize
@@ -23,15 +23,15 @@ const ingredient = <K extends IngredientKind>(kind: K) => {
 };
 
 export const GRAPHICS = {
-  'board.backdrop': size(640, 480),
-  'platform.left': size(32, 12),
-  'platform.mid': size(32, 12),
-  'platform.right': size(32, 12),
-  crossing: size(32, 12),
-  ladder: size(32, 32),
-  'plate.left': size(32, 10),
-  'plate.mid': size(32, 10),
-  'plate.right': size(32, 10),
+  'board.backdrop': size(624, 480),
+  'platform.left': size(16, 12),
+  'platform.mid': size(16, 12),
+  'platform.right': size(16, 12),
+  crossing: size(16, 12),
+  ladder: size(16, 16),
+  'plate.left': size(16, 10),
+  'plate.mid': size(16, 10),
+  'plate.right': size(16, 10),
   ...ingredient('bunTop'),
   ...ingredient('lettuce'),
   ...ingredient('patty'),

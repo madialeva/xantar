@@ -148,11 +148,11 @@ describe('Ingredient position', () => {
 });
 
 describe('Ingredient fall', () => {
-  it('goes down the same amount every tick and reaches a floor three rows below in 34 ticks', () => {
+  it('goes down the same amount every tick and reaches a floor two chefs (64 units) below in 34 ticks', () => {
     const host = new FakeHost();
     const ingredient = new Ingredient(spec(), host);
     stompAll(ingredient);
-    ingredient.fall(floor(8));
+    ingredient.fall(floor(9));
     const heights: number[] = [];
     for (let i = 0; i < 33; i++) {
       tick(ingredient);
@@ -163,10 +163,10 @@ describe('Ingredient fall', () => {
     heights.forEach((y, index) => expect(y).toBeCloseTo(5 + (index + 1) * FALL_STEP, 10));
     expect(host.touches).toEqual([]);
     tick(ingredient);
-    expect([ingredient.y, ingredient.phase, ingredient.row]).toEqual([8, 'idle', 8]);
+    expect([ingredient.y, ingredient.phase, ingredient.row]).toEqual([9, 'idle', 9]);
     expect(ingredient.stomped).toEqual([false, false, false, false]);
-    expect(host.touches).toEqual([floor(8)]);
-    expect(host.rests).toEqual([floor(8)]);
+    expect(host.touches).toEqual([floor(9)]);
+    expect(host.rests).toEqual([floor(9)]);
   });
 
   it('keeps the previous height for the view to interpolate', () => {
@@ -187,9 +187,11 @@ describe('Ingredient fall', () => {
     tick(ingredient, BOUNCE_RISE_TICKS);
     expect(ingredient.y).toBeCloseTo(contact - BOUNCE_HEIGHT, 10);
     tick(ingredient, BOUNCE_HOLD_TICKS - 1);
-    expect([ingredient.phase, ingredient.y]).toEqual(['bouncing', contact - BOUNCE_HEIGHT]);
+    expect(ingredient.phase).toBe('bouncing');
+    expect(ingredient.y).toBeCloseTo(contact - BOUNCE_HEIGHT, 10);
     tick(ingredient);
-    expect([ingredient.phase, ingredient.y]).toEqual(['falling', contact - BOUNCE_HEIGHT]);
+    expect(ingredient.phase).toBe('falling');
+    expect(ingredient.y).toBeCloseTo(contact - BOUNCE_HEIGHT, 10);
     tick(ingredient);
     expect(ingredient.y).toBeCloseTo(contact - BOUNCE_HEIGHT + FALL_STEP, 10);
     tickWhile(ingredient, 'falling');

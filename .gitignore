@@ -6,6 +6,10 @@ release/
 *.local
 .DS_Store
 
+# Python bytecode written when Blender runs the scripts in tools/blender
+__pycache__/
+*.pyc
+
 # Visual Studio Code
 .vscode
 

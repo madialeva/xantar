@@ -14,8 +14,10 @@ independientes, cada una con su gráfico renderizado, su punto de giro y su
 posición relativa: el chef con cuerpo, cabeza, ojos, gorro, coleta, dos brazos
 y dos piernas, y cada enemigo con cuerpo, ojos y dos piernas. Los brazos del
 chef SHALL girar alrededor del hombro sin que se vea separación entre el brazo
-y el cuerpo. Los enemigos SHALL tener aproximadamente la misma altura que el
-chef. La composición de cada personaje SHALL describirse como datos.
+y el cuerpo. El chef SHALL medir de pie 32 unidades (dos casillas del
+tablero) de los pies a lo alto del gorro, y los enemigos SHALL tener
+aproximadamente la misma altura, con los pies en el suelo de su plataforma. La composición de
+cada personaje, incluida su escala, SHALL describirse como datos.
 
 #### Scenario: Sustituir el gorro del chef
 - **WHEN** se vuelve a generar el gráfico del gorro del chef con otro modelo
@@ -26,10 +28,16 @@ chef. La composición de cada personaje SHALL describirse como datos.
 - **WHEN** el chef anda y balancea los brazos
 - **THEN** cada brazo gira alrededor de su hombro y sigue unido al cuerpo
 
+#### Scenario: Altura del chef
+- **WHEN** el chef está quieto de pie en una plataforma
+- **THEN** mide 32 unidades, con una tolerancia de una unidad, de la suela de
+  los zapatos a lo alto del gorro, y la suela queda sobre el suelo de la
+  plataforma
+
 #### Scenario: Altura de los enemigos
 - **WHEN** el chef y un enemigo están de pie en la misma plataforma
-- **THEN** la parte más alta de ambos queda a una altura parecida y los dos
-  apoyan los pies en la plataforma
+- **THEN** la parte más alta de ambos queda a una altura parecida, ninguno pasa
+  de 34 unidades de alto y los dos apoyan los pies en la plataforma
 
 ### Requirement: Estados de animación
 La animación de cada personaje SHALL derivarse del estado de la simulación en
@@ -69,7 +77,7 @@ caso los personajes SHALL NOT usar animaciones fotograma a fotograma.
 
 #### Scenario: Ingrediente que aterriza
 - **WHEN** la simulación emite el evento de ingrediente que toca un piso
-- **THEN** el ingrediente se dibuja 12 unidades más abajo y vuelve a su altura
+- **THEN** el ingrediente se dibuja 8 unidades más abajo y vuelve a su altura
   en 60 ms, sin cambiar su posición lógica
 
 #### Scenario: Ingrediente que llega al plato

@@ -2,9 +2,10 @@
 
 Builds each ingredient procedurally, lights it with sun lamps only and renders it with Cycles.
 One Blender unit is one logical unit of the board, and x runs along the four tiles of the
-ingredient. The game draws the middle segment twice in a row, so nothing may change along x
+ingredient (a tile is one 16-unit cell, so an ingredient is 64 wide: two chefs, as in the
+original). The game draws the middle segment twice in a row, so nothing may change along x
 from one tile to the next: directional light does not, and every texture, displacement and
-pattern repeats exactly once per tile.
+pattern repeats exactly once per tile. The rounded ends must fit in the first and last tile.
 
 Run from the repository root:
     blender -b --factory-startup --python tools/blender/ingredients.py -- [--only patty] [--samples N] [--no-hero]
@@ -228,13 +229,13 @@ def leaf_mesh(name, footprint, spacing, rings, top, hem, amp, waves, frill, crin
     verts, edge, loop = [], [], []
     for (sx, sy), (nx, ny), s in frames:
         angles = [2 * math.pi * n * s / TILE + phase for (n, _), phase in zip(waves, phases)]
-        swell = 0.65 + 0.35 * math.sin(2 * math.pi * 2 * s / TILE + swell_phase)
+        swell = 0.65 + 0.35 * math.sin(2 * math.pi * 1 * s / TILE + swell_phase)
         for j in range(rings + 1):
             u = j / rings
             wave = sum(a * math.sin(t + 1.3 * u) for (_, a), t in zip(waves, angles)) / total
             sway = sum(a * math.cos(t + 0.7 * u) for (_, a), t in zip(waves, angles)) / total
-            folds = 0.6 * math.sin(2 * math.pi * 3 * s / TILE + 4.0 * u + swell_phase)
-            folds += 0.4 * math.sin(2 * math.pi * 7 * s / TILE - 6.0 * u + 2 * swell_phase)
+            folds = 0.6 * math.sin(2 * math.pi * 2 * s / TILE + 4.0 * u + swell_phase)
+            folds += 0.4 * math.sin(2 * math.pi * 4 * s / TILE - 6.0 * u + 2 * swell_phase)
             r = u * footprint.radius + frill * u**3 * sway
             z = hem + (top - hem) * (1 - u * u) ** 0.8 + amp * swell * u**4 * wave
             z += crinkle * 4 * u * (1 - u) * folds
@@ -340,12 +341,12 @@ def patty_material(height):
     wobble = noise4(tree, vector, z, 0.5, detail=3)
 
     # Grill bars leave diagonal charred stripes on the top and bottom faces and on the rims next
-    # to them, five per tile so that they repeat with it. The middle of the side stays lighter.
+    # to them, three per tile so that they repeat with it. The middle of the side stays lighter.
     coords = tree.nodes.new("ShaderNodeTexCoord")
     raw = tree.nodes.new("ShaderNodeSeparateXYZ")
     tree.links.new(coords.outputs["Object"], raw.inputs[0])
     across = add(tree, raw.outputs["X"], scaled(tree, raw.outputs["Y"], 0.7))
-    phase = add(tree, scaled(tree, across, 2 * math.pi * 5 / TILE), scaled(tree, wobble, 0.8))
+    phase = add(tree, scaled(tree, across, 2 * math.pi * 3 / TILE), scaled(tree, wobble, 0.8))
     bars = map_range(tree, math_op(tree, "SINE", phase), 0.62, 0.9, 0.0, 1.0)
     level_z = math_op(tree, "DIVIDE", z, height)
     edgeness = scaled(tree, math_op(tree, "ABSOLUTE", math_op(tree, "SUBTRACT", level_z, 0.5)), 2.0)
@@ -412,9 +413,9 @@ def lettuce_material():
     mottle = noise4(tree, vector, z, 0.2, detail=4)
     wobble = noise4(tree, vector, z, 0.35, detail=3)
     crinkles = noise4(tree, vector, z, 0.7, detail=6, roughness=0.6)
-    # Veins run from the rib to the rim, so they are lines of constant loop coordinate: nine per
+    # Veins run from the rib to the rim, so they are lines of constant loop coordinate: five per
     # tile, bent by noise. The line is where the sine of its phase crosses zero.
-    phase = add(tree, scaled(tree, loop.outputs["Fac"], 9 * math.pi / TILE), scaled(tree, wobble, 2.0))
+    phase = add(tree, scaled(tree, loop.outputs["Fac"], 5 * math.pi / TILE), scaled(tree, wobble, 2.0))
     distance = math_op(tree, "ABSOLUTE", math_op(tree, "SINE", phase))
     vein = map_range(tree, distance, 0.04, 0.2, 1.0, 0.0)
     vein = math_op(tree, "MULTIPLY", vein, map_range(tree, edge.outputs["Fac"], 0.1, 0.85, 1.0, 0.25))
@@ -583,7 +584,7 @@ def segments(strip, blend=8):
 # --- Ingredients: each builder fills the scene and returns (points to frame, support height) ---
 
 
-BUN_FOOTPRINT = Footprint(edge=1.5, radius=24.0)
+BUN_FOOTPRINT = Footprint(edge=1.5, radius=14.0)
 
 
 def build_bun_top(scene):
@@ -604,7 +605,7 @@ def build_bun_bottom(scene):
     return [v.co.copy() for v in mesh.vertices], height
 
 
-PATTY_FOOTPRINT = Footprint(edge=1.0, radius=24.0)
+PATTY_FOOTPRINT = Footprint(edge=1.0, radius=14.0)
 
 
 def build_patty(scene):
@@ -620,8 +621,8 @@ def build_patty(scene):
 
 
 LETTUCE_LAYERS = [
-    {"edge": 1.5, "radius": 26.0, "top": 5.2, "hem": 1.0, "amp": 2.4, "waves": [(3, 1.0), (5, 0.5), (8, 0.25)], "frill": 1.6, "crinkle": 1.1},
-    {"edge": 5.0, "radius": 22.5, "top": 7.0, "hem": 3.4, "amp": 2.0, "waves": [(4, 1.0), (6, 0.45), (9, 0.2)], "frill": 1.2, "crinkle": 0.9},
+    {"edge": 1.5, "radius": 14.0, "top": 5.2, "hem": 1.0, "amp": 2.4, "waves": [(2, 1.0), (3, 0.5), (4, 0.25)], "frill": 1.6, "crinkle": 1.1},
+    {"edge": 3.0, "radius": 12.0, "top": 7.0, "hem": 3.4, "amp": 2.0, "waves": [(2, 1.0), (3, 0.45), (5, 0.2)], "frill": 1.2, "crinkle": 0.9},
 ]
 
 
