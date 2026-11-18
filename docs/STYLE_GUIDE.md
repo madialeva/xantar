@@ -97,8 +97,13 @@ Lo generan los scripts de `tools/blender/` (ver el manual del desarrollador,
   botones y pañuelo rojo, pantalón azul y zapatos negros. Partes: `body`,
   `head`, `eyes`, `hat`, `ponytail`, `armLeft`/`armRight` (con el hombro
   incluido, para que el brazo gire unido al cuerpo) y `legLeft`/`legRight`.
-- **Enemigos**: de la altura del chef (unas 38 unidades de los pies a la
-  cabeza), con piernas de su color y zapatillas blancas, ojos grandes con cejas
+- **Tamaño en el juego**: las partes se renderizan para un personaje de unas 38
+  unidades de los pies a la cabeza, y cada rig lleva una escala (`scale` en
+  `src/view/rigs/rigs.ts`) que lo deja en **32 unidades**, dos casillas: el chef
+  a 0,82 y los enemigos entre 30 y 33 (salchicha y pepinillo a 0,82; el huevo,
+  más bajo, a 0,9). La escala se aplica alrededor de los pies, que siguen en el
+  suelo. `rigHeights.test.ts` mide la altura con los píxeles opacos.
+- **Enemigos**: de la altura del chef, con piernas de su color y zapatillas blancas, ojos grandes con cejas
   de enfadado. Partes: `body`, `eyes` y `leg` (una imagen para las dos piernas).
 - **Bailes**: cada enemigo tiene cinco imágenes de su cuerpo, del mismo tamaño,
   de un extremo a otro de su baile con `body` en el centro:

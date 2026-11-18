@@ -23,9 +23,9 @@
 
 ## 5. Personajes de 2×2 casillas
 
-- [ ] 5.1 Añadir `scale` (por defecto 1) a `RigDefinition` y aplicarla en `CharacterRig` con el origen en los pies; verificar con una prueba de que una escala de 0,5 deja los pies en su sitio y lleva lo alto del gorro a la mitad de su distancia a los pies
-- [ ] 5.2 Medir la altura visible de la postura base de cada rig (píxeles opacos de cada parte colocada como en el rig) y fijar en `src/view/rigs/rigs.ts` la escala del chef para que mida 32 y la de cada enemigo para que quede entre 30 y 33; añadir una prueba en `rigs.test.ts` que lo compruebe (chef 32 ± 1, enemigos ≤ 34, pies en el suelo); verificar con `npm run test` y en `npm run dev` (el gorro del chef al pie de una escalera de dos filas llega al suelo del piso de arriba)
-- [ ] 5.3 Documentar la escala de los rigs y la altura de los personajes en `docs/STYLE_GUIDE.md` (las "unas 38 unidades" pasan a 32 tras la escala), `docs/MANUAL.md` (§8.7 y receta §9.10) y `docs/GAMEDEV_FUNDAMENTALS.md` (la altura del personaje como unidad del tablero); verificar con `npm run format:check`, `grep` de los nombres citados y las comprobaciones de entrega
+- [x] 5.1 Añadir `scale` (por defecto 1) a `RigDefinition` y aplicarla en `CharacterRig` con el origen en los pies; verificar con una prueba de que una escala de 0,5 deja los pies en su sitio y lleva lo alto del gorro a la mitad de su distancia a los pies
+- [x] 5.2 Medir la altura visible de la postura base de cada rig (píxeles opacos de cada parte colocada como en el rig) y fijar en `src/view/rigs/rigs.ts` la escala del chef para que mida 32 y la de cada enemigo para que quede entre 30 y 33; añadir una prueba en `rigs.test.ts` que lo compruebe (chef 32 ± 1, enemigos ≤ 34, pies en el suelo); verificar con `npm run test` y en `npm run dev` (el gorro del chef al pie de una escalera de dos filas llega al suelo del piso de arriba)
+- [x] 5.3 Documentar la escala de los rigs y la altura de los personajes en `docs/STYLE_GUIDE.md` (las "unas 38 unidades" pasan a 32 tras la escala), `docs/MANUAL.md` (§8.7 y receta §9.10) y `docs/GAMEDEV_FUNDAMENTALS.md` (la altura del personaje como unidad del tablero); verificar con `npm run format:check`, `grep` de los nombres citados y las comprobaciones de entrega
 
 ## 6. Caída a escala ×2
 

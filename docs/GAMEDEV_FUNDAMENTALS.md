@@ -332,7 +332,10 @@ que las escaleras miden cocineros enteros. Xantar usa esa misma rejilla al
 doble de tamaño: una casilla de 16 unidades es un carácter y medio cocinero.
 Elegir la unidad de la rejilla a partir del personaje hace que las proporciones
 salgan solas: si la casilla y el personaje no encajan, ningún nivel quedará
-bien por mucho que se retoque.
+bien por mucho que se retoque. Por eso el dibujo del personaje se ajusta a la
+rejilla, y no al revés: en Xantar cada personaje lleva una escala en sus datos
+que lo deja en dos casillas de alto, aplicada alrededor de los pies para que
+siga pisando el suelo.
 
 ### 7.3 Resolución, proporción y escalado
 

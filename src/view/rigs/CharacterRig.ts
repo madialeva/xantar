@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { ArtFactory } from '../raster/ArtFactory';
-import type { RigDefinition } from './RigDefinition';
+import { type RigDefinition, rigPlacement } from './RigDefinition';
 
 /** Offsets from the base pose that an animation moves a part to. */
 export interface PoseOffset {
@@ -28,7 +28,9 @@ export class CharacterRig extends Phaser.GameObjects.Container {
   readonly #frames = new Map<string, readonly string[]>();
 
   constructor(scene: Phaser.Scene, art: ArtFactory, definition: RigDefinition) {
-    super(scene, 0, 0);
+    const { scale, y } = rigPlacement(definition);
+    super(scene, 0, y);
+    this.setScale(scale);
     for (const part of definition.parts) {
       const image = art
         .image(part.graphic, part.x, part.y)
