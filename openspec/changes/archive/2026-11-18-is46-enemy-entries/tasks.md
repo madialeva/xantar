@@ -30,7 +30,7 @@
 ## 6. Integración
 
 - [x] 6.1 Ejecutar las comprobaciones de entrega completas (`npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build`, `npm run smoke`) y `openspec validate is46-enemy-entries --strict`; verificar que todo termina sin errores
-- [ ] 6.2 Jugar en `npm run dev` y en `npm run dev:desktop` comparando con la grabación: entradas por los lados con el orden y los tiempos del original, pasarelas que se distinguen del piso y enemigos montados que vuelven donde paran (lo verifica el autor)
+- [x] 6.2 Jugar en `npm run dev` y en `npm run dev:desktop` comparando con la grabación: entradas por los lados con el orden y los tiempos del original, pasarelas que se distinguen del piso y enemigos montados que vuelven donde paran (lo verifica el autor)
 
 ## Workflow follow-up
 

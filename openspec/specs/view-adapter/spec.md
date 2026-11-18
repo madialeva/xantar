@@ -139,10 +139,13 @@ sin decidir por sí misma qué segmentos están pisados.
 - **THEN** la vista dibuja todos los segmentos a la misma altura
 
 ### Requirement: Laberinto a partir del nivel cargado
-La vista SHALL dibujar plataformas, escaleras, cruces y platos a partir del
-nivel cargado y no de constantes, con el gráfico asignado al id de cada pieza,
-de modo que cualquier nivel válido se dibuje correctamente. Los extremos de cada
-tramo de plataforma y de cada plato SHALL dibujarse con su remate.
+La vista SHALL dibujar plataformas, escaleras, cruces, platos y pasarelas de
+entrada a partir del nivel cargado y no de constantes, con el gráfico asignado
+al id de cada pieza, de modo que cualquier nivel válido se dibuje
+correctamente. Los extremos de cada tramo de plataforma y de cada plato SHALL
+dibujarse con su remate. Las pasarelas SHALL dibujarse como una prolongación
+más oscura del piso al que están pegadas, que se distinga de la plataforma por
+la que anda el chef.
 
 #### Scenario: Nivel con plataformas irregulares
 - **WHEN** se carga un nivel con plataformas de longitudes distintas y escaleras
@@ -153,6 +156,11 @@ tramo de plataforma y de cada plato SHALL dibujarse con su remate.
 - **WHEN** se carga un documento de nivel antiguo que declara un tema
 - **THEN** las piezas ocupan exactamente las mismas casillas y se dibujan igual
   que sin ese campo
+
+#### Scenario: Pasarelas a los lados de un piso
+- **WHEN** se carga un nivel con pasarelas a los dos lados de un piso
+- **THEN** la vista dibuja el piso con sus remates y, más allá de cada remate,
+  la pasarela hasta el borde del tablero con su propio gráfico
 
 ### Requirement: Apilado en el plato según el grosor
 La vista SHALL dibujar cada ingrediente que va hacia un plato, o que ya está en
