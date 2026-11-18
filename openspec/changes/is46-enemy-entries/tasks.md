@@ -24,8 +24,8 @@
 
 ## 5. Nivel clásico con los enemigos del original
 
-- [ ] 5.1 Poner en `src/levels/classic.level.json` las pasarelas de las filas 5 y 23 (columnas 0–3 y 35–38), los marcadores perrito (5, 0), perrito (5, 38), perrito (23, 0) y huevo (23, 38), y `entries` con 500, 1000, 2750 y 4500 ms para (23, 38), (23, 0), (5, 38) y (5, 0); actualizar `classic.level.test.ts` (cuatro entradas, tipos, retrasos y `joinX`; el nivel se puede terminar; el montado de la calle 3 baja tres pisos) y `Simulation.test.ts`; verificar con `npm run test`
-- [ ] 5.2 Probar en `npm run smoke` y en `npm run dev` que la pantalla empieza vacía, que los enemigos entran por los lados en el orden del original y que un montado vuelve donde paró; documentar el nivel en `docs/MANUAL.md` (§8.5) y la hoja de ruta de `README.md`; verificar con las comprobaciones de entrega
+- [x] 5.1 Poner en `src/levels/classic.level.json` las pasarelas de las filas 5 y 23 (columnas 0–3 y 35–38), los marcadores perrito (5, 0), perrito (5, 38), perrito (23, 0) y huevo (23, 38), y `entries` con 500, 1000, 2750 y 4500 ms para (23, 38), (23, 0), (5, 38) y (5, 0); actualizar `classic.level.test.ts` (cuatro entradas, tipos, retrasos y `joinX`; el nivel se puede terminar; el montado de la calle 3 baja tres pisos) y `Simulation.test.ts`; verificar con `npm run test`
+- [x] 5.2 Probar en `npm run smoke` y en `npm run dev` que la pantalla empieza vacía, que los enemigos entran por los lados en el orden del original y que un montado vuelve donde paró; documentar el nivel en `docs/MANUAL.md` (§8.5) y la hoja de ruta de `README.md`; verificar con las comprobaciones de entrega
 
 ## 6. Integración
 
