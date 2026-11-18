@@ -4,8 +4,9 @@ export interface Landing {
 }
 
 /**
- * Immutable tile map of platforms, ladders and plates, with the landing query that decides
- * where a falling ingredient stops.
+ * Immutable tile map of platforms, ladders, plates and entry walkways, with the landing query
+ * that decides where a falling ingredient stops. Walkways are not platforms: only entering
+ * enemies walk them.
  */
 export class Terrain {
   readonly cols: number;
@@ -13,19 +14,22 @@ export class Terrain {
   readonly #platforms: ReadonlySet<number>;
   readonly #ladders: ReadonlySet<number>;
   readonly #plateIds: ReadonlyMap<number, number>;
+  readonly #walkways: ReadonlySet<number>;
 
   constructor(
     cols: number,
     rows: number,
     platforms: ReadonlySet<number>,
     ladders: ReadonlySet<number>,
-    plateIds: ReadonlyMap<number, number>
+    plateIds: ReadonlyMap<number, number>,
+    walkways: ReadonlySet<number> = new Set()
   ) {
     this.cols = cols;
     this.rows = rows;
     this.#platforms = platforms;
     this.#ladders = ladders;
     this.#plateIds = plateIds;
+    this.#walkways = walkways;
   }
 
   hasPlatform(row: number, col: number): boolean {
@@ -34,6 +38,23 @@ export class Terrain {
 
   hasLadder(row: number, col: number): boolean {
     return this.#ladders.has(this.#key(row, col));
+  }
+
+  hasWalkway(row: number, col: number): boolean {
+    return this.#walkways.has(this.#key(row, col));
+  }
+
+  /** First and last column of the walkway run through a tile, or undefined off a walkway. */
+  walkwayRunAt(
+    row: number,
+    col: number
+  ): { readonly left: number; readonly right: number } | undefined {
+    if (!this.hasWalkway(row, col)) return undefined;
+    let left = col;
+    let right = col;
+    while (left > 0 && this.hasWalkway(row, left - 1)) left -= 1;
+    while (right + 1 < this.cols && this.hasWalkway(row, right + 1)) right += 1;
+    return { left, right };
   }
 
   plateIdAt(row: number, col: number): number | undefined {

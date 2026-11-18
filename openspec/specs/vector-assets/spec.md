@@ -24,9 +24,9 @@ colorearse solo con tokens de esa paleta.
   y el color
 
 ### Requirement: Fuentes SVG para todo lo visible
-Las piezas del laberinto (plataforma, escalera, cruce, plato), la nube de
-pimienta y demás efectos, y los iconos del HUD SHALL dibujarse a partir de
-fuentes SVG coloreadas con la paleta única del juego. Los ingredientes y los
+Las piezas del laberinto (plataforma, escalera, cruce, plato y pasarela de
+entrada), la nube de pimienta y demás efectos, y los iconos del HUD SHALL
+dibujarse a partir de fuentes SVG coloreadas con la paleta única del juego. Los ingredientes y los
 personajes SHALL dibujarse con su arte renderizado. Cada gráfico del catálogo
 SHALL tener exactamente una fuente, SVG o renderizada, y la vista SHALL NOT
 dibujar ninguno de esos elementos con primitivas geométricas.

@@ -7,8 +7,21 @@ export interface Spawn {
   readonly x: number;
 }
 
+/**
+ * Where an enemy appears and how long after play starts. On an entry walkway it appears off
+ * the floor and walks in to `joinX` on the platform the walkway leads to.
+ */
 export interface EnemySpawn extends Spawn {
   readonly kind: EnemyKind;
+  readonly delayTicks: number;
+  readonly joinX?: number;
+}
+
+/** An entry delay of the level document, in ticks, at the tile it names. */
+export interface EntryDelay {
+  readonly row: number;
+  readonly col: number;
+  readonly delayTicks: number;
 }
 
 export interface IngredientSpec {
@@ -43,6 +56,7 @@ export interface LevelParts {
   readonly plates: readonly PlateSpec[];
   readonly chefStart: Spawn;
   readonly enemySpawns: readonly EnemySpawn[];
+  readonly entries: readonly EntryDelay[];
 }
 
 /**
@@ -60,6 +74,7 @@ export class Level {
   readonly plates: readonly PlateSpec[];
   readonly chefStart: Spawn;
   readonly enemySpawns: readonly EnemySpawn[];
+  readonly entries: readonly EntryDelay[];
 
   constructor(parts: LevelParts) {
     this.name = parts.name;
@@ -72,6 +87,7 @@ export class Level {
     this.plates = parts.plates;
     this.chefStart = parts.chefStart;
     this.enemySpawns = parts.enemySpawns;
+    this.entries = parts.entries;
   }
 
   landingBelow(row: number, left: number, right: number): LevelLanding | undefined {

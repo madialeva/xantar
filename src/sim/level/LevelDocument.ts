@@ -7,6 +7,13 @@ export const ALLOWED_SEGMENTS: readonly number[] = [2, 3, 4];
 
 export type LevelLayers = Readonly<Record<LayerId, readonly string[]>>;
 
+/** How long after play starts the enemy of the marker at a tile comes in. */
+export interface LevelEntry {
+  readonly row: number;
+  readonly col: number;
+  readonly delayMs: number;
+}
+
 export interface LevelDocument {
   readonly format: typeof LEVEL_FORMAT;
   readonly version: number;
@@ -15,4 +22,5 @@ export interface LevelDocument {
   readonly rows: number;
   readonly segments: number;
   readonly layers: LevelLayers;
+  readonly entries?: readonly LevelEntry[];
 }

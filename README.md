@@ -47,6 +47,7 @@ comes next.
 |   ✅   | Game state machine, pause, high score, Spanish and English                                                |   —    |  #5   |
 |   ✅   | Ingredients fall like in the original, crush enemies on contact and carry riders two extra floors each    |   —    |  #41  |
 |   ✅   | The grid and the first screen of the original: half-chef cells, two-chef burgers, ladders on every side   |   —    |  #45  |
+|   ✅   | Enemies walk in from the sides one by one, as in the original, and riders come back where they stopped    |   —    |  #46  |
 |   ✅   | Gamepad and touch controls, music and sound effects, CI and a hardened desktop app                        |   —    |  #6   |
 |   ✅   | Public web version at madialeva.github.io                                                                 |   —    |  #14  |
 |   ⬜   | Replay recording and debug tooling                                                                        | v1.0.0 |  #8   |
@@ -132,20 +133,26 @@ disconnected. The pause menu lets you resume or quit to the main menu.
 
 ### Enemies
 
-- **Mr. Hot Dog**, **Mr. Pickle** and **Mr. Egg** roam the maze and chase you
-  using the ladders, always taking the shortest way to you.
+- On the first screen, three **Mr. Hot Dogs** and a **Mr. Egg** roam the maze
+  and chase you using the ladders, always taking the shortest way to you
+  (**Mr. Pickle** is ready for later screens).
+- A board starts empty: the enemies **walk in one by one from the sides** of
+  the screen, along short walkways at the ends of some floors, and come back
+  the same way after you lose a life.
 - If they touch you, you **lose a life**.
 - You can **crush them** by dropping an ingredient on top of them. An enemy is
   crushed when the falling ingredient reaches it: one that gets out of the way
   in time escapes, and one that walks under a falling ingredient is crushed.
-  They respawn after a few seconds.
+  They come back after a few seconds, walking in from one of the sides.
 - Crushing enemies in a row increases the scoring multiplier, which resets when
   you lose a life.
 - **Drop an ingredient with enemies standing on it** and they ride it down: it
   falls two extra floors for every enemy on board (with one enemy, three
   floors), stopping for a moment on each floor and knocking down what it meets.
   While riding they cannot hurt you. When the ingredient lands they are gone
-  for a few seconds and you get a bonus. Stunned enemies ride too, so pepper
+  for a few seconds and you get a bonus; then they come back **right where the
+  ingredient stopped** (or on the floor just above the burger if it reached the
+  plate), so step away. Stunned enemies ride too, so pepper
   them on an ingredient and then drop it.
 
 ### Pepper

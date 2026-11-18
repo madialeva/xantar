@@ -868,6 +868,11 @@ sensación.
   pasan por encima no confundan. Así se midió la primera pantalla del original
   (pisos a 0, 2, 3, 4, 5, 6, 7 y 9 cocineros) y se copió en el nivel clásico de
   Xantar.
+- **La entrada escalonada de los enemigos**: el original no pone a todos los
+  enemigos en el tablero de golpe; entran uno a uno por los lados, con unos
+  segundos entre uno y otro, y así el jugador tiene un respiro para empezar.
+  En Xantar ese ritmo es un dato del nivel (`entries`: cuándo entra cada
+  enemigo), no código: cada pantalla puede tener el suyo sin tocar las reglas.
 - **Tolerancia** (*forgiveness*): pequeñas ayudas invisibles, como permitir
   agarrar una escalera aunque el chef no esté exactamente alineado
   (`LADDER_GRAB_DISTANCE`).

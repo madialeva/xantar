@@ -1,6 +1,6 @@
 import { Chef, type ChefSnapshot } from './entities/Chef';
 import { createEnemy } from './entities/createEnemy';
-import type { Enemy, EnemySnapshot } from './entities/Enemy';
+import type { Enemy, EnemyEntry, EnemySnapshot } from './entities/Enemy';
 import { isCrushedBy } from './entities/crush';
 import { isStandingOn } from './entities/riders';
 import { type EnemyRoster, IngredientField } from './entities/IngredientField';
@@ -34,7 +34,7 @@ export class Simulation {
   readonly #stats = new GameStats(this.#events);
   readonly #chef: Chef;
   readonly #enemies: readonly Enemy[];
-  readonly #enemyPlaces: readonly NavPlace[];
+  readonly #enemyEntries: readonly EnemyEntry[];
   readonly #chefPlace: NavPlace;
   readonly #roster: EnemyRoster = {
     board: (ingredient) => this.#board(ingredient),
@@ -52,9 +52,13 @@ export class Simulation {
     const graph = level.graph;
     this.#chefPlace = graph.placeAt(level.chefStart.row, level.chefStart.x);
     this.#chef = new Chef(this.#chefPlace);
-    this.#enemyPlaces = level.enemySpawns.map((spawn) => graph.placeAt(spawn.row, spawn.x));
+    this.#enemyEntries = level.enemySpawns.map((spawn): EnemyEntry => ({
+      place: graph.placeAt(spawn.row, spawn.joinX ?? spawn.x),
+      delayTicks: spawn.delayTicks,
+      ...(spawn.joinX === undefined ? {} : { fromX: spawn.x })
+    }));
     this.#enemies = level.enemySpawns.map((spawn, id) =>
-      createEnemy(id, spawn.kind, this.#events, graph, this.#enemyPlaces)
+      createEnemy(id, spawn.kind, this.#events, graph, this.#enemyEntries)
     );
     this.#field = this.#newField();
     this.startBoard();
@@ -142,7 +146,7 @@ export class Simulation {
 
   #resetPositions(): void {
     this.#chef.reset(this.#chefPlace);
-    this.#enemies.forEach((enemy, index) => enemy.reset(this.#enemyPlaces[index], this.#rng));
+    this.#enemies.forEach((enemy, index) => enemy.await(this.#enemyEntries[index], this.#rng));
   }
 
   #board(ingredient: IngredientSnapshot): number {
@@ -154,7 +158,11 @@ export class Simulation {
   #release(ingredient: IngredientSnapshot): void {
     const riders = this.#enemies.filter((enemy) => enemy.rides(ingredient));
     if (riders.length === 0) return;
-    for (const enemy of riders) enemy.squash();
+    for (const enemy of riders) {
+      const place = this.#dropPlace(ingredient, enemy.x);
+      if (place === undefined) enemy.squash();
+      else enemy.dropAt(place);
+    }
     const points = this.#stats.registerRiders(SCORE.riders, riders.length);
     this.#events.emit({
       type: 'ridersDropped',
@@ -162,6 +170,26 @@ export class Simulation {
       riders: riders.map((enemy) => ({ enemyId: enemy.id, x: enemy.x, y: ingredient.y })),
       points
     });
+  }
+
+  /**
+   * Where a rider comes back: on the floor where its ingredient stopped or, when it ended on
+   * its plate, on the lowest platform above the plate, at the rider's horizontal position.
+   */
+  #dropPlace(ingredient: IngredientSnapshot, x: number): NavPlace | undefined {
+    const graph = this.#level.graph;
+    const onPlate = ingredient.stackSlot !== null;
+    const floor = graph.platforms
+      .filter((platform) =>
+        onPlate ? platform.row < ingredient.row : platform.row === ingredient.row
+      )
+      .filter((platform) => platform.left <= x && x <= platform.right)
+      .reduce<(typeof graph.platforms)[number] | undefined>(
+        (lowest, platform) =>
+          lowest === undefined || platform.row > lowest.row ? platform : lowest,
+        undefined
+      );
+    return floor === undefined ? undefined : graph.placeAt(floor.row, x);
   }
 
   #crushUnder(ingredient: IngredientSnapshot): void {

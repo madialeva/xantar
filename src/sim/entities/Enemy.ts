@@ -19,6 +19,7 @@ export interface EnemySnapshot extends PositionSnapshot {
   readonly facing: 1 | -1;
   readonly isClimbing: boolean;
   readonly riding: boolean;
+  readonly entering: boolean;
   readonly place: NavPlace;
 }
 
@@ -28,8 +29,29 @@ interface Climb {
 }
 
 /**
- * A chasing enemy. Walks the navigation graph, climbs ladders, can be stunned, crushed or
- * carried down by an ingredient, and respawns; where it goes is decided by its EnemyBrain.
+ * Where an enemy comes into play and how long after play starts: straight onto `place`, or,
+ * from an entry walkway, appearing at `fromX` and walking in to `place`.
+ */
+export interface EnemyEntry {
+  readonly place: NavPlace;
+  readonly fromX?: number;
+  readonly delayTicks: number;
+}
+
+/** An entry that puts the enemy straight onto a place, with no delay. */
+export const entryAt = (place: NavPlace): EnemyEntry => ({ place, delayTicks: 0 });
+
+/** Off the board: how many ticks are left and how it comes back. */
+interface Away {
+  ticks: number;
+  readonly back: EnemyEntry | 'anyEntry';
+  readonly announce: boolean;
+}
+
+/**
+ * A chasing enemy. Comes in from its entry, walks the navigation graph, climbs ladders, can be
+ * stunned, crushed or carried down by an ingredient, and comes back; where it goes is decided
+ * by its EnemyBrain.
  */
 export class Enemy extends MovingEntity implements EnemySnapshot {
   readonly id: number;
@@ -37,13 +59,14 @@ export class Enemy extends MovingEntity implements EnemySnapshot {
   readonly #brain: EnemyBrain;
   readonly #events: EventSink;
   readonly #graph: NavigationGraph;
-  readonly #spawns: readonly NavPlace[];
+  readonly #entries: readonly EnemyEntry[];
   #place: NavPlace;
   #row: number;
   #direction: 1 | -1 = 1;
   #active = true;
   #stunTicks = 0;
-  #respawnTicks = 0;
+  #away: Away | undefined;
+  #entrance: NavPlace | undefined;
   #decisionTicks = 0;
   #pending: LadderIntent | undefined;
   #climb: Climb | undefined;
@@ -55,17 +78,18 @@ export class Enemy extends MovingEntity implements EnemySnapshot {
     brain: EnemyBrain,
     events: EventSink,
     graph: NavigationGraph,
-    spawns: readonly NavPlace[]
+    entries: readonly EnemyEntry[]
   ) {
-    super(spawns[0].point.x, spawns[0].point.y);
+    const { place } = entries[0];
+    super(place.point.x, place.point.y);
     this.id = id;
     this.kind = kind;
     this.#brain = brain;
     this.#events = events;
     this.#graph = graph;
-    this.#spawns = spawns;
-    this.#place = spawns[0];
-    this.#row = spawns[0].platform?.row ?? 0;
+    this.#entries = entries;
+    this.#place = place;
+    this.#row = place.platform?.row ?? 0;
   }
 
   get place(): NavPlace {
@@ -110,6 +134,22 @@ export class Enemy extends MovingEntity implements EnemySnapshot {
     this.#carrier = carrier;
   }
 
+  /** Whether it is walking in along an entry walkway. */
+  get entering(): boolean {
+    return this.#entrance !== undefined;
+  }
+
+  /** Waits off the board for its entry: it comes in when the entry's delay has passed. */
+  await(entry: EnemyEntry, rng: Rng): void {
+    this.#leave(entry.delayTicks, entry, false);
+    if (entry.delayTicks <= 0) this.#comeIn(entry, rng);
+  }
+
+  /** Leaves the board after its ride and comes back on `place` after the respawn delay. */
+  dropAt(place: NavPlace): void {
+    this.#leave(RESPAWN_TICKS, entryAt(place), true);
+  }
+
   reset(place: NavPlace, rng: Rng): void {
     this.#place = place;
     this.#row = place.platform?.row ?? this.#row;
@@ -119,7 +159,8 @@ export class Enemy extends MovingEntity implements EnemySnapshot {
     this.#pending = undefined;
     this.#decisionTicks = 0;
     this.#stunTicks = 0;
-    this.#respawnTicks = 0;
+    this.#away = undefined;
+    this.#entrance = undefined;
     this.#carrier = undefined;
     this.#active = true;
   }
@@ -130,14 +171,12 @@ export class Enemy extends MovingEntity implements EnemySnapshot {
   }
 
   squash(): void {
-    this.#active = false;
-    this.#respawnTicks = RESPAWN_TICKS;
-    this.#carrier = undefined;
+    this.#leave(RESPAWN_TICKS, 'anyEntry', true);
   }
 
   step(chef: ChefSnapshot, rng: Rng): void {
     if (!this.#active) {
-      this.#stepRespawn(rng);
+      this.#stepAway(rng);
       return;
     }
     if (this.#carrier !== undefined) {
@@ -146,6 +185,10 @@ export class Enemy extends MovingEntity implements EnemySnapshot {
     }
     if (this.#stunTicks > 0) {
       this.#stunTicks -= 1;
+      return;
+    }
+    if (this.#entrance !== undefined) {
+      this.#stepEntrance(this.#entrance);
       return;
     }
     if (this.#climb !== undefined) {
@@ -173,12 +216,45 @@ export class Enemy extends MovingEntity implements EnemySnapshot {
     this.moveTo(this.#place.point.x, this.#place.point.y);
   }
 
-  #stepRespawn(rng: Rng): void {
-    if (this.#respawnTicks <= 0) return;
-    this.#respawnTicks -= 1;
-    if (this.#respawnTicks > 0) return;
-    this.reset(rng.pick(this.#spawns), rng);
-    this.#events.emit({ type: 'enemyRespawned', enemyId: this.id, x: this.x, y: this.y });
+  #leave(ticks: number, back: EnemyEntry | 'anyEntry', announce: boolean): void {
+    this.#active = false;
+    this.#carrier = undefined;
+    this.#entrance = undefined;
+    this.#climb = undefined;
+    this.#stunTicks = 0;
+    this.#away = { ticks, back, announce };
+  }
+
+  #stepAway(rng: Rng): void {
+    const away = this.#away;
+    if (away === undefined) return;
+    away.ticks -= 1;
+    if (away.ticks > 0) return;
+    this.#comeIn(away.back === 'anyEntry' ? rng.pick(this.#entries) : away.back, rng);
+    if (away.announce) {
+      this.#events.emit({ type: 'enemyRespawned', enemyId: this.id, x: this.x, y: this.y });
+    }
+  }
+
+  #comeIn(entry: EnemyEntry, rng: Rng): void {
+    this.reset(entry.place, rng);
+    if (entry.fromX === undefined) return;
+    this.#entrance = entry.place;
+    this.#direction = entry.place.point.x >= entry.fromX ? 1 : -1;
+    this.teleportTo(entry.fromX, entry.place.point.y);
+  }
+
+  /** Walks in along the entry walkway until it reaches the platform it leads to. */
+  #stepEntrance(target: NavPlace): void {
+    const step = this.#direction * ENEMY_SPEED * TICK_SECONDS;
+    const x = this.x + step;
+    if ((target.point.x - x) * this.#direction <= 0) {
+      this.#entrance = undefined;
+      this.#decisionTicks = 0;
+      this.moveTo(target.point.x, target.point.y);
+      return;
+    }
+    this.moveTo(x, target.point.y);
   }
 
   #beginClimb({ edge, direction }: LadderIntent): void {

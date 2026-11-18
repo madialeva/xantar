@@ -31,6 +31,7 @@ export const defaultPieces: readonly PieceDefinition[] = [
     builder.addLadder(row, col);
   }),
   piece('structure', 'plate', '_', 'unit', (placement, builder) => builder.addPlate(placement)),
+  piece('structure', 'walkway', '-', 1, ({ row, col }, builder) => builder.addWalkway(row, col)),
   piece('ingredients', 'empty', '.', 1, nothing),
   ingredient('bunTop', 'T'),
   ingredient('lettuce', 'L'),

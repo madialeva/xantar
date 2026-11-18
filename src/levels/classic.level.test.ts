@@ -3,6 +3,7 @@ import { type EnemyRoster, IngredientField } from '../sim/entities/IngredientFie
 import { EventQueue } from '../sim/events';
 import { GameStats } from '../sim/GameStats';
 import { assembleLevel } from '../sim/level/assembleLevel';
+import { EDGE_MARGIN } from '../sim/rules';
 import { chefAt } from '../sim/testing/chef';
 import { parseLevelDocument, parseLevelJson, serializeLevel } from '../sim/level/levelJson';
 import classicDocument from './classic.level.json';
@@ -92,13 +93,36 @@ describe('classic level', () => {
     }
   });
 
-  it('puts the chef in the middle of the bottom floor and the enemies on the top one', () => {
+  it('puts the chef in the middle of the bottom floor', () => {
     expect(level.chefStart).toEqual({ row: 23, x: 19.5 });
+  });
+
+  it('brings in three hot dogs and an egg from the corners, in the order of the original', () => {
+    const left = 4 + EDGE_MARGIN;
+    const right = 35 - EDGE_MARGIN;
     expect(level.enemySpawns).toEqual([
-      { kind: 'hotdog', row: 5, x: 5.5 },
-      { kind: 'pickle', row: 5, x: 19.5 },
-      { kind: 'egg', row: 5, x: 33.5 }
+      { kind: 'hotdog', row: 5, x: 0.5, delayTicks: 270, joinX: left },
+      { kind: 'hotdog', row: 5, x: 38.5, delayTicks: 165, joinX: right },
+      { kind: 'hotdog', row: 23, x: 0.5, delayTicks: 60, joinX: left },
+      { kind: 'egg', row: 23, x: 38.5, delayTicks: 30, joinX: right }
     ]);
+    const order = [...level.enemySpawns].sort((a, b) => a.delayTicks - b.delayTicks);
+    expect(order.map((spawn) => [spawn.kind, spawn.row, spawn.x])).toEqual([
+      ['egg', 23, 38.5],
+      ['hotdog', 23, 0.5],
+      ['hotdog', 5, 38.5],
+      ['hotdog', 5, 0.5]
+    ]);
+  });
+
+  it('has entry walkways on both sides of the top and bottom floors only', () => {
+    for (let row = 0; row < level.rows; row++) {
+      for (const col of [0, 1, 2, 3, 35, 36, 37, 38]) {
+        expect(level.terrain.hasWalkway(row, col), `row ${row}, col ${col}`).toBe(
+          row === 5 || row === 23
+        );
+      }
+    }
   });
 
   it('can be finished by dropping its ingredients floor by floor', () => {

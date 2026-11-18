@@ -38,7 +38,8 @@ describe('Simulation', () => {
     const sim = create();
     expect(sim.ingredients).toHaveLength(16);
     expect(sim.plates).toHaveLength(4);
-    expect(sim.enemies.map((enemy) => enemy.kind)).toEqual(['hotdog', 'pickle', 'egg']);
+    expect(sim.enemies.map((enemy) => enemy.kind)).toEqual(['hotdog', 'hotdog', 'hotdog', 'egg']);
+    expect(sim.enemies.some((enemy) => enemy.active)).toBe(false);
   });
 
   it('returns no events for a tick without happenings', () => {

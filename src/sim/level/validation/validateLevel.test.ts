@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import classicDocument from '../../../levels/classic.level.json';
-import { levelFromGrid, tinyGrid, withGrid } from '../../testing/grids';
+import { documentFromGrid, levelFromGrid, tinyGrid, withGrid } from '../../testing/grids';
 import { assembleLevel } from '../assembleLevel';
 import { parseLevelDocument } from '../levelJson';
 import { validateLevel } from './validateLevel';
@@ -128,5 +128,36 @@ describe('validateLevel', () => {
     const found = codes(withGrid({ structure }));
     expect(found).toContain('ladder-dangling');
     expect(found).toContain('ingredient-no-plate');
+  });
+
+  describe('entry walkways', () => {
+    const level = (structure: readonly string[], entries = [{ row: 1, col: 0, delayMs: 500 }]) =>
+      assembleLevel({
+        ...documentFromGrid({
+          structure,
+          ingredients: ['........', '........', '........', '..TTTT..', '........'],
+          actors: ['........', 'h.......', '........', '..C.....', '........']
+        }),
+        entries
+      });
+    const floors = ['........', '----===+', '.......H', '=======+', '..____..'];
+
+    it('finds nothing wrong in a walkway that leads to a reachable floor', () => {
+      expect(validateLevel(level(floors))).toEqual([]);
+    });
+
+    it('reports a walkway that leads to no platform', () => {
+      const structure = ['--......', '----===+', '.......H', '=======+', '..____..'];
+      expect(validateLevel(level(structure))).toContainEqual(
+        expect.objectContaining({ severity: 'error', code: 'walkway-detached', row: 0, col: 0 })
+      );
+    });
+
+    it('reports an entry delay on a tile with no enemy marker', () => {
+      const issues = validateLevel(level(floors, [{ row: 3, col: 5, delayMs: 0 }]));
+      expect(issues).toContainEqual(
+        expect.objectContaining({ severity: 'error', code: 'entry-without-enemy', row: 3, col: 5 })
+      );
+    });
   });
 });

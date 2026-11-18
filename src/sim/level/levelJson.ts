@@ -3,7 +3,8 @@ import {
   DEFAULT_SEGMENTS,
   LEVEL_FORMAT,
   LEVEL_VERSION,
-  type LevelDocument
+  type LevelDocument,
+  type LevelEntry
 } from './LevelDocument';
 import { LAYER_IDS, LevelError } from './LevelError';
 
@@ -29,6 +30,38 @@ function readSegments(record: UnknownRecord): number {
     );
   }
   return value;
+}
+
+const isNonNegativeInteger = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isInteger(value) && value >= 0;
+
+function readEntries(
+  record: UnknownRecord,
+  cols: number,
+  rows: number
+): readonly LevelEntry[] | undefined {
+  const entries = record.entries;
+  if (entries === undefined) return undefined;
+  if (!Array.isArray(entries)) throw new LevelError('The level "entries" must be a list');
+  return entries.map((entry: unknown, index): LevelEntry => {
+    if (
+      !isRecord(entry) ||
+      !isNonNegativeInteger(entry.row) ||
+      !isNonNegativeInteger(entry.col) ||
+      !isNonNegativeInteger(entry.delayMs)
+    ) {
+      throw new LevelError(
+        `Entry ${index} must have a "row", a "col" and a "delayMs" that are whole numbers of 0 or more`
+      );
+    }
+    if (entry.row >= rows || entry.col >= cols) {
+      throw new LevelError(`Entry ${index} is outside the board`, {
+        row: entry.row,
+        col: entry.col
+      });
+    }
+    return { row: entry.row, col: entry.col, delayMs: entry.delayMs };
+  });
 }
 
 function readLayers(record: UnknownRecord, cols: number, rows: number): LevelDocument['layers'] {
@@ -75,6 +108,7 @@ export function parseLevelDocument(value: unknown): LevelDocument {
   if (typeof value.name !== 'string') throw new LevelError('The level "name" must be a string');
   const cols = requirePositiveInteger(value, 'cols');
   const rows = requirePositiveInteger(value, 'rows');
+  const entries = readEntries(value, cols, rows);
   return {
     format: LEVEL_FORMAT,
     version,
@@ -82,7 +116,8 @@ export function parseLevelDocument(value: unknown): LevelDocument {
     cols,
     rows,
     segments: readSegments(value),
-    layers: readLayers(value, cols, rows)
+    layers: readLayers(value, cols, rows),
+    ...(entries === undefined ? {} : { entries })
   };
 }
 
@@ -111,6 +146,13 @@ export function serializeLevel(document: LevelDocument): string {
     `${indent(1)}"cols": ${document.cols},`,
     `${indent(1)}"rows": ${document.rows},`,
     `${indent(1)}"segments": ${document.segments},`,
+    ...(document.entries === undefined
+      ? []
+      : [
+          `${indent(1)}"entries": [`,
+          document.entries.map((entry) => `${indent(2)}${JSON.stringify(entry)}`).join(',\n'),
+          `${indent(1)}],`
+        ]),
     `${indent(1)}"layers": {`,
     layers.join(',\n'),
     `${indent(1)}}`,

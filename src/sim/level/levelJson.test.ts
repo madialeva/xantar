@@ -137,3 +137,29 @@ describe('serializeLevel', () => {
     );
   });
 });
+
+describe('level entries', () => {
+  const withEntries = (entries: unknown) => ({ ...base(), entries });
+
+  it('reads the entry delays and writes them back', () => {
+    const document = parseLevelDocument(withEntries([{ row: 1, col: 0, delayMs: 500 }]));
+    expect(document.entries).toEqual([{ row: 1, col: 0, delayMs: 500 }]);
+    expect(parseLevelJson(serializeLevel(document))).toEqual(document);
+  });
+
+  it('leaves a document without entries as it was', () => {
+    const document = parseLevelDocument(base());
+    expect(document.entries).toBeUndefined();
+    expect(serializeLevel(document)).not.toContain('"entries"');
+  });
+
+  it('rejects entries that are not a list of whole numbers on the board', () => {
+    expect(capture(() => parseLevelDocument(withEntries({}))).message).toContain('list');
+    expect(
+      capture(() => parseLevelDocument(withEntries([{ row: 1, col: 0, delayMs: -5 }]))).message
+    ).toContain('whole numbers');
+    expect(
+      capture(() => parseLevelDocument(withEntries([{ row: 2, col: 0, delayMs: 0 }]))).message
+    ).toContain('outside the board');
+  });
+});

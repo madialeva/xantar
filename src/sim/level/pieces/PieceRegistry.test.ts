@@ -28,7 +28,7 @@ describe('PieceRegistry', () => {
         .pieces(layer)
         .map((piece) => piece.symbol)
         .join('');
-    expect(symbols('structure')).toBe('.=H+_');
+    expect(symbols('structure')).toBe('.=H+_-');
     expect(symbols('ingredients')).toBe('.TLPB');
     expect(symbols('actors')).toBe('.Chpe');
   });
