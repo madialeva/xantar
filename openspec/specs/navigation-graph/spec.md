@@ -19,7 +19,7 @@ SHALL NOT generar tramo de escalera.
 
 #### Scenario: Nivel clásico
 - **WHEN** se deriva el grafo del nivel clásico
-- **THEN** contiene cuatro tramos de plataforma y doce tramos de escalera
+- **THEN** contiene diez tramos de plataforma y veintinueve tramos de escalera
 
 #### Scenario: Plataforma interrumpida
 - **WHEN** una fila tiene dos grupos de casillas de plataforma separados por un
@@ -34,7 +34,7 @@ SHALL NOT generar tramo de escalera.
 La posición de un chef o un enemigo SHALL expresarse como una arista y un
 desplazamiento a lo largo de ella; su posición en casillas SHALL ser una función
 determinista de ambos. Sobre un tramo de plataforma el desplazamiento SHALL
-limitarse a 12/32 casillas de cada extremo. Sobre un tramo de escalera el
+limitarse a 12 unidades de cada extremo. Sobre un tramo de escalera el
 desplazamiento SHALL limitarse a la longitud del tramo; al alcanzar un extremo, la
 entidad SHALL quedar sobre el tramo de plataforma de ese extremo, centrada en la
 columna de la escalera.
@@ -50,7 +50,7 @@ columna de la escalera.
   escalera
 
 #### Scenario: Límite del tramo
-- **WHEN** una entidad intenta avanzar más allá de 12/32 casillas del extremo de
+- **WHEN** una entidad intenta avanzar más allá de 12 unidades del extremo de
   su tramo de plataforma
 - **THEN** su desplazamiento se detiene en ese límite
 
@@ -94,4 +94,4 @@ una posición.
 #### Scenario: Plataformas conectadas
 - **WHEN** se calcula la alcanzabilidad desde el inicio del chef en el nivel
   clásico
-- **THEN** son alcanzables los cuatro tramos de plataforma
+- **THEN** son alcanzables los diez tramos de plataforma
