@@ -5,6 +5,7 @@ import {
   ENEMY_HEIGHT,
   LEVEL_CLEAR_TICKS,
   READY_TICKS,
+  RESPAWN_TICKS,
   START_LIVES,
   START_PEPPERS,
   STUN_TICKS
@@ -12,7 +13,15 @@ import {
 import { isCrushedBy } from './entities/crush';
 import { NO_INPUT, type SimInput } from './SimInput';
 import { Simulation } from './Simulation';
-import { type GridSpec, levelFromGrid, tinyGrid, withGrid } from './testing/grids';
+import { assembleLevel } from './level/assembleLevel';
+import type { LevelEntry } from './level/LevelDocument';
+import {
+  type GridSpec,
+  documentFromGrid,
+  levelFromGrid,
+  tinyGrid,
+  withGrid
+} from './testing/grids';
 import { StubRng } from './testing/rng';
 import { skipReady } from './testing/simulation';
 
@@ -165,6 +174,53 @@ describe('Simulation: stomping and crushing enemies', () => {
     expect(ofType(events, 'enemyRespawned')).toHaveLength(2);
     expect(sim.enemies.every((enemy) => enemy.active)).toBe(true);
     expect(sim.enemies.map((enemy) => enemy.row)).toEqual([5, 5]);
+  });
+});
+
+describe('Simulation: enemies entering the board', () => {
+  const entering = (entries: readonly LevelEntry[]) =>
+    skipReady(
+      new Simulation({
+        level: assembleLevel({
+          ...documentFromGrid({
+            structure: ['----===+==', '.......H..', '=======+==', '..........', '.____.....'],
+            ingredients: ['..........', '..........', '.TTTT.....', '..........', '..........'],
+            actors: ['h.......C.', '..........', '.........e', '..........', '..........']
+          }),
+          entries
+        }),
+        rng: new StubRng(0.99)
+      })
+    );
+
+  it('keeps the board empty until the first delay and brings the enemies in by order', () => {
+    const sim = entering([
+      { row: 0, col: 0, delayMs: 500 },
+      { row: 2, col: 9, delayMs: 1000 }
+    ]);
+    const [hotdog, egg] = sim.enemies;
+    run(sim, 29);
+    expect([hotdog.active, egg.active]).toEqual([false, false]);
+    run(sim, 1);
+    expect([hotdog.active, hotdog.entering, hotdog.x, egg.active]).toEqual([
+      true,
+      true,
+      0.5,
+      false
+    ]);
+    run(sim, 30);
+    expect(egg.active).toBe(true);
+  });
+
+  it('brings the enemies in again after the chef loses a life', () => {
+    const sim = entering([{ row: 0, col: 0, delayMs: 500 }]);
+    const [hotdog] = sim.enemies;
+    for (let i = 0; i < 600 && sim.phase === 'playing'; i++) run(sim, 1);
+    expect(sim.stats.lives).toBe(START_LIVES - 1);
+    for (let i = 0; i < 600 && sim.phase !== 'playing'; i++) run(sim, 1);
+    expect(hotdog.active).toBe(false);
+    run(sim, 30);
+    expect([hotdog.active, hotdog.x]).toEqual([true, 0.5]);
   });
 });
 
@@ -592,6 +648,47 @@ describe('Simulation: enemies riding an ingredient', () => {
     expect(sim.stats.score - score).toBe(deltas.reduce((sum, delta) => sum + delta, 0));
     const respawned = run(sim, 160);
     expect(ofType(respawned, 'enemyRespawned')).toHaveLength(1);
+  });
+
+  it('brings the rider back where its ingredient stopped', () => {
+    const sim = create(column('..h...C.............'));
+    dropWithRider(sim);
+    const [rider] = sim.enemies;
+    const x = rider.x;
+    untilTopRests(sim);
+    run(sim, RESPAWN_TICKS - 2);
+    expect(rider.active).toBe(false);
+    run(sim, 1);
+    expect([rider.active, rider.row, rider.x]).toEqual([true, 14, x]);
+  });
+
+  it('brings riders that reach the plate back on the lowest floor above it', () => {
+    const grid = column('...hh.C.............');
+    const withSecondBurger = (rows: readonly string[] | undefined, row: number, piece: string) =>
+      (rows ?? []).map((line, index) =>
+        index === row ? line.slice(0, 12) + piece.repeat(4) + line.slice(16) : line
+      );
+    const sim = create({
+      ...grid,
+      structure: withSecondBurger(grid.structure, 18, '_'),
+      ingredients: withSecondBurger(grid.ingredients, 2, 'T')
+    });
+    dropWithRider(sim);
+    const riders = sim.enemies.filter((enemy) => enemy.riding);
+    expect(riders).toHaveLength(2);
+    const xs = riders.map((enemy) => enemy.x);
+    const [top] = sim.ingredients;
+    let dropped = false;
+    for (let i = 0; i < 3000 && !dropped; i++) {
+      dropped = ofType(run(sim, 1), 'ridersDropped').length > 0;
+    }
+    expect([top.phase, top.row]).toEqual(['stacked', 18]);
+    run(sim, RESPAWN_TICKS - 2);
+    expect(riders.some((enemy) => enemy.active)).toBe(false);
+    run(sim, 1);
+    expect(riders.map((enemy) => [enemy.active, enemy.row, enemy.x])).toEqual(
+      xs.map((x) => [true, 14, x])
+    );
   });
 
   it('gives no bonus when the chef loses a life during the ride', () => {

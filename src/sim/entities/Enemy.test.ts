@@ -7,7 +7,7 @@ import { StubRng } from '../testing/rng';
 import { levelFromShape } from '../testing/shapes';
 import { Chef } from './Chef';
 import { createEnemy } from './createEnemy';
-import type { Enemy } from './Enemy';
+import { type Enemy, entryAt } from './Enemy';
 
 const rng = new StubRng(0.99);
 const tiny = levelFromGrid(tinyGrid);
@@ -19,7 +19,7 @@ const spawn = (
   spawns: readonly [number, number][] = [[row, x]]
 ): { enemy: Enemy; events: EventQueue } => {
   const events = new EventQueue();
-  const places = spawns.map(([r, sx]) => level.graph.placeAt(r, sx));
+  const places = spawns.map(([r, sx]) => entryAt(level.graph.placeAt(r, sx)));
   const enemy = createEnemy(0, 'hotdog', events, level.graph, places);
   enemy.reset(level.graph.placeAt(row, x), rng);
   return { enemy, events };
@@ -197,5 +197,72 @@ describe('Enemy riding', () => {
     enemy.ride(carrier(5));
     enemy.reset(tiny.graph.placeAt(5, 1.5), rng);
     expect(enemy.riding).toBe(false);
+  });
+});
+
+describe('Enemy entering from a walkway', () => {
+  const walkway = levelFromGrid({
+    structure: ['----====', '........'],
+    actors: ['h.....C.', '........']
+  });
+  const entry = { place: walkway.graph.placeAt(0, 4.75), fromX: 0.5, delayTicks: 30 };
+  const waiting = (): { enemy: Enemy; events: EventQueue } => {
+    const events = new EventQueue();
+    const enemy = createEnemy(0, 'hotdog', events, walkway.graph, [entry]);
+    enemy.await(entry, rng);
+    return { enemy, events };
+  };
+  const chef = chefAt(walkway, 0, 6.5);
+
+  it('waits off the board until its entry delay and then appears on its marker', () => {
+    const { enemy, events } = waiting();
+    expect(enemy.active).toBe(false);
+    run(enemy, chef, 29);
+    expect(enemy.active).toBe(false);
+    run(enemy, chef, 1);
+    expect([enemy.active, enemy.entering, enemy.x, enemy.row]).toEqual([true, true, 0.5, 0]);
+    expect(events.drain()).toEqual([]);
+  });
+
+  it('walks in at its speed until it reaches the platform, then chases', () => {
+    const { enemy } = waiting();
+    run(enemy, chef, 30);
+    const steps: number[] = [];
+    while (enemy.entering) {
+      run(enemy, chef, 1);
+      steps.push(enemy.x - enemy.prevX);
+    }
+    expect(enemy.x).toBe(4.75);
+    steps.slice(0, -1).forEach((step) => expect(step).toBeCloseTo(ENEMY_SPEED / 60, 10));
+    run(enemy, chef, 10);
+    expect(enemy.x).toBeGreaterThan(4.75);
+  });
+
+  it('stands still on the walkway while it is stunned', () => {
+    const { enemy } = waiting();
+    run(enemy, chef, 35);
+    const x = enemy.x;
+    enemy.stun();
+    run(enemy, chef, 20);
+    expect([enemy.x, enemy.entering]).toEqual([x, true]);
+  });
+
+  it('comes in at once when its entry has no delay and no walkway', () => {
+    const events = new EventQueue();
+    const place = walkway.graph.placeAt(0, 6.5);
+    const enemy = createEnemy(0, 'hotdog', events, walkway.graph, [entryAt(place)]);
+    enemy.await(entryAt(place), rng);
+    expect([enemy.active, enemy.entering, enemy.x]).toEqual([true, false, 6.5]);
+  });
+
+  it('comes back on the given place after a ride and announces it', () => {
+    const { enemy, events } = spawn(tiny, 5, 1.5);
+    enemy.dropAt(tiny.graph.placeAt(2, 6.5));
+    expect(enemy.active).toBe(false);
+    run(enemy, chefAt(tiny, 5, 1.5), RESPAWN_TICKS - 1);
+    expect(enemy.active).toBe(false);
+    run(enemy, chefAt(tiny, 5, 1.5), 1);
+    expect([enemy.active, enemy.row, enemy.x]).toEqual([true, 2, 6.5]);
+    expect(events.drain()).toEqual([{ type: 'enemyRespawned', enemyId: 0, x: 6.5, y: 2 }]);
   });
 });

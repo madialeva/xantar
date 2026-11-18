@@ -5,6 +5,7 @@ import { CELL_UNITS } from '../rules';
 import { levelFromGrid, tinyGrid } from '../testing/grids';
 import { StubRng } from '../testing/rng';
 import { createEnemy } from './createEnemy';
+import { entryAt } from './Enemy';
 import { isHitByPepper, pepperCloudFor, type PepperSource, type ThrowDirection } from './pepper';
 
 const level = levelFromGrid(tinyGrid);
@@ -12,7 +13,7 @@ const rng = new StubRng(0.99);
 const [ladder] = level.graph.ladders;
 
 const enemyAtPlace = (place: NavPlace, active = true) => {
-  const enemy = createEnemy(0, 'pickle', new EventQueue(), level.graph, [place]);
+  const enemy = createEnemy(0, 'pickle', new EventQueue(), level.graph, [entryAt(place)]);
   enemy.reset(place, rng);
   if (!active) enemy.squash();
   return enemy;
@@ -99,7 +100,7 @@ describe('pepper on a ladder', () => {
       actors: [...Array.from({ length: 9 }, () => '........'), 'C.......']
     });
     const far = createEnemy(0, 'pickle', new EventQueue(), tall.graph, [
-      tall.graph.placeAt(0, 3.5)
+      entryAt(tall.graph.placeAt(0, 3.5))
     ]);
     far.reset(tall.graph.placeAt(0, 3.5), rng);
     expect(isHitByPepper(chef(3.5, 8.9, 'up'), far)).toBe(false);
