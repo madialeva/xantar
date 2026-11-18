@@ -19,8 +19,8 @@ export const EDGE_MARGIN = fromPx(12);
 export const LADDER_GRAB_DISTANCE = fromPx(19.2);
 export const STEP_OFF_DISTANCE = fromPx(12.8);
 
-export const FALL_SPEED = fromPx(170);
-export const BOUNCE_HEIGHT = fromPx(20);
+export const FALL_SPEED = fromPx(113);
+export const BOUNCE_HEIGHT = fromPx(13);
 export const BOUNCE_RISE_TICKS = fromMs(80);
 export const BOUNCE_HOLD_TICKS = fromMs(220);
 export const RIDER_STOP_TICKS = fromMs(270);

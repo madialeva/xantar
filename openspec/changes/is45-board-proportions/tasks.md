@@ -29,8 +29,8 @@
 
 ## 6. Caída a escala ×2
 
-- [ ] 6.1 En `src/sim/rules.ts`, `FALL_SPEED = fromPx(113)` y `BOUNCE_HEIGHT = fromPx(13)`, y en `src/objects/IngredientView.ts` un `TOUCH_DOWN` de 8 unidades; actualizar `Ingredient.test.ts` (64 unidades de caída libre en 34 ticks bajando lo mismo cada tick; rebote de 13 unidades en 5 ticks) y cualquier prueba que cite las distancias antiguas; verificar con `npm run test` y `grep -rn "fromPx(170)\|fromPx(20)" src` sin restos
-- [ ] 6.2 Documentar la escala ×2 (un píxel del original son 2 unidades; un piso de dos cocineros en 0,57 s) en `docs/MANUAL.md` (§8.5) y en `docs/GAMEDEV_FUNDAMENTALS.md` si menciona la ×3; verificar con `grep -rn "×3\|170" docs README.md` sin restos y `npm run format:check`
+- [x] 6.1 En `src/sim/rules.ts`, `FALL_SPEED = fromPx(113)` y `BOUNCE_HEIGHT = fromPx(13)`, y en `src/objects/IngredientView.ts` un `TOUCH_DOWN` de 8 unidades; actualizar `Ingredient.test.ts` (64 unidades de caída libre en 34 ticks bajando lo mismo cada tick; rebote de 13 unidades en 5 ticks) y cualquier prueba que cite las distancias antiguas; verificar con `npm run test` y `grep -rn "fromPx(170)\|fromPx(20)" src` sin restos
+- [x] 6.2 Documentar la escala ×2 (un píxel del original son 2 unidades; un piso de dos cocineros en 0,57 s) en `docs/MANUAL.md` (§8.5) y en `docs/GAMEDEV_FUNDAMENTALS.md` si menciona la ×3; verificar con `grep -rn "×3\|170" docs README.md` sin restos y `npm run format:check`
 
 ## 7. Primera pantalla como la del original
 

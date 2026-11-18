@@ -7,7 +7,7 @@ import { interpolatedRow } from './interpolation';
 
 const PLATE_TOP = 5;
 const STOMP_DEPTH = 3;
-const TOUCH_DOWN = { depth: 12, ms: 60 };
+const TOUCH_DOWN = { depth: 8, ms: 60 };
 
 /**
  * Phaser view of an ingredient: draws its segments with the game graphics (lowered when

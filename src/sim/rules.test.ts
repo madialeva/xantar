@@ -62,8 +62,8 @@ describe('rules', () => {
   });
 
   it('keeps the cadence of the falls measured in the original game', () => {
-    expect(FALL_SPEED * PX_PER_TILE).toBe(170);
-    expect(BOUNCE_HEIGHT * PX_PER_TILE).toBe(20);
+    expect(FALL_SPEED * PX_PER_TILE).toBe(113);
+    expect(BOUNCE_HEIGHT * PX_PER_TILE).toBe(13);
     expect([BOUNCE_RISE_TICKS, BOUNCE_HOLD_TICKS]).toEqual([5, 13]);
   });
 
