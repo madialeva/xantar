@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { TILE, type RenderTier, platformY } from '../config';
+import { TILE, type RenderTier, characterY, platformY } from '../config';
 import IngredientView from '../objects/IngredientView';
 import { type IngredientKind, type IngredientSnapshot } from '../sim';
 import { HUD_FONT } from '../view/hud/textStyle';
@@ -112,8 +112,9 @@ export default class ArtSheetScene extends Phaser.Scene {
     y: number
   ): void {
     const stage = this.add.container(x, y).setScale(SPECIMEN_ZOOM);
-    for (const [index, part] of segmentParts(2).entries()) {
-      stage.add(this.#art.image(`platform.${part}`, (index - 0.5) * TILE, TILE / 2));
+    const line = platformY(0) - characterY(0);
+    for (const [index, part] of segmentParts(4).entries()) {
+      stage.add(this.#art.image(`platform.${part}`, (index - 1.5) * TILE, line));
     }
     const rig = new CharacterRig(this, this.#art, definition);
     stage.add(rig);
@@ -169,20 +170,20 @@ export default class ArtSheetScene extends Phaser.Scene {
     const tile = (graphic: GraphicId, col: number, y: number): void => {
       maze.add(this.#art.image(graphic, (col + 0.5) * TILE, y));
     };
-    for (const row of [0, 1]) {
+    for (const row of [0, 1, 2, 3]) {
       maze.add(this.#art.image('ladder', 1.5 * TILE, platformY(row)).setOrigin(0.5, 0));
     }
-    for (const row of [0, 2]) {
-      segmentParts(6).forEach((part, col) => tile(`platform.${part}`, col, platformY(row)));
+    for (const row of [0, 4]) {
+      segmentParts(8).forEach((part, col) => tile(`platform.${part}`, col, platformY(row)));
       tile('crossing', 1, platformY(row));
     }
-    segmentParts(4).forEach((part, index) => tile(`plate.${part}`, index + 2, platformY(3)));
+    segmentParts(4).forEach((part, index) => tile(`plate.${part}`, index + 3, platformY(6)));
     maze.add(
       new IngredientView(this, this.#art, {
         ...this.#snapshot('patty', 4),
-        col: 2,
-        left: 2,
-        right: 6
+        col: 3,
+        left: 3,
+        right: 7
       })
     );
   }

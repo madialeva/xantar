@@ -30,11 +30,11 @@ en español de forma provisional; se traducirá al inglés más adelante.
 
 | Elemento | Tamaño | Cómo se coloca |
 |---|---|---|
-| Tramo de plataforma (`platform.left/mid/right`), cruce (`crossing`) | 32×12 | centrado en la línea de la plataforma; la cara superior (línea − 6) es el suelo |
-| Escalera (`ladder`) | 32×32 | una por fila, desde la línea de un piso hasta la del siguiente, detrás de las plataformas |
-| Plato (`plate.left/mid/right`) | 32×10 | centrado en la línea del plato |
+| Tramo de plataforma (`platform.left/mid/right`), cruce (`crossing`) | 16×12 | centrado en la línea de la plataforma; la cara superior (línea − 6) es el suelo |
+| Escalera (`ladder`) | 16×16 | una por fila, desde la línea de un piso hasta la del siguiente, detrás de las plataformas; dos peldaños por fila |
+| Plato (`plate.left/mid/right`) | 16×10 | centrado en la línea del plato |
 | Segmento de ingrediente (`<tipo>.left/mid/right`) | 32×(12–18) | apoyado sobre el suelo de la plataforma |
-| Partes de personaje | según el rig | el punto de anclaje es el centro de su casilla; los pies tocan el suelo (+10 respecto al anclaje) |
+| Partes de personaje | según el rig | el punto de anclaje está 16 por encima de la línea de la plataforma (`characterY`); los pies tocan el suelo (+10 respecto al anclaje) |
 | Fondo del tablero (`board.backdrop`) | 624×480 | detrás de todo |
 
 Un tramo de 2 casillas usa `left` + `right`; de 3, `left` + `mid` + `right`; de
@@ -151,9 +151,9 @@ Para añadir un token hay que añadirlo a `PALETTE_TOKENS` y darle color en
 ### 3.3 Convención de autoría de los SVG
 
 ```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 10" width="32" height="10">
-  <rect class="f-shadow" x="1" y="2.5" width="30" height="7" rx="3" opacity="0.25"/>
-  <rect class="f-plate s-outline" x="1" y="1" width="30" height="7" rx="3" stroke-width="1.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 10" width="16" height="10">
+  <rect class="f-shadow" x="1" y="2.5" width="14" height="7" rx="3" opacity="0.25"/>
+  <rect class="f-plate s-outline" x="1" y="1" width="14" height="7" rx="3" stroke-width="1.5"/>
 </svg>
 ```
 

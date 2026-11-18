@@ -13,8 +13,8 @@
 
 ## 3. Arte del laberinto a 16 de ancho
 
-- [ ] 3.1 Redibujar en SVG `platform.left/mid/right` y `crossing` (16×12), `ladder` (16×16, con peldaños para ese ancho) y `plate.left/mid/right` (16×10), y cambiar sus tamaños en `src/view/art/graphics.ts`; verificar con las pruebas del arte (`graphics.test.ts`, `art.test.ts`, `svgProblems.test.ts`), `npm run smoke` y la hoja de arte en `/tools/art-sheet.html` (tramos sin costuras, remates y cruces encajados, escalera de una casilla)
-- [ ] 3.2 Actualizar `docs/STYLE_GUIDE.md` (rejilla de 16, tabla de tamaños de las piezas y fondo de 624×480); verificar con `npm run format:check`
+- [x] 3.1 Redibujar en SVG `platform.left/mid/right` y `crossing` (16×12), `ladder` (16×16, con peldaños para ese ancho) y `plate.left/mid/right` (16×10), y cambiar sus tamaños en `src/view/art/graphics.ts`; verificar con las pruebas del arte (`graphics.test.ts`, `art.test.ts`, `svgProblems.test.ts`), `npm run smoke` y la hoja de arte en `/tools/art-sheet.html` (tramos sin costuras, remates y cruces encajados, escalera de una casilla)
+- [x] 3.2 Actualizar `docs/STYLE_GUIDE.md` (rejilla de 16, tabla de tamaños de las piezas y fondo de 624×480); verificar con `npm run format:check`
 
 ## 4. Ingredientes renderizados a 16 de ancho
 
