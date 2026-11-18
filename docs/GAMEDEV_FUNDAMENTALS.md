@@ -858,6 +858,16 @@ sensación.
   del tablero propio y se conservan los tiempos. Así se midió la caída de los
   ingredientes de Xantar en una partida de BurgerTime, y una kimografía de la
   simulación permite compararla con la del original.
+- **Las proporciones de un juego de referencia**: el mismo vídeo sirve para
+  medir el escenario. Primero se busca la **rejilla**: en un juego de
+  recreativa todo está dibujado con caracteres (en BurgerTime, de 8×8
+  píxeles), así que las distancias salen en números enteros de caracteres.
+  Después se saca el **mapa**: en muchos fotogramas seguidos se mira el color
+  de cada punto clave (el remate de cada plataforma, cada tramo de escalera) y
+  se queda lo que aparece en más de la mitad, para que los personajes que
+  pasan por encima no confundan. Así se midió la primera pantalla del original
+  (pisos a 0, 2, 3, 4, 5, 6, 7 y 9 cocineros) y se copió en el nivel clásico de
+  Xantar.
 - **Tolerancia** (*forgiveness*): pequeñas ayudas invisibles, como permitir
   agarrar una escalera aunque el chef no esté exactamente alineado
   (`LADDER_GRAB_DISTANCE`).

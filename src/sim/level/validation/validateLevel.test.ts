@@ -13,8 +13,34 @@ describe('validateLevel', () => {
     expect(validateLevel(assembleLevel(parseLevelDocument(classicDocument)))).toEqual([]);
   });
 
-  it('finds nothing wrong in a small playable level', () => {
-    expect(validateLevel(levelFromGrid(tinyGrid))).toEqual([]);
+  it('only warns about the odd ladder of the small test level', () => {
+    expect(validateLevel(levelFromGrid(tinyGrid))).toEqual([
+      expect.objectContaining({ severity: 'warning', code: 'ladder-odd-span', row: 2, col: 3 })
+    ]);
+  });
+
+  describe('ladders a whole number of chefs tall', () => {
+    const ladder = (rows: number) => {
+      const structure = Array.from({ length: 12 }, () => '........');
+      structure[5] = '===+====';
+      for (let row = 6; row < 5 + rows; row++) structure[row] = '...H....';
+      structure[5 + rows] = '===+====';
+      const actors = structure.map(() => '........');
+      actors[5] = '......C.';
+      return levelFromGrid({ structure, actors });
+    };
+    const ladderIssues = (rows: number) =>
+      validateLevel(ladder(rows)).filter((issue) => issue.code === 'ladder-odd-span');
+
+    it('says nothing about a ladder two rows long', () => {
+      expect(ladderIssues(2)).toEqual([]);
+    });
+
+    it('warns about a ladder three rows long at its top end', () => {
+      expect(ladderIssues(3)).toEqual([
+        expect.objectContaining({ severity: 'warning', row: 5, col: 3 })
+      ]);
+    });
   });
 
   it('reports an ingredient on a platform the chef cannot reach', () => {
