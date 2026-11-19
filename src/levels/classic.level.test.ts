@@ -145,6 +145,26 @@ describe('classic level', () => {
     expect(field.plates.every((plate) => plate.isComplete)).toBe(true);
   });
 
+  it('is secured by the drop that finishes it, before the last ingredient lands', () => {
+    const events = new EventQueue();
+    const noEnemies: EnemyRoster = { board: () => 0, crushUnder: () => {}, release: () => {} };
+    const field = new IngredientField(level, events, new GameStats(events), noEnemies);
+    const away = chefAt(0, 0.5);
+    const securedAtDrop: boolean[] = [];
+    while (!field.isComplete && securedAtDrop.length < 100) {
+      const next = field.ingredients
+        .filter((ingredient) => ingredient.phase === 'idle')
+        .sort((a, b) => b.row - a.row)[0];
+      for (let segment = 0; segment < next.width; segment++) {
+        field.step(chefAt(next.row, next.left + segment + 0.5));
+      }
+      securedAtDrop.push(field.isSecured && !field.isComplete);
+      for (let tick = 0; tick < 600; tick++) field.step(away);
+    }
+    expect(securedAtDrop.at(-1)).toBe(true);
+    expect(securedAtDrop.slice(0, -1).every((secured) => !secured)).toBe(true);
+  });
+
   it('carries one rider three floors down from the top bun of the third burger', () => {
     const events = new EventQueue();
     const top = level.ingredients.find(

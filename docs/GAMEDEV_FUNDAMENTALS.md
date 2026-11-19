@@ -245,6 +245,7 @@ juegos. Los que usamos:
 | **Observer** (observador) | Quien produce algo no sabe quién lo escucha | Los eventos de la simulación (`EventSink`) que la vista escucha; `GameSession` (estado de la partida para el HUD) y `Localization` (cambio de idioma) |
 | **Factory** (fábrica) | Un punto que sabe crear objetos | `createEnemy`, `ArtFactory` (crea imágenes del juego a la escala correcta) |
 | **Command** (orden) | Una acción representada como dato | `SimInput`: la entrada del tick como un objeto inmutable; base de las repeticiones |
+| **Prototype** (prototipo) | Crear un objeto copiando otro que ya está en el estado que interesa | [`IngredientField.copy`](../src/sim/entities/IngredientField.ts): una copia muda del campo de ingredientes para prever en qué acaban las caídas |
 | **Registry** (registro) | Catálogo extensible de tipos por identificador | [`PieceRegistry`](../src/sim/level/pieces/PieceRegistry.ts) (piezas de nivel) |
 
 Otras dos prácticas que verás por todo el código:
@@ -256,6 +257,15 @@ Otras dos prácticas que verás por todo el código:
 - **Datos inmutables y funciones puras** para cálculos sin estado (geometría,
   carga y validación de niveles, disposición de la pantalla): reciben datos y
   devuelven datos nuevos, sin efectos secundarios, y son triviales de probar.
+
+Una técnica que sale de juntar Prototype y la simulación determinista es
+**prever el futuro jugándolo en una copia**: para saber si las caídas en curso
+completarán el tablero, Xantar copia el campo de ingredientes con colaboradores
+mudos (no emiten eventos ni dan puntos), lo avanza sin el chef hasta que nada
+se mueve y mira el resultado. Así la previsión usa las mismas reglas que el
+juego y no puede desviarse de ellas, algo que sí pasaría con un cálculo aparte.
+Con eso, el chef no pierde vidas una vez soltado el ingrediente que gana el
+tablero.
 
 Otro patrón muy común en juegos, que aquí no usamos todavía, es **ECS**
 (*Entity Component System*): las entidades son solo identificadores, los datos

@@ -105,6 +105,14 @@ export class Simulation {
     return this.#difficulty;
   }
 
+  /**
+   * Whether the falls under way will complete the board: from then on enemies no longer take
+   * lives.
+   */
+  get boardSecured(): boolean {
+    return this.#field.isSecured;
+  }
+
   /** Factor over the enemies' speeds now, from the difficulty, the level and the time played. */
   get pace(): number {
     return this.#pace.factor(this.#stats.level, this.#playTicks);
@@ -161,10 +169,14 @@ export class Simulation {
     return this.#checkContact() ? 'chefHit' : 'continue';
   }
 
-  /** Play resumes after a lost life: everyone back to the start and the pace back to its first step. */
+  /**
+   * Play resumes after a lost life: everyone back to the start, the pace back to its first step
+   * and the half-stomped ingredients whole again, as in the original.
+   */
   #respawn(): void {
     this.#playTicks = 0;
     this.#resetPositions();
+    this.#field.liftStomps();
   }
 
   #newField(): IngredientField {
@@ -250,6 +262,7 @@ export class Simulation {
   }
 
   #checkContact(): boolean {
+    if (this.#field.isSecured) return false;
     const touching = this.#enemies.some(
       (enemy) =>
         enemy.active &&

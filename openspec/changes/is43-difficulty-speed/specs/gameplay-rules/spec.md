@@ -85,11 +85,12 @@ como siempre, al quedar completa la última hamburguesa.
   ingrediente al plato
 
 #### Scenario: Cadena que completa el tablero
-- **WHEN** el chef suelta un ingrediente que golpea al último ingrediente que
-  falta, quieto en el piso más bajo de su columna, y le alcanza un enemigo
-  antes de que este llegue al plato
+- **WHEN** solo faltan los dos ingredientes de una columna, el chef suelta el
+  de arriba con un enemigo montado, este golpea al de abajo, quieto en el piso
+  más bajo, y los dos acaban en el plato, y un enemigo alcanza al chef antes de
+  que lleguen
 - **THEN** no se pierde ninguna vida, porque el tablero quedó asegurado en el
-  tick en que el chef soltó el primero
+  tick en que el chef soltó el de arriba
 
 #### Scenario: Contacto en el mismo tick
 - **WHEN** en el mismo tick el chef pisa el último segmento del ingrediente que

@@ -119,10 +119,11 @@ disconnected. The pause menu lets you resume or quit to the main menu.
 ### Ingredients and falls
 
 - Every ingredient is made of **segments** (four in the classic level). When the
-  chef **steps on a segment** it is pressed down, and it stays pressed; the
-  segments pressed before it sink a little further, so a half-pressed ingredient
-  tilts. Press all the segments of an ingredient and it falls one platform down,
-  slowly and at a steady pace, as in the original arcade game.
+  chef **steps on a segment** it is pressed down, and it stays pressed until the
+  ingredient falls or you lose a life; the segments pressed before it sink a
+  little further, so a half-pressed ingredient tilts. Press all the segments of
+  an ingredient and it falls one platform down, slowly and at a steady pace, as
+  in the original arcade game.
 - When a falling ingredient reaches another one, it **knocks it down too** and
   bounces up for a moment before going on: a chain reaction from the top down
   that only affects the ingredients it actually hits.
@@ -182,8 +183,13 @@ disconnected. The pause menu lets you resume or quit to the main menu.
 - You have **3 lives**.
 - Every touch from a non-stunned enemy costs a life.
 - Every board starts with a short **GET READY!** pause. When an enemy catches
-  you, the chef falls, everyone goes back to the start and you get ready again;
-  the ingredients stay as they were.
+  you, the chef falls, everyone goes back to the start and you get ready again.
+  Ingredients that already fell stay where they are, but the ones you had only
+  half stepped on are whole again: you have to cross them again from the start.
+- Once the ingredients on their way are bound to finish every burger (the last
+  one is falling to its plate, or carrying enemies that will take it there), the
+  board is won: enemies can no longer take a life, and the level ends when the
+  last burger is complete.
 - Complete all four burgers to advance to the next level: after a short **LEVEL
   CLEAR!** pause the board is rebuilt on its own, and your score, lives and
   pepper carry over (every level uses the same layout for now).

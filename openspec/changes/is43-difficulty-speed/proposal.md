@@ -50,8 +50,8 @@ muestra:
   siguen apilados y los que estaban cayendo terminan su caída.
 - **Nivel asegurado.** En cuanto se sabe que los ingredientes que están cayendo
   completarán todas las hamburguesas sin que el chef haga nada más (el último
-  ingrediente, o uno con enemigos montados que acabará en el plato, o una cadena
-  que lo empuja), el tablero queda asegurado: los enemigos ya no le quitan
+  ingrediente, o uno con enemigos montados que acabará en el plato, empujando
+  si hace falta al último), el tablero queda asegurado: los enemigos ya no le quitan
   vidas al chef, que sigue jugando hasta que se completa el nivel como hoy.
 - **BREAKING (sensación de juego):** el chef y los enemigos van más despacio que
   ahora y los enemigos suben las escaleras a la mitad de su velocidad.
