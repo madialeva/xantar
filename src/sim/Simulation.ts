@@ -1,6 +1,6 @@
 import { Chef, type ChefSnapshot } from './entities/Chef';
 import { createEnemy } from './entities/createEnemy';
-import type { Enemy, EnemyEntry, EnemySnapshot } from './entities/Enemy';
+import { type Enemy, type EnemyEntry, type EnemySnapshot, enemyGait } from './entities/Enemy';
 import { isCrushedBy } from './entities/crush';
 import { isStandingOn } from './entities/riders';
 import { type EnemyRoster, IngredientField } from './entities/IngredientField';
@@ -135,7 +135,7 @@ export class Simulation {
     this.#chef.step(input, this.#level.graph);
     this.#field.step(this.#chef);
     if (this.#checkLevelClear()) return 'levelCleared';
-    for (const enemy of this.#enemies) enemy.step(this.#chef, this.#rng);
+    for (const enemy of this.#enemies) enemy.step(this.#chef, this.#rng, enemyGait());
     if (input.pepper) this.#throwPepper();
     return this.#checkContact() ? 'chefHit' : 'continue';
   }

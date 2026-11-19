@@ -1,13 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { EventQueue } from '../events';
 import type { Level } from '../level/Level';
-import { EDGE_MARGIN, ENEMY_SPEED, RESPAWN_TICKS, STUN_TICKS } from '../rules';
+import {
+  EDGE_MARGIN,
+  ENEMY_CLIMB_SPEED,
+  ENEMY_WALK_SPEED,
+  RESPAWN_TICKS,
+  STUN_TICKS,
+  TICK_SECONDS
+} from '../rules';
 import { levelFromGrid, tinyGrid } from '../testing/grids';
 import { StubRng } from '../testing/rng';
 import { levelFromShape } from '../testing/shapes';
 import { Chef } from './Chef';
 import { createEnemy } from './createEnemy';
-import { type Enemy, entryAt } from './Enemy';
+import { type Enemy, type EnemyGait, enemyGait, entryAt } from './Enemy';
 
 const rng = new StubRng(0.99);
 const tiny = levelFromGrid(tinyGrid);
@@ -28,10 +35,10 @@ const spawn = (
 const chefAt = (level: Level, row: number, x: number): Chef =>
   new Chef(level.graph.placeAt(row, x));
 
-const run = (enemy: Enemy, chef: Chef, ticks: number): void => {
+const run = (enemy: Enemy, chef: Chef, ticks: number, gait: EnemyGait = enemyGait()): void => {
   for (let i = 0; i < ticks; i++) {
     enemy.beginTick();
-    enemy.step(chef, rng);
+    enemy.step(chef, rng, gait);
   }
 };
 
@@ -39,7 +46,7 @@ describe('Enemy chasing', () => {
   it('walks towards the chef on the same platform', () => {
     const { enemy } = spawn(tiny, 5, 1.5);
     run(enemy, chefAt(tiny, 5, 6.5), 60);
-    expect(enemy.x).toBeCloseTo(1.5 + ENEMY_SPEED, 6);
+    expect(enemy.x).toBeCloseTo(1.5 + ENEMY_WALK_SPEED, 6);
     expect(enemy.facing).toBe(1);
   });
 
@@ -68,6 +75,27 @@ describe('Enemy chasing', () => {
     expect(enemy.isClimbing).toBe(true);
     expect(enemy.row).toBe(2);
     expect(enemy.y).toBeGreaterThan(2);
+  });
+
+  it('walks at the walking gait it is given', () => {
+    const { enemy } = spawn(tiny, 5, 1.5);
+    run(enemy, chefAt(tiny, 5, 6.5), 60, { walk: 2, climb: 1 });
+    expect(enemy.x).toBeCloseTo(3.5, 6);
+  });
+
+  it('climbs at its climbing gait, half as fast as it walks', () => {
+    const { enemy } = spawn(tiny, 2, 3.5);
+    const chef = chefAt(tiny, 5, 6.5);
+    run(enemy, chef, 1);
+    const steps: number[] = [];
+    while (enemy.isClimbing) {
+      run(enemy, chef, 1);
+      steps.push(enemy.y - enemy.prevY);
+    }
+    expect(ENEMY_CLIMB_SPEED * 2).toBe(ENEMY_WALK_SPEED);
+    steps
+      .slice(0, -1)
+      .forEach((step) => expect(step).toBeCloseTo(ENEMY_CLIMB_SPEED * TICK_SECONDS, 10));
   });
 
   it('follows the shortest path in an irregular level, not the nearest ladder', () => {
@@ -233,9 +261,16 @@ describe('Enemy entering from a walkway', () => {
       steps.push(enemy.x - enemy.prevX);
     }
     expect(enemy.x).toBe(4.75);
-    steps.slice(0, -1).forEach((step) => expect(step).toBeCloseTo(ENEMY_SPEED / 60, 10));
+    steps.slice(0, -1).forEach((step) => expect(step).toBeCloseTo(ENEMY_WALK_SPEED / 60, 10));
     run(enemy, chef, 10);
     expect(enemy.x).toBeGreaterThan(4.75);
+  });
+
+  it('walks in at the walking gait it is given', () => {
+    const { enemy } = waiting();
+    const gait = { walk: 3, climb: 1.5 };
+    run(enemy, chef, 31, gait);
+    expect(enemy.x).toBeCloseTo(0.5 + gait.walk * TICK_SECONDS, 10);
   });
 
   it('stands still on the walkway while it is stunned', () => {

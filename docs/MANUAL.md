@@ -398,6 +398,15 @@ contextBridge.exposeInMainWorld('xantar', {
 4. Cuando han **quedado quietos** en un plato todos los ingredientes que acaban en él (el destino se calcula al cargar el nivel), la hamburguesa se completa (+400 puntos y +1 pimienta). Al completar todos los platos se sube de nivel.
 5. Cada ingrediente da 50 puntos al terminar su caída; aplastar enemigos da 100 x combo.
 6. **Enemigos montados.** Cuando el chef suelta un ingrediente, los enemigos que están sobre él (en la plataforma de su fila, dentro de sus casillas y no en una escalera; aturdidos o no; `isStandingOn` en `riders.ts`) quedan montados: bajan con él sin andar, no se aplastan ni quitan vidas. El ingrediente baja `1 + 2n` soportes con `n` enemigos (`EXTRA_SUPPORTS_PER_RIDER`), como el original: en cada piso intermedio se para `RIDER_STOP_TICKS` (fase `stopped`) y sigue, golpeando lo que encuentra; el plato termina la caída. Al quedar quieto, los montados salen del tablero y, a los 150 ticks, vuelven en la plataforma de la fila donde se ha quedado el ingrediente, en su misma `x` (si acabó en el plato, en la plataforma más baja por encima del plato), como en el original; se conceden 500 puntos por el primero, doblando con cada uno más (`GameStats.registerRiders`, sin combo), con el evento `ridersDropped`. Si el chef pierde una vida durante el viaje, vuelven a su sitio y no hay bonificación.
+7. **Velocidades.** Son las del original (`src/sim/rules.ts`), medidas en una segunda grabación con la misma escala que las caídas (un píxel del original son 2 unidades y los segundos se conservan). Ojo al medir: MAME muestra la pantalla de 240×240 con proporción 4:3, así que en el recorte cuadrado habitual las distancias horizontales hay que multiplicarlas por 4/3. Los enemigos van a 5/8 del chef y suben a la mitad de lo que andan; `Enemy.step` recibe en cada tick su paso (`EnemyGait`: `walk` y `climb`), que le da `Simulation`, y lo usa también para entrar por la pasarela. Las medidas y el método están en el diseño del cambio `is43-difficulty-speed`.
+
+   | Movimiento                       | Constante           | Unidades/s |
+   | -------------------------------- | ------------------- | ---------- |
+   | Chef andando                     | `CHEF_SPEED`        | 86         |
+   | Chef en una escalera             | `CLIMB_SPEED`       | 43         |
+   | Enemigo andando y entrando       | `ENEMY_WALK_SPEED`  | 54         |
+   | Enemigo en una escalera          | `ENEMY_CLIMB_SPEED` | 27         |
+   | Ingrediente cayendo              | `FALL_SPEED`        | 113        |
 
 **Controles**:
 

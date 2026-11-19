@@ -140,6 +140,8 @@ disconnected. The pause menu lets you resume or quit to the main menu.
 - A board starts empty: the enemies **walk in one by one from the sides** of
   the screen, along short walkways at the ends of some floors, and come back
   the same way after you lose a life.
+- They are slower than you, as in the original: they walk at about five eighths
+  of your pace and climb ladders at half their walking speed.
 - If they touch you, you **lose a life**.
 - You can **crush them** by dropping an ingredient on top of them. An enemy is
   crushed when the falling ingredient reaches it: one that gets out of the way

@@ -6,8 +6,8 @@
 
 ## 2. Velocidades del original
 
-- [ ] 2.1 En `src/sim/rules.ts`, poner `CHEF_SPEED = fromPx(86)` y `CLIMB_SPEED = fromPx(43)` y sustituir `ENEMY_SPEED` por `ENEMY_WALK_SPEED = fromPx(54)` y `ENEMY_CLIMB_SPEED = fromPx(27)`; hacer que `Enemy.step(chef, rng, gait)` ande y entre por la pasarela a `gait.walk` y suba a `gait.climb`, y que `Simulation` le pase por ahora el paso base; actualizar las pruebas de `Chef`, `Enemy`, `riders`, `crush` y de reglas que suponen las velocidades antiguas para que usen las constantes; verificar con pruebas de `Chef` (86 unidades en 60 ticks andando, 43 subiendo) y de `Enemy` (anda y entra a `gait.walk`, sube a `gait.climb`) y `npm run test`
-- [ ] 2.2 Documentar las velocidades nuevas en `docs/MANUAL.md` (§8.5, con la tabla de medidas y la escala horizontal 4:3 de la grabación) y en `README.md` ("Enemies": suben las escaleras más despacio de lo que andan); verificar con `npm run format:check` y las comprobaciones de entrega
+- [x] 2.1 En `src/sim/rules.ts`, poner `CHEF_SPEED = fromPx(86)` y `CLIMB_SPEED = fromPx(43)` y sustituir `ENEMY_SPEED` por `ENEMY_WALK_SPEED = fromPx(54)` y `ENEMY_CLIMB_SPEED = fromPx(27)`; hacer que `Enemy.step(chef, rng, gait)` ande y entre por la pasarela a `gait.walk` y suba a `gait.climb`, y que `Simulation` le pase por ahora el paso base; actualizar las pruebas de `Chef`, `Enemy`, `riders`, `crush` y de reglas que suponen las velocidades antiguas para que usen las constantes; verificar con pruebas de `Chef` (86 unidades en 60 ticks andando, 43 subiendo) y de `Enemy` (anda y entra a `gait.walk`, sube a `gait.climb`) y `npm run test`
+- [x] 2.2 Documentar las velocidades nuevas en `docs/MANUAL.md` (§8.5, con la tabla de medidas y la escala horizontal 4:3 de la grabación) y en `README.md` ("Enemies": suben las escaleras más despacio de lo que andan); verificar con `npm run format:check` y las comprobaciones de entrega
 
 ## 3. Dificultad y ritmo de los enemigos
 

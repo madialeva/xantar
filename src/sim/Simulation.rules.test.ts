@@ -76,16 +76,32 @@ describe('Simulation: stomping and crushing enemies', () => {
     ]
   });
 
+  /** Walks the chef left until `done` holds for the events so far, then `extra` ticks more. */
+  const walkLeftUntil = (
+    sim: Simulation,
+    done: (events: readonly SimEvent[]) => boolean,
+    extra = 0
+  ): SimEvent[] => {
+    const events: SimEvent[] = [];
+    for (let i = 0; i < 300 && !done(events); i++) events.push(...run(sim, 1, { left: true }));
+    events.push(...run(sim, extra, { left: true }));
+    return events;
+  };
+  const triggered = (events: readonly SimEvent[]): boolean =>
+    ofType(events, 'ingredientsTriggered').length > 0;
+
   it('activates an ingredient only after the chef has stepped on all its segments', () => {
     const sim = create(crushGrid);
-    const events = run(sim, 25, { left: true });
+    const events = walkLeftUntil(sim, (so) => ofType(so, 'segmentStomped').length === 2);
     expect(ofType(events, 'segmentStomped').map((event) => event.segment)).toEqual([3, 2]);
     expect(ofType(events, 'ingredientsTriggered')).toHaveLength(0);
+    const rest = walkLeftUntil(sim, triggered);
+    expect(ofType(rest, 'segmentStomped').map((event) => event.segment)).toEqual([1, 0]);
   });
 
   it('crushes consecutive enemies with a growing combo', () => {
     const sim = create(crushGrid);
-    const events = run(sim, 50, { left: true });
+    const events = walkLeftUntil(sim, (so) => ofType(so, 'enemySquashed').length === 2);
     expect(ofType(events, 'ingredientsTriggered')).toHaveLength(1);
     const crushed = ofType(events, 'enemySquashed');
     expect(crushed.map((event) => [event.points, event.combo])).toEqual([
@@ -169,7 +185,7 @@ describe('Simulation: stomping and crushing enemies', () => {
 
   it('respawns the crushed enemies after the respawn delay at a spawn marker', () => {
     const sim = create(crushGrid);
-    run(sim, 50, { left: true });
+    walkLeftUntil(sim, (so) => ofType(so, 'enemySquashed').length === 2);
     const events = run(sim, 160);
     expect(ofType(events, 'enemyRespawned')).toHaveLength(2);
     expect(sim.enemies.every((enemy) => enemy.active)).toBe(true);

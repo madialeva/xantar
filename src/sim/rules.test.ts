@@ -12,7 +12,8 @@ import {
   DECISION_MAX_TICKS,
   DECISION_MIN_TICKS,
   EDGE_MARGIN,
-  ENEMY_SPEED,
+  ENEMY_CLIMB_SPEED,
+  ENEMY_WALK_SPEED,
   FALL_SPEED,
   INGREDIENT_THICKNESS,
   LADDER_GRAB_DISTANCE,
@@ -34,10 +35,11 @@ describe('rules', () => {
     expect(CELL_UNITS).toBe(16);
   });
 
-  it('converts the speeds of the proof of concept to tiles per second exactly', () => {
-    expect(CHEF_SPEED * PX_PER_TILE).toBe(115);
-    expect(CLIMB_SPEED * PX_PER_TILE).toBe(80);
-    expect(ENEMY_SPEED * PX_PER_TILE).toBe(68);
+  it('keeps the speeds measured in the original game, enemies at 5/8 of the chef', () => {
+    expect(CHEF_SPEED * PX_PER_TILE).toBe(86);
+    expect(CLIMB_SPEED * PX_PER_TILE).toBe(43);
+    expect(ENEMY_WALK_SPEED * PX_PER_TILE).toBe(54);
+    expect(ENEMY_CLIMB_SPEED * PX_PER_TILE).toBe(27);
   });
 
   it('converts the pixel thresholds to tiles exactly', () => {
@@ -79,7 +81,8 @@ describe('rules', () => {
 
   it('advances less per tick than the alignment window, so ladders cannot be skipped', () => {
     expect(CLIMB_SPEED * TICK_SECONDS).toBeLessThan(2 * ARRIVAL_THRESHOLD);
-    expect(ENEMY_SPEED * TICK_SECONDS).toBeLessThan(2 * ARRIVAL_THRESHOLD);
+    expect(ENEMY_WALK_SPEED * TICK_SECONDS).toBeLessThan(2 * ARRIVAL_THRESHOLD);
+    expect(ENEMY_CLIMB_SPEED * TICK_SECONDS).toBeLessThan(2 * ARRIVAL_THRESHOLD);
     expect(CHEF_SPEED * TICK_SECONDS).toBeLessThan(2 * ARRIVAL_THRESHOLD);
   });
 });

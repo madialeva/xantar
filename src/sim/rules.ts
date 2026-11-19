@@ -10,9 +10,10 @@ const fromPx = (pixels: number): number => pixels / CELL_UNITS;
 const fromMs = (milliseconds: number): number =>
   Math.round((milliseconds * TICKS_PER_SECOND) / 1000);
 
-export const CHEF_SPEED = fromPx(115);
-export const CLIMB_SPEED = fromPx(80);
-export const ENEMY_SPEED = fromPx(68);
+export const CHEF_SPEED = fromPx(86);
+export const CLIMB_SPEED = fromPx(43);
+export const ENEMY_WALK_SPEED = fromPx(54);
+export const ENEMY_CLIMB_SPEED = fromPx(27);
 
 export const ARRIVAL_THRESHOLD = fromPx(3);
 export const EDGE_MARGIN = fromPx(12);

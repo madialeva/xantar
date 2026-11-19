@@ -26,6 +26,12 @@ describe('Chef walking', () => {
     expect(chef.isMoving).toBe(true);
   });
 
+  it('walks 86 units in a second, the speed of the original', () => {
+    const chef = chefAt(5, 1);
+    run(chef, press({ right: true }), 60);
+    expect(chef.x).toBeCloseTo(1 + 86 / 16, 9);
+  });
+
   it('faces left when walking left', () => {
     const chef = chefAt(5, 4);
     run(chef, press({ left: true }), 10);
@@ -61,6 +67,15 @@ describe('Chef walking', () => {
 });
 
 describe('Chef on ladders', () => {
+  it('climbs 43 units in a second, half its walking speed', () => {
+    const chef = chefAt(5, 3.5);
+    run(chef, press({ up: true }), 1);
+    const y = chef.y;
+    run(chef, press({ up: true }), 60);
+    expect(y - chef.y).toBeCloseTo(43 / 16, 9);
+    expect(CLIMB_SPEED * 2).toBe(CHEF_SPEED);
+  });
+
   it('centers on a nearby ladder when up is pressed and does not move that tick', () => {
     const chef = chefAt(5, 3.8);
     run(chef, press({ up: true }), 1);
@@ -120,7 +135,7 @@ describe('Chef on ladders', () => {
 
   it('ignores lateral input while on the ladder', () => {
     const chef = chefAt(5, 3.5);
-    run(chef, press({ up: true }), 15);
+    run(chef, press({ up: true }), 25);
     run(chef, press({ left: true, up: true }), 10);
     expect(chef.x).toBe(3.5);
     expect(chef.isClimbing).toBe(true);
@@ -208,7 +223,7 @@ describe('Chef stepping off a ladder', () => {
   it('ignores lateral input far from a platform', () => {
     const chef = onFloors(5, 3.5);
     run(chef, press({ up: true }), 1, nav);
-    run(chef, press({ up: true }), 12, nav);
+    run(chef, press({ up: true }), 22, nav);
     const y = chef.y;
     run(chef, press({ left: true }), 10, nav);
     expect([chef.x, chef.y, chef.isClimbing]).toEqual([3.5, y, true]);
