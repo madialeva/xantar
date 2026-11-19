@@ -111,18 +111,27 @@ Alternativas descartadas:
 - Guardar el orden de pisado en lugar de la profundidad. Da lo mismo, pero
   obliga a la vista a calcular la rampa; la profundidad ya es lo que se dibuja.
 
-### 2. Un escalón son 2 unidades
+### 2. Un escalón son 2 unidades, dibujados como una pendiente continua
 
-`IngredientView` baja cada segmento `sink · STOMP_STEP`, con `STOMP_STEP = 2`
-(1 px del original). Con cuatro segmentos la rampa llega a 6 unidades en el
-primero pisado (hoy 3); con tres, a 4, y con dos, a 2. Se retira
-`STOMP_DEPTH`. Como la caída ya no da los segmentos como pisados, el
+Cada segmento queda `sink · STOMP_STEP` unidades por debajo de su sitio, con
+`STOMP_STEP = 2` (1 px del original). Con cuatro segmentos la rampa llega a 6
+unidades en el primero pisado (hoy 3); con tres, a 4, y con dos, a 2. Se
+retira `STOMP_DEPTH`. Como la caída ya no da los segmentos como pisados, el
 ingrediente cae plano.
 
-Alternativa descartada: girar cada segmento para que la rampa sea una línea
-continua. Los giros abren huecos o solapes en las uniones, y el original
-también baja por escalones; a 2 unidades por segmento de 16 se lee como una
-pendiente.
+En el original cada escalón es 1 px y la rampa se lee como una pendiente. Con
+el arte a alta resolución, los escalones de 2 unidades se ven como cortes
+verticales en la hoja de arte. Por eso cada segmento se dibuja girado: el borde
+entre dos segmentos queda a la media de sus profundidades, el centro de cada
+uno a la media de sus dos bordes y su giro es la pendiente entre ellos (unos 4°
+o 7°). Los segmentos girados se dibujan media unidad más anchos por cada lado
+para que no se abra una rendija en las uniones, y como el tramo central se
+repite sin costuras, el solape no se nota. Un segmento sin pisar junto a uno
+pisado se inclina un poco hacia él; en el original cambia de escalón en ese
+borde, pero la diferencia es de medio píxel.
+
+Alternativa descartada: los escalones sin girar (la primera versión de este
+cambio). Se veían como una escalera, que es lo que el autor quería evitar.
 
 ### 3. El arco es solo dibujo
 
@@ -137,9 +146,11 @@ En un ingrediente de tres o más segmentos, la vista baja los dos extremos
 
 Con dos segmentos no hay centro y no se arquea.
 
-La cuenta de alturas de los segmentos (escalones, arco) va en una función pura
-en el módulo de la vista, `segmentOffsets(snapshot, arched)`, que se prueba con
-Vitest sin canvas. `IngredientView` decide `arched` (fase o plazo tras
+El arco se dibuja con los mismos giros, así que también es una curva suave.
+
+La cuenta de la pose de cada segmento (altura, giro y ancho) va en una función
+pura de la vista, `segmentPoses(snapshot, arched)` en
+`src/objects/segmentPoses.ts`, que se prueba con Vitest sin canvas. `IngredientView` decide `arched` (fase o plazo tras
 `touchDown`, con el reloj de la escena) y aplica el resultado.
 
 Alternativa descartada: un estado de "recién aterrizado" en la simulación. Las
@@ -213,8 +224,9 @@ dio el 44 de hoy, y en el juego.
   retomado, volver a pisar sin cambios, profundidad cero al caer, al rebotar,
   en el plato y tras `resetSegments`, e ingredientes de dos y tres segmentos.
 - `IngredientField.test.ts`: el chef cruzando un ingrediente deja la rampa.
-- Prueba de `segmentOffsets`: rampa, plano al caer, arco solo en los extremos
-  y solo con tres o más segmentos.
+- Prueba de `segmentPoses`: plano en reposo y al caer, pendiente continua
+  (cada borde coincide con el del vecino), sentido del giro, solape de los
+  segmentos girados y arco solo con tres o más segmentos.
 - La prueba de determinismo incluye `sink` en su resumen.
 - Las pruebas que fijan los grosores (`rules.test.ts`, `IngredientField.test.ts`
   con 7,4 + 8,3) pasan a los valores nuevos; las del nivel clásico (cadena de

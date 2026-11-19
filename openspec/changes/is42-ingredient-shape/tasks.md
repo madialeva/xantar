@@ -12,8 +12,8 @@
 
 ## 3. Rampa, caída plana y arco en la vista
 
-- [ ] 3.1 Escribir la función pura `segmentOffsets(snapshot, arched)` junto a `IngredientView` (`STOMP_STEP = 2` unidades por escalón de `sink`; `ARCH_DEPTH = 2` en los extremos si `arched` y el ingrediente tiene tres o más segmentos) con su prueba de Vitest (rampa, plano al caer, arco solo en los extremos, sin arco con dos segmentos); verificar con `npm run test`
-- [ ] 3.2 Usarla en `IngredientView.sync`, con `arched` cuando `phase` es `bouncing` o no han pasado `TOUCH_DOWN_ARCH_MS = 230` ms desde `touchDown` (reloj de la escena), y retirar `STOMP_DEPTH`; verificar con las comprobaciones de entrega y `npm run smoke`, mirando en las capturas un ingrediente a medio pisar
+- [x] 3.1 Escribir la función pura `segmentPoses(snapshot, arched)` en `src/objects/segmentPoses.ts` (`STOMP_STEP = 2` unidades por escalón de `sink`; `ARCH_DEPTH = 2` en los extremos si `arched` y el ingrediente tiene tres o más segmentos; cada segmento girado para que sus bordes coincidan con los de sus vecinos y media unidad más ancho por lado si está girado) con su prueba de Vitest (plano en reposo, pendiente continua, sentido del giro, solape, arco solo con tres o más segmentos); verificar con `npm run test`
+- [x] 3.2 Usarla en `IngredientView.sync` (altura, giro y ancho de cada segmento, respetando la escala del nivel de render), con `arched` cuando `phase` es `bouncing` o no han pasado `TOUCH_DOWN_ARCH_MS = 230` ms desde `touchDown` (reloj de la escena), y retirar `STOMP_DEPTH`; verificar con las comprobaciones de entrega y `npm run smoke`, mirando un ingrediente a medio pisar en la hoja de arte (`/tools/art-sheet.html`, que muestra uno con la rampa 2·1·0·0)
 
 ## 4. Arte de los ingredientes: pan de arriba en cúpula, lechuga y carne
 
