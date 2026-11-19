@@ -35,6 +35,11 @@ export interface IngredientSnapshot extends PositionSnapshot {
   readonly row: number;
   readonly phase: IngredientPhase;
   readonly stomped: readonly boolean[];
+  /**
+   * How many steps each segment has sunk: a newly stomped one sinks one step and every one
+   * stomped before it one more, so a half-stomped ingredient slopes. Zero unless it rests.
+   */
+  readonly sink: readonly number[];
   readonly stackSlot: number | null;
 }
 
@@ -64,34 +69,41 @@ interface IngredientState {
   readonly phase: IngredientPhase;
   readonly support: Support | undefined;
   readonly stomped: readonly boolean[];
+  readonly sink: readonly number[];
   step(context: StateContext): IngredientState | undefined;
 }
 
 const FALL_STEP = FALL_SPEED * TICK_SECONDS;
 const RISE_STEP = BOUNCE_HEIGHT / BOUNCE_RISE_TICKS;
 
-const filled = (width: number, value: boolean): readonly boolean[] =>
+const filled = <T>(width: number, value: T): readonly T[] =>
   Array.from({ length: width }, () => value);
 
 /**
- * Ingredient resting on a platform; remembers which segments the chef has stomped.
+ * Ingredient resting on a platform; remembers how far the chef has stomped each segment down.
  */
 class IdleState implements IngredientState {
   readonly phase = 'idle';
   readonly support = undefined;
-  readonly #stomped: boolean[];
+  #sink: readonly number[];
 
   constructor(width: number) {
-    this.#stomped = [...filled(width, false)];
+    this.#sink = filled(width, 0);
+  }
+
+  get sink(): readonly number[] {
+    return this.#sink;
   }
 
   get stomped(): readonly boolean[] {
-    return this.#stomped;
+    return this.#sink.map((steps) => steps > 0);
   }
 
   stomp(segment: number): boolean {
-    if (this.#stomped[segment] === undefined || this.#stomped[segment]) return false;
-    this.#stomped[segment] = true;
+    if (this.#sink[segment] !== 0) return false;
+    this.#sink = this.#sink.map((steps, index) =>
+      index === segment ? 1 : steps > 0 ? steps + 1 : 0
+    );
     return true;
   }
 
@@ -123,12 +135,14 @@ class FallingState implements IngredientState {
   readonly phase = 'falling';
   readonly support: Support;
   readonly stomped: readonly boolean[];
+  readonly sink: readonly number[];
   readonly #descent: Descent;
   readonly #settling: boolean;
 
   constructor(width: number, descent: Descent, settling = false) {
     this.support = descent.support;
     this.stomped = filled(width, true);
+    this.sink = filled(width, 0);
     this.#descent = descent;
     this.#settling = settling;
   }
@@ -161,6 +175,7 @@ class BouncingState implements IngredientState {
   readonly phase = 'bouncing';
   readonly support: Support;
   readonly stomped: readonly boolean[];
+  readonly sink: readonly number[];
   readonly #descent: Descent;
   readonly #thenSettle: boolean;
   #elapsed = 0;
@@ -168,6 +183,7 @@ class BouncingState implements IngredientState {
   constructor(width: number, descent: Descent, thenSettle: boolean) {
     this.support = descent.support;
     this.stomped = filled(width, true);
+    this.sink = filled(width, 0);
     this.#descent = descent;
     this.#thenSettle = thenSettle;
   }
@@ -188,11 +204,13 @@ class StoppedState implements IngredientState {
   readonly phase = 'stopped';
   readonly support = undefined;
   readonly stomped: readonly boolean[];
+  readonly sink: readonly number[];
   readonly #supportsLeft: number;
   #elapsed = 0;
 
   constructor(width: number, supportsLeft: number) {
     this.stomped = filled(width, true);
+    this.sink = filled(width, 0);
     this.#supportsLeft = supportsLeft;
   }
 
@@ -220,10 +238,12 @@ class StackedState implements IngredientState {
   readonly phase = 'stacked';
   readonly support: Support;
   readonly stomped: readonly boolean[];
+  readonly sink: readonly number[];
 
   constructor(width: number, support: Support) {
     this.support = support;
     this.stomped = filled(width, false);
+    this.sink = filled(width, 0);
   }
 
   step(): undefined {
@@ -296,6 +316,10 @@ export class Ingredient extends MovingEntity implements IngredientSnapshot {
 
   get stomped(): readonly boolean[] {
     return this.#state.stomped;
+  }
+
+  get sink(): readonly number[] {
+    return this.#state.sink;
   }
 
   get allStomped(): boolean {

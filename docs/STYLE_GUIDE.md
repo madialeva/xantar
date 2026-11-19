@@ -74,20 +74,28 @@ Lo generan los scripts de `tools/blender/` (ver el manual del desarrollador,
   para su sombra de contacto.
 - **Grosor visible** para el apilado en el plato (`INGREDIENT_THICKNESS`, en
   `src/sim/rules.ts`, porque la simulación lo usa para apilar y para saber
-  cuándo un ingrediente golpea a otro): pan de abajo 7,4, carne 8,3, lechuga 4,8
-  y pan de arriba 13. Si cambia la forma de un ingrediente, se recalcula con
-  `tmp/blender/metrics.json`. Al pasar a casillas de 16 el ingrediente es menos
-  profundo, pero su cara delantera mide lo mismo, así que estos grosores no
-  cambian.
+  cuándo un ingrediente golpea a otro): pan de abajo 11, carne 12, lechuga 8 y
+  pan de arriba 13, cerca de las proporciones del original (unos 7 px cada uno;
+  la lechuga, 5–6). En los sólidos es su altura (`support` en
+  `tmp/blender/metrics.json`) menos la unidad del margen de la sombra; si cambia
+  la forma de un ingrediente, se recalcula así y se comprueba apilando una
+  hamburguesa.
 - Un ingrediente mide 64 de ancho (cuatro casillas, dos cocineros, como en el
   original) y sus extremos redondeados caben en el primer y el último tramo.
+- La **carne** es de un marrón a la brasa claro y cálido (luminancia media de
+  la imagen entre 80 y 100), para que se reconozca sobre el fondo del tablero
+  sin confundirse con los panes; las marcas de parrilla siguen oscuras.
+- Al pisarlo, el juego **inclina** cada tramo para que el ingrediente forme una
+  pendiente continua, y lo dibuja un poco más ancho para tapar las juntas: el
+  arte no necesita nada especial para eso, salvo que los extremos de cada tramo
+  encajen con el central.
 
 | Ingrediente | Imagen | Forma |
 |---|---|---|
-| `bunTop` | 16×18 | cúpula de 13,5 de alto con semillas de sésamo |
-| `lettuce` | 16×12 | dos hojas posadas con el borde rizado colgando |
-| `patty` | 16×14 | disco de 9,2 de alto con borde irregular y marcas de parrilla |
-| `bunBottom` | 16×14 | base más ancha en el corte, con la miga a la vista |
+| `bunTop` | 16×18 | cúpula de 13,5 de alto con semillas de sésamo que, también vista de frente, baja en el primer y el último tramo hasta un 25 % de su altura en la punta |
+| `lettuce` | 16×14 | dos hojas posadas con el borde rizado colgando, la de arriba a 10,5 |
+| `patty` | 16×17 | disco de 13 de alto con borde irregular y marcas de parrilla |
+| `bunBottom` | 16×16 | base de 12 de alto, más ancha en el corte, con la miga a la vista |
 
 ### 2.3 Personajes
 

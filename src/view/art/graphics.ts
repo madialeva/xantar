@@ -9,9 +9,9 @@ const size = (width: number, height: number): GraphicSize => ({ width, height })
 
 export const INGREDIENT_HEIGHTS: Readonly<Record<IngredientKind, number>> = {
   bunTop: 18,
-  lettuce: 12,
-  patty: 14,
-  bunBottom: 14
+  lettuce: 14,
+  patty: 17,
+  bunBottom: 16
 };
 
 const ingredient = <K extends IngredientKind>(kind: K) => {

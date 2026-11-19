@@ -4,24 +4,27 @@ import type { IngredientSnapshot } from '../sim';
 import type { ArtFactory } from '../view/raster/ArtFactory';
 import { INGREDIENT_HEIGHTS, segmentParts } from '../view/art/graphics';
 import { interpolatedRow } from './interpolation';
+import { segmentPoses } from './segmentPoses';
 
 const PLATE_TOP = 5;
-const STOMP_DEPTH = 3;
-const TOUCH_DOWN = { depth: 8, ms: 60 };
+const TOUCH_DOWN = { depth: 8, ms: 60, archMs: 230 };
 
 /**
- * Phaser view of an ingredient: draws its segments with the game graphics (lowered when
- * stomped) at the height of its base given by the simulation, interpolated between ticks.
- * Its origin is the bottom centre; touching a floor sinks it for a moment.
+ * Phaser view of an ingredient: draws its segments with the game graphics (sloping as they are
+ * stomped) at the height of its base given by the simulation, interpolated between ticks. Its
+ * origin is the bottom centre; it arches while it bounces and for a moment after touching a floor.
  */
 export default class IngredientView extends Phaser.GameObjects.Container {
   readonly #height: number;
   readonly #body: Phaser.GameObjects.Container;
   readonly #segments: Phaser.GameObjects.Image[] = [];
+  readonly #artScale: number;
+  #archUntil = Number.NEGATIVE_INFINITY;
 
   constructor(scene: Phaser.Scene, art: ArtFactory, ingredient: IngredientSnapshot) {
     super(scene, ((ingredient.left + ingredient.right) / 2) * TILE, 0);
     this.#height = INGREDIENT_HEIGHTS[ingredient.kind];
+    this.#artScale = art.scale;
     this.#body = scene.add.container(0, 0);
     segmentParts(ingredient.width).forEach((part, index) => {
       const offset = (index + 0.5 - ingredient.width / 2) * TILE;
@@ -39,8 +42,14 @@ export default class IngredientView extends Phaser.GameObjects.Container {
   sync(ingredient: IngredientSnapshot, alpha: number): void {
     const surface = ingredient.stackSlot === null ? PLATFORM_TOP : PLATE_TOP;
     this.setY(platformY(interpolatedRow(ingredient, alpha)) - surface);
+    const arched = ingredient.phase === 'bouncing' || this.scene.time.now < this.#archUntil;
+    const poses = segmentPoses(ingredient, arched);
     this.#segments.forEach((segment, index) => {
-      segment.setY(-this.#height / 2 + (ingredient.stomped[index] ? STOMP_DEPTH : 0));
+      const pose = poses[index];
+      segment
+        .setY(-this.#height / 2 + (pose?.offset ?? 0))
+        .setRotation(pose?.angle ?? 0)
+        .setScale(this.#artScale * (pose?.widthScale ?? 1), this.#artScale);
     });
   }
 
@@ -49,8 +58,9 @@ export default class IngredientView extends Phaser.GameObjects.Container {
     return { x: this.x + (segment?.x ?? 0), y: this.y - this.#height };
   }
 
-  /** The ingredient has touched a floor: it sinks for a moment and comes back up. */
+  /** The ingredient has touched a floor: it sinks for a moment, comes back up and arches. */
   touchDown(): void {
+    this.#archUntil = this.scene.time.now + TOUCH_DOWN.archMs;
     this.scene.tweens.killTweensOf(this.#body);
     this.#body.setY(TOUCH_DOWN.depth);
     this.scene.tweens.add({

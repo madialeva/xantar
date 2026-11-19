@@ -134,6 +134,65 @@ describe('Ingredient segments', () => {
   });
 });
 
+describe('Ingredient sink', () => {
+  const sinkAfter = (segments: readonly number[], width = 4): readonly number[] => {
+    const ingredient = new Ingredient(spec(width), new FakeHost());
+    segments.forEach((segment) => ingredient.stomp(segment));
+    return ingredient.sink;
+  };
+
+  it('starts level', () => {
+    expect(sinkAfter([])).toEqual([0, 0, 0, 0]);
+  });
+
+  it('slopes down towards where the chef started, left to right', () => {
+    expect(sinkAfter([0])).toEqual([1, 0, 0, 0]);
+    expect(sinkAfter([0, 1])).toEqual([2, 1, 0, 0]);
+    expect(sinkAfter([0, 1, 2])).toEqual([3, 2, 1, 0]);
+  });
+
+  it('slopes down towards where the chef started, right to left', () => {
+    expect(sinkAfter([3, 2, 1])).toEqual([0, 1, 2, 3]);
+  });
+
+  it('sinks the stomped segments one more step for each new one, from whichever side', () => {
+    expect(sinkAfter([0, 1, 3])).toEqual([3, 2, 0, 1]);
+  });
+
+  it('does not change when a stomped segment is stomped again', () => {
+    expect(sinkAfter([0, 1, 0, 1])).toEqual([2, 1, 0, 0]);
+  });
+
+  it('slopes the same way with fewer segments', () => {
+    expect(sinkAfter([0, 1], 3)).toEqual([2, 1, 0]);
+    expect(sinkAfter([1], 2)).toEqual([0, 1]);
+  });
+
+  it('is level again when it has nowhere to fall', () => {
+    const ingredient = new Ingredient(spec(), new FakeHost());
+    [0, 1, 2].forEach((segment) => ingredient.stomp(segment));
+    ingredient.resetSegments();
+    expect(ingredient.sink).toEqual([0, 0, 0, 0]);
+  });
+
+  it('is level while it falls, bounces, stops with riders and once stacked', () => {
+    const host = new FakeHost();
+    host.below.push(plate);
+    const ingredient = new Ingredient(spec(), host);
+    stompAll(ingredient);
+    ingredient.fall(floor(8), 2);
+    const phases = new Set<IngredientPhase>();
+    let deepest = 0;
+    while (ingredient.phase !== 'stacked') {
+      tick(ingredient);
+      phases.add(ingredient.phase);
+      deepest = Math.max(deepest, ...ingredient.sink);
+    }
+    expect([...phases].sort()).toEqual(['bouncing', 'falling', 'stacked', 'stopped']);
+    expect(deepest).toBe(0);
+  });
+});
+
 describe('Ingredient position', () => {
   it('starts idle on its platform, at the centre of its casillas', () => {
     const ingredient = new Ingredient(spec(), new FakeHost());

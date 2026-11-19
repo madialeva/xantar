@@ -29,9 +29,9 @@ export const EXTRA_SUPPORTS_PER_RIDER = 2;
 /** How thick each ingredient is: where the next one rests on it, on a floor or in a burger. */
 export const INGREDIENT_THICKNESS: Readonly<Record<IngredientKind, number>> = {
   bunTop: fromPx(13),
-  lettuce: fromPx(4.8),
-  patty: fromPx(8.3),
-  bunBottom: fromPx(7.4)
+  lettuce: fromPx(8),
+  patty: fromPx(12),
+  bunBottom: fromPx(11)
 };
 
 export const READY_TICKS = fromMs(1500);
