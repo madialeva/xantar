@@ -25,7 +25,7 @@
 ## 5. Integración
 
 - [x] 5.1 Ejecutar las comprobaciones de entrega completas (`npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build`), `npm run smoke` y `openspec validate is42-ingredient-shape --strict`; verificar que todo termina sin errores
-- [ ] 5.2 Jugar en `npm run dev` comparando con la grabación: rampa al cruzar en los dos sentidos, caída plana, arco al rebotar y al tocar un piso, pan de arriba con forma de hamburguesa también inclinado, lechuga, carne y pan de abajo más altos, con la carne bien visible sobre el fondo y distinta del pan de abajo en el plato (lo verifica el autor)
+- [x] 5.2 Jugar en `npm run dev` comparando con la grabación: rampa al cruzar en los dos sentidos, caída plana, arco al rebotar y al tocar un piso, pan de arriba con forma de hamburguesa también inclinado, lechuga, carne y pan de abajo más altos, con la carne bien visible sobre el fondo y distinta del pan de abajo en el plato (lo verifica el autor)
 
 ## Workflow follow-up
 
