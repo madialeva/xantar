@@ -6,9 +6,9 @@
 
 ## 2. Profundidad de los segmentos en la simulación
 
-- [ ] 2.1 En `Ingredient`, cambiar `IdleState` para guardar la profundidad de cada segmento (`#sink`): pisar uno sin pisar sube uno los ya pisados y pone el nuevo a 1; derivar `stomped` de `sink > 0`; añadir `sink` a `IngredientSnapshot`, a cero en los demás estados y tras `resetSegments`; verificar con pruebas de `Ingredient.test.ts` (rampa 3·2·1·0 y 0·1·2·3, recorrido retomado 3·2·0·1, volver a pisar sin cambios, cero al caer, al rebotar, en el plato y tras reiniciar, ingredientes de dos y tres segmentos) y `npm run test`
-- [ ] 2.2 Añadir a `IngredientField.test.ts` el chef que cruza tres segmentos y deja la rampa, e incluir `sink` en el resumen de `Simulation.determinism.test.ts`; verificar con `npm run test`
-- [ ] 2.3 Documentar la profundidad de los segmentos en `docs/MANUAL.md` (§8.5, mecánica principal, punto 1, y el modelo de `Ingredient`) y en `README.md` ("Ingredients and falls": el ingrediente se inclina al pisarlo); verificar con `npm run format:check` y las comprobaciones de entrega
+- [x] 2.1 En `Ingredient`, cambiar `IdleState` para guardar la profundidad de cada segmento (`#sink`): pisar uno sin pisar sube uno los ya pisados y pone el nuevo a 1; derivar `stomped` de `sink > 0`; añadir `sink` a `IngredientSnapshot`, a cero en los demás estados y tras `resetSegments`; verificar con pruebas de `Ingredient.test.ts` (rampa 3·2·1·0 y 0·1·2·3, recorrido retomado 3·2·0·1, volver a pisar sin cambios, cero al caer, al rebotar, en el plato y tras reiniciar, ingredientes de dos y tres segmentos) y `npm run test`
+- [x] 2.2 Añadir a `IngredientField.test.ts` el chef que cruza tres segmentos y deja la rampa, e incluir `sink` en el resumen de `Simulation.determinism.test.ts`; verificar con `npm run test`
+- [x] 2.3 Documentar la profundidad de los segmentos en `docs/MANUAL.md` (§8.5, mecánica principal, punto 1, y el modelo de `Ingredient`) y en `README.md` ("Ingredients and falls": el ingrediente se inclina al pisarlo); verificar con `npm run format:check` y las comprobaciones de entrega
 
 ## 3. Rampa, caída plana y arco en la vista
 

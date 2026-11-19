@@ -113,6 +113,14 @@ describe('IngredientField stomping', () => {
     expect(ofType(context.events.drain(), 'ingredientsTriggered')).toHaveLength(1);
   });
 
+  it('leaves a slope behind the chef as he walks across an ingredient', () => {
+    const context = create();
+    for (const x of [4.5, 3.9, 3.5, 2.9, 2.5]) context.field.step(chefAt(1, x));
+    expect(context.field.ingredients[0].sink).toEqual([0, 1, 2, 3]);
+    settle(context, 30);
+    expect(context.field.ingredients[0].sink).toEqual([0, 1, 2, 3]);
+  });
+
   it('keeps the stomped segments when the chef walks away and comes back', () => {
     const context = create();
     context.field.step(chefAt(1, 1.5));

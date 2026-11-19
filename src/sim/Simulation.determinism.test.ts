@@ -42,13 +42,7 @@ const stateOf = (sim: Simulation): string =>
     stats: { ...sim.stats },
     chef: [sim.chef.x, sim.chef.y, sim.chef.row, sim.chef.facing],
     enemies: sim.enemies.map((e) => [e.x, e.y, e.row, e.active, e.stunTicksLeft]),
-    ingredients: sim.ingredients.map((i) => [
-      i.row,
-      i.phase,
-      i.y,
-      i.stackSlot,
-      i.stomped.map(Number).join('')
-    ]),
+    ingredients: sim.ingredients.map((i) => [i.row, i.phase, i.y, i.stackSlot, i.sink.join('')]),
     plates: sim.plates.map((p) => [p.landed, p.isComplete])
   });
 

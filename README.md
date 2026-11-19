@@ -119,9 +119,10 @@ disconnected. The pause menu lets you resume or quit to the main menu.
 ### Ingredients and falls
 
 - Every ingredient is made of **segments** (four in the classic level). When the
-  chef **steps on a segment** it is pressed down, and it stays pressed. Press all
-  the segments of an ingredient and it falls one platform down, slowly and at a
-  steady pace, as in the original arcade game.
+  chef **steps on a segment** it is pressed down, and it stays pressed; the
+  segments pressed before it sink a little further, so a half-pressed ingredient
+  tilts. Press all the segments of an ingredient and it falls one platform down,
+  slowly and at a steady pace, as in the original arcade game.
 - When a falling ingredient reaches another one, it **knocks it down too** and
   bounces up for a moment before going on: a chain reaction from the top down
   that only affects the ingredients it actually hits.
