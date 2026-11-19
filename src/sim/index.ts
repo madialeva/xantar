@@ -1,3 +1,4 @@
+export * from './difficulty';
 export * from './entities/Chef';
 export * from './entities/createEnemy';
 export * from './entities/crush';

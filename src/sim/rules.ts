@@ -39,6 +39,18 @@ export const READY_TICKS = fromMs(1500);
 export const DYING_TICKS = fromMs(2000);
 export const LEVEL_CLEAR_TICKS = fromMs(3000);
 
+/**
+ * Pace of the enemies on Normal, as in the original: the factor of each step over their speeds,
+ * one step more every `PACE_STEP_TICKS` of play on a board; from `LATE_PACE_LEVEL` a board
+ * starts on `LATE_PACE_FIRST_STEP`. Easy and Hard keep a steady factor.
+ */
+export const PACE_STEPS: readonly number[] = [1, 1.03, 1.07, 1.25];
+export const PACE_STEP_TICKS = fromMs(21_750);
+export const LATE_PACE_LEVEL = 4;
+export const LATE_PACE_FIRST_STEP = 2;
+export const EASY_PACE = 0.75;
+export const HARD_PACE = 1.25;
+
 export const STUN_TICKS = fromMs(5000);
 export const RESPAWN_TICKS = fromMs(2500);
 export const DECISION_MIN_TICKS = fromMs(500);

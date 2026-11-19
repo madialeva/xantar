@@ -241,7 +241,7 @@ juegos. Los que usamos:
 | Patrón | Idea | Dónde está en Xantar |
 |---|---|---|
 | **State** (estado) | Un objeto cambia de comportamiento según su estado, y cada estado es un objeto propio en lugar de un `switch` gigante | Fases de partida (preparado, jugando, muriendo, nivel completado, fin) en [`src/sim/phases/`](../src/sim/phases/); fases del ingrediente (reposo, esperando, cayendo, apilado) en [`Ingredient.ts`](../src/sim/entities/Ingredient.ts); estados de animación de los personajes en [`states.ts`](../src/view/rigs/states.ts) |
-| **Strategy** (estrategia) | Comportamientos intercambiables detrás de una interfaz | La "mente" de los enemigos, [`EnemyBrain`](../src/sim/entities/EnemyBrain.ts) (`ChaseBrain` persigue al chef por el camino más corto) |
+| **Strategy** (estrategia) | Comportamientos intercambiables detrás de una interfaz | La "mente" de los enemigos, [`EnemyBrain`](../src/sim/entities/EnemyBrain.ts) (`ChaseBrain` persigue al chef por el camino más corto); el ritmo de los enemigos según la dificultad, [`EnemyPace`](../src/sim/difficulty.ts) |
 | **Observer** (observador) | Quien produce algo no sabe quién lo escucha | Los eventos de la simulación (`EventSink`) que la vista escucha; `GameSession` (estado de la partida para el HUD) y `Localization` (cambio de idioma) |
 | **Factory** (fábrica) | Un punto que sabe crear objetos | `createEnemy`, `ArtFactory` (crea imágenes del juego a la escala correcta) |
 | **Command** (orden) | Una acción representada como dato | `SimInput`: la entrada del tick como un objeto inmutable; base de las repeticiones |
@@ -706,6 +706,17 @@ de los personajes que no controla el jugador**, programado con reglas.
 - **Dificultad justa**: la IA no tiene que ser perfecta, tiene que ser
   divertida. En Xantar los enemigos deciden cada cierto tiempo (no en cada
   tick) y a veces se dan la vuelta (20 %), para que se les pueda esquivar.
+- **Curva de dificultad**: cómo cambia la presión sobre el jugador a lo largo
+  de la partida. Suele hacerse cambiando **parámetros** (velocidad, número de
+  enemigos, tiempos), no reglas. En BurgerTime los enemigos van más deprisa
+  cuanto más tarda el jugador en terminar un tablero (un poco a los 21,75 s y
+  a los 43,5 s, y un acelerón a los 65 s), y vuelven a su ritmo al empezar otro
+  tablero o al perder una vida: la prisa empuja a terminar sin castigar al que
+  acaba de morir. Elegir una **dificultad** (Fácil, Normal, Difícil) es elegir
+  otra curva: en Xantar cada una es una Strategy
+  ([`EnemyPace`](../src/sim/difficulty.ts)) que da el factor de velocidad de
+  los enemigos según el nivel y el tiempo jugado; la simulación lleva el reloj
+  y el resto del código no pregunta nunca por la dificultad.
 
 En Xantar: [`NavigationGraph`](../src/sim/nav/NavigationGraph.ts) con
 `shortestPath` (Dijkstra) y la estrategia
@@ -857,7 +868,12 @@ sensación.
   picos (los rebotes) a la vista. Después se llevan las distancias a la escala
   del tablero propio y se conservan los tiempos. Así se midió la caída de los
   ingredientes de Xantar en una partida de BurgerTime, y una kimografía de la
-  simulación permite compararla con la del original.
+  simulación permite compararla con la del original. Las velocidades del chef
+  y de los enemigos se midieron **siguiendo los sprites**: se separa cada
+  personaje por su color en cada fotograma, se sigue de un fotograma al
+  siguiente y se ajusta una recta a cada tramo recto. Cuidado con la
+  proporción de la pantalla: si el emulador la estira (BurgerTime se muestra
+  en 4:3), un píxel no mide lo mismo en horizontal que en vertical.
 - **Las proporciones de un juego de referencia**: el mismo vídeo sirve para
   medir el escenario. Primero se busca la **rejilla**: en un juego de
   recreativa todo está dibujado con caracteres (en BurgerTime, de 8×8
@@ -984,6 +1000,7 @@ sensación.
 | Bloom | Halo de luz alrededor de las zonas brillantes de la imagen |
 | Bones (huesos) | Piezas del esqueleto de un rig que mueven partes del dibujo |
 | Canvas 2D | API de dibujo del navegador por CPU; alternativa a WebGL |
+| Curva de dificultad | Cómo crece la presión sobre el jugador a lo largo de la partida |
 | Determinismo | Mismas entradas y estado inicial, mismo resultado |
 | Draw call | Petición de dibujo de la CPU a la GPU |
 | Easing | Curva que da forma a la velocidad de una animación |

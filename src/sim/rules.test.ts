@@ -15,6 +15,7 @@ import {
   ENEMY_CLIMB_SPEED,
   ENEMY_WALK_SPEED,
   FALL_SPEED,
+  HARD_PACE,
   INGREDIENT_THICKNESS,
   LADDER_GRAB_DISTANCE,
   PEPPER_CLOUD_OFFSET,
@@ -81,8 +82,8 @@ describe('rules', () => {
 
   it('advances less per tick than the alignment window, so ladders cannot be skipped', () => {
     expect(CLIMB_SPEED * TICK_SECONDS).toBeLessThan(2 * ARRIVAL_THRESHOLD);
-    expect(ENEMY_WALK_SPEED * TICK_SECONDS).toBeLessThan(2 * ARRIVAL_THRESHOLD);
-    expect(ENEMY_CLIMB_SPEED * TICK_SECONDS).toBeLessThan(2 * ARRIVAL_THRESHOLD);
+    expect(ENEMY_WALK_SPEED * HARD_PACE * TICK_SECONDS).toBeLessThan(2 * ARRIVAL_THRESHOLD);
+    expect(ENEMY_CLIMB_SPEED * HARD_PACE * TICK_SECONDS).toBeLessThan(2 * ARRIVAL_THRESHOLD);
     expect(CHEF_SPEED * TICK_SECONDS).toBeLessThan(2 * ARRIVAL_THRESHOLD);
   });
 });

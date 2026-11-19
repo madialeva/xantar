@@ -408,6 +408,8 @@ contextBridge.exposeInMainWorld('xantar', {
    | Enemigo en una escalera          | `ENEMY_CLIMB_SPEED` | 27         |
    | Ingrediente cayendo              | `FALL_SPEED`        | 113        |
 
+8. **Dificultad y ritmo de los enemigos.** `Simulation` recibe la dificultad en sus opciones (`difficulty`: `easy`, `normal` o `hard`; Normal si no se indica) y elige con `paceFor` su `EnemyPace` (Strategy, en `src/sim/difficulty.ts`): el factor por el que se multiplican las velocidades de los enemigos. Fácil y Difícil dan un factor fijo (`EASY_PACE`, 0,75; `HARD_PACE`, 1,25). Normal sigue la curva medida en el original (`PACE_STEPS`: 1, 1,03, 1,07 y 1,25), un escalón más cada `PACE_STEP_TICKS` (1305 ticks, 21,75 s) de tiempo de juego del tablero, sin pasar del último; desde el nivel `LATE_PACE_LEVEL` (4) el tablero empieza en el escalón `LATE_PACE_FIRST_STEP` (el tercero). El tiempo de juego lo cuenta `Simulation` (`#playTicks`): solo suma en `playing` y vuelve a cero al empezar el tablero y al volver a jugar tras perder una vida. En cada tick, `enemyGait(pace)` da el paso de los enemigos; `sim.pace` expone el factor del momento.
+
 **Controles**:
 
 | Acción | Tecla |
