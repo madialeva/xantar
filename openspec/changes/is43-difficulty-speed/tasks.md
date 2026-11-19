@@ -24,9 +24,9 @@
 
 ## 5. Opción de dificultad
 
-- [ ] 5.1 Añadir `difficulty` a `PlayerSettings` (Normal por defecto, leído con `isDifficulty`, registro en la versión 1) y `Settings#setDifficulty()`; verificar con `settings.test.ts` (registro sin dificultad, dificultad desconocida, registro dañado, ida y vuelta, aviso a los suscriptores)
-- [ ] 5.2 Añadir `options.difficulty` y `difficulty.easy|normal|hard` a `es.ts` y `en.ts`; poner Dificultad como primera opción de `MenuScene` (← y → en círculo con `cycle`; desplazar `OPTION_ROWS` y el índice al que vuelve el cambio de idioma) y hacer que `GameScene` pase `settings.values.difficulty` a la `Simulation`; verificar con las pruebas de i18n, `npm run lint`, `npm run typecheck`, `npm run smoke` y, en `npm run dev`, que la opción recorre Fácil, Normal y Difícil, se guarda y se aplica a la partida siguiente
-- [ ] 5.3 Documentar la opción en `README.md` ("Starting a game": elegir la dificultad en Options y qué hace cada una) y en `docs/MANUAL.md` (§8.8: ajuste `difficulty`; §9.14 si cambia la receta); verificar con `npm run format:check` y las comprobaciones de entrega
+- [x] 5.1 Añadir `difficulty` a `PlayerSettings` (Normal por defecto, leído con `isDifficulty`, registro en la versión 1) y `Settings#setDifficulty()`; verificar con `settings.test.ts` (registro sin dificultad, dificultad desconocida, registro dañado, ida y vuelta, aviso a los suscriptores)
+- [x] 5.2 Añadir `options.difficulty` y `difficulty.easy|normal|hard` a `es.ts` y `en.ts`; poner Dificultad como primera opción de `MenuScene` (← y → en círculo con `cycle`; desplazar `OPTION_ROWS` y el índice al que vuelve el cambio de idioma) y hacer que `GameScene` pase `settings.values.difficulty` a la `Simulation`; verificar con las pruebas de i18n, `npm run lint`, `npm run typecheck`, `npm run smoke` y, en `npm run dev`, que la opción recorre Fácil, Normal y Difícil, se guarda y se aplica a la partida siguiente
+- [x] 5.3 Documentar la opción en `README.md` ("Starting a game": elegir la dificultad en Options y qué hace cada una) y en `docs/MANUAL.md` (§8.8: ajuste `difficulty`; §9.14 si cambia la receta); verificar con `npm run format:check` y las comprobaciones de entrega
 
 ## 6. Integración
 

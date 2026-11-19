@@ -69,7 +69,8 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(PALETTE.background);
     this.#sim = new Simulation({
       level: loadLevel(parseLevelDocument(classicDocument)),
-      rng: new SeededRng(Date.now())
+      rng: new SeededRng(Date.now()),
+      difficulty: settings.difficulty
     });
     this.#stepper.reset();
     this.#pepperPending = false;

@@ -3,6 +3,7 @@ import { GAME_HEIGHT, GAME_WIDTH, type RenderTier } from '../config';
 import { LANGUAGES } from '../i18n/language';
 import type { ActionReader } from '../input/actions';
 import type { Localization } from '../i18n/Localization';
+import { DIFFICULTIES } from '../sim';
 import { type AudioBus, nextVolume } from '../settings/PlayerSettings';
 import type { Settings } from '../settings/Settings';
 import type { GameAudio } from '../view/audio/GameAudio';
@@ -26,7 +27,7 @@ export interface MenuSceneDependencies {
 
 type Page = 'main' | 'options' | 'controls';
 
-const OPTION_ROWS = { controls: 4, back: 5 } as const;
+const OPTION_ROWS = { language: 1, controls: 5, back: 6 } as const;
 const OPTIONS_STYLE = { titleY: 78, y: 150, spacing: 38, size: 22 } as const;
 
 const cycle = <T>(values: readonly T[], current: T, direction: 1 | -1): T =>
@@ -34,8 +35,8 @@ const cycle = <T>(values: readonly T[], current: T, direction: 1 | -1): T =>
 
 /**
  * Main menu (play, options, best score and, on the desktop, quit) and options page
- * (language, sound and controls), both driven by keyboard or pointer. Options are applied and saved
- * at once.
+ * (difficulty, language, sound and controls), both driven by keyboard or pointer. Options are
+ * applied and saved at once.
  */
 export default class MenuScene extends Phaser.Scene {
   readonly #deps: MenuSceneDependencies;
@@ -153,13 +154,19 @@ export default class MenuScene extends Phaser.Scene {
     });
     return [
       {
+        label: () => localization.t('options.difficulty'),
+        value: () => localization.t(`difficulty.${settings.difficulty}`),
+        change: (direction) =>
+          settings.setDifficulty(cycle(DIFFICULTIES, settings.difficulty, direction))
+      },
+      {
         label: () => localization.t('options.language'),
         value: () => localization.t(`language.${localization.language}`),
         change: (direction) => {
           const language = cycle(LANGUAGES, localization.language, direction);
           settings.setLanguage(language);
           localization.setLanguage(language);
-          this.#show('options', 0);
+          this.#show('options', OPTION_ROWS.language);
         }
       },
       volume('music', 'options.music'),

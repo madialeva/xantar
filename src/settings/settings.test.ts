@@ -57,6 +57,28 @@ describe('parseSettings', () => {
   });
 });
 
+describe('parseSettings difficulty', () => {
+  it('plays on normal by default and when the record has no difficulty', () => {
+    expect(defaults.difficulty).toBe('normal');
+    const record = { version: 1, language: 'es', musicVolume: 3, muted: true };
+    expect(parseSettings(record, defaults)).toEqual({
+      ...defaults,
+      language: 'es',
+      musicVolume: 3,
+      muted: true
+    });
+  });
+
+  it('keeps a stored difficulty and replaces an unknown one, keeping everything else', () => {
+    expect(parseSettings({ version: 1, difficulty: 'easy' }, defaults).difficulty).toBe('easy');
+    const unknown = parseSettings(
+      { version: 1, difficulty: 'imposible', musicVolume: 3 },
+      defaults
+    );
+    expect([unknown.difficulty, unknown.musicVolume]).toEqual(['normal', 3]);
+  });
+});
+
 describe('nextVolume', () => {
   it('steps up one point and goes back to silence from the top', () => {
     expect([0, 9, 10].map(nextVolume)).toEqual([1, 10, 0]);
@@ -97,6 +119,19 @@ describe('Settings', () => {
     expect(reopened.keyBindings.pepper).toEqual(['KeyX']);
   });
 
+  it('saves the difficulty, tells its listeners and remembers it when reopened', () => {
+    const store = new MemorySettingsStore();
+    const settings = new Settings(store, defaults);
+    const seen: PlayerSettings[] = [];
+    settings.subscribe((values) => seen.push(values));
+    settings.setDifficulty('easy');
+    expect([settings.difficulty, seen.map((values) => values.difficulty)]).toEqual([
+      'easy',
+      ['easy']
+    ]);
+    expect(new Settings(store, defaults).difficulty).toBe('easy');
+  });
+
   it('keeps only a better score', () => {
     const settings = new Settings(new MemorySettingsStore(), { ...defaults, bestScore: 8000 });
     expect(settings.submitScore(3000)).toBe(false);
@@ -128,7 +163,8 @@ describe('LocalStorageSettingsStore', () => {
   it('reads broken JSON as no record', () => {
     const storage = memoryStorage();
     storage.items.set(SETTINGS_KEY, '{ not json');
-    expect(new Settings(new LocalStorageSettingsStore(storage), defaults).bestScore).toBe(0);
+    const settings = new Settings(new LocalStorageSettingsStore(storage), defaults);
+    expect([settings.bestScore, settings.difficulty]).toEqual([0, 'normal']);
   });
 
   it('keeps working when the storage throws or is missing', () => {

@@ -41,7 +41,7 @@ export const SCENARIOS: Readonly<Record<string, readonly SmokeRun[]>> = {
       name: 'menu',
       size: SIZES['16x9'],
       query: '',
-      steps: `${TO_MENU},shot:title-to-menu,key:Down,key:Return,wait:500,shot:options,key:Right,wait:500,shot:options-other-language,key:Down,key:Right,wait:500,shot:options-music,key:Escape,wait:500,shot:menu-after-options`
+      steps: `${TO_MENU},shot:title-to-menu,key:Down,key:Return,wait:500,shot:options,key:Right,wait:500,shot:options-hard,key:Left,wait:300,key:Down,key:Right,wait:500,shot:options-other-language,key:Down,key:Right,wait:500,shot:options-music,key:Escape,wait:500,shot:menu-after-options`
     }
   ],
   controls: [
@@ -49,7 +49,7 @@ export const SCENARIOS: Readonly<Record<string, readonly SmokeRun[]>> = {
       name: 'controls',
       size: SIZES['16x9'],
       query: '',
-      steps: `${TO_MENU},key:Down,key:Return,wait:300,${'key:Down,'.repeat(4)}key:Return,wait:400,shot:controls,key:Down,key:Down,key:Down,key:Down,key:Return,wait:300,shot:capturing,key:Return,wait:300,shot:reserved,key:X,wait:300,shot:pepper-on-x,key:Escape,wait:300,key:Escape,wait:300,key:Up,key:Return,wait:2500,key:X,wait:400,shot:pepper-thrown`
+      steps: `${TO_MENU},key:Down,key:Return,wait:300,${'key:Down,'.repeat(5)}key:Return,wait:400,shot:controls,key:Down,key:Down,key:Down,key:Down,key:Return,wait:300,shot:capturing,key:Return,wait:300,shot:reserved,key:X,wait:300,shot:pepper-on-x,key:Escape,wait:300,key:Escape,wait:300,key:Up,key:Return,wait:2500,key:X,wait:400,shot:pepper-thrown`
     }
   ],
   touch: [
@@ -89,7 +89,7 @@ export const SCENARIOS: Readonly<Record<string, readonly SmokeRun[]>> = {
       size: SIZES['16x9'],
       query: '',
       steps: [
-        `${TO_MENU},key:Down,key:Return,wait:300,key:Right,wait:300`,
+        `${TO_MENU},key:Down,key:Return,wait:300,key:Down,key:Right,wait:300`,
         'key:Down,key:Down,key:Left,key:Left,key:Left,key:Down,key:Right,key:Down,key:Right',
         'wait:300,shot:options-en-muted,key:M,wait:300,shot:unmuted-by-key',
         'key:Up,key:Up,key:Up,key:Up,key:Right,wait:300,key:M,wait:300,shot:options-es',
