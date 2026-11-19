@@ -17,6 +17,7 @@ const columnGrid: GridSpec = {
     '........',
     '========',
     '........',
+    '........',
     '.____...'
   ],
   ingredients: [
@@ -29,6 +30,7 @@ const columnGrid: GridSpec = {
     '........',
     '.BBBB...',
     '........',
+    '........',
     '........'
   ],
   actors: [
@@ -40,6 +42,7 @@ const columnGrid: GridSpec = {
     '........',
     '........',
     '......C.',
+    '........',
     '........',
     '........'
   ]
@@ -220,7 +223,7 @@ describe('IngredientField chain', () => {
       [2],
       [3]
     ]);
-    expect(context.field.ingredients.map((ingredient) => ingredient.row)).toEqual([3, 5, 7, 9]);
+    expect(context.field.ingredients.map((ingredient) => ingredient.row)).toEqual([3, 5, 7, 10]);
     expect(context.field.ingredients[3].phase).toBe('stacked');
     expect(context.field.ingredients[0].stomped).toEqual([false, false, false, false]);
     expect(context.stats.score).toBe(200);
@@ -240,7 +243,7 @@ describe('IngredientField chain', () => {
     const context = create();
     stompAll(context, 3);
     settle(context);
-    expect(context.field.ingredients.map((ingredient) => ingredient.row)).toEqual([1, 3, 5, 9]);
+    expect(context.field.ingredients.map((ingredient) => ingredient.row)).toEqual([1, 3, 5, 10]);
     expect(context.field.ingredients[3].phase).toBe('stacked');
     expect(context.stats.score).toBe(50);
   });
@@ -257,6 +260,7 @@ describe('IngredientField chain', () => {
         '........',
         '........',
         '.BBBB...',
+        '........',
         '........',
         '........'
       ]
@@ -412,8 +416,8 @@ describe('IngredientField plates', () => {
   it('stacks each piece at the thickness of the ones below it', () => {
     const context = build();
     const [, lettuce, patty, bottom] = context.field.ingredients;
-    expect([bottom.y, patty.y]).toEqual([9, 9 - INGREDIENT_THICKNESS.bunBottom]);
-    expect(lettuce.y).toBeCloseTo(9 - (7.4 + 8.3) / CELL_UNITS, 10);
+    expect([bottom.y, patty.y]).toEqual([10, 10 - INGREDIENT_THICKNESS.bunBottom]);
+    expect(lettuce.y).toBeCloseTo(10 - (11 + 12) / CELL_UNITS, 10);
   });
 
   it('completes the burger with points and a pepper when the last piece comes to rest', () => {
@@ -519,6 +523,6 @@ describe('IngredientField riders', () => {
     const [top] = context.field.ingredients;
     stompAll(context, 0);
     settle(context, 600);
-    expect([top.phase, top.row, top.stackSlot]).toEqual(['stacked', 9, 3]);
+    expect([top.phase, top.row, top.stackSlot]).toEqual(['stacked', 10, 3]);
   });
 });

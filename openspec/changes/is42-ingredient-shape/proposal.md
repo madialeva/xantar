@@ -51,7 +51,7 @@ Medido en la grabación del original (`tmp/ejemplo-partida.webm`, ver
   central y el grosor de apilado no cambian.
 - **Lechuga, carne y pan de abajo más altos.** Se modelan más altos en
   Blender: un grosor visible de unas 8 unidades la lechuga, de unas 12 la carne
-  y de unas 11 el pan de abajo, y sus imágenes pasan a 16×16, 16×18 y 16×18. Los grosores de apilado (`INGREDIENT_THICKNESS`) se
+  y de unas 11 el pan de abajo, y sus imágenes pasan a 16×14, 16×17 y 16×16. Los grosores de apilado (`INGREDIENT_THICKNESS`) se
   actualizan con lo medido en el render, así que las hamburguesas quedan más
   altas en el plato y un ingrediente que cae golpea antes a los ingredientes
   más gruesos.

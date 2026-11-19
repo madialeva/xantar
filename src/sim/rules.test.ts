@@ -72,9 +72,9 @@ describe('rules', () => {
       Object.entries(INGREDIENT_THICKNESS).map(([kind, rows]) => [kind, rows * PX_PER_TILE])
     );
     expect(thickness.bunTop).toBeCloseTo(13, 10);
-    expect(thickness.lettuce).toBeCloseTo(4.8, 10);
-    expect(thickness.patty).toBeCloseTo(8.3, 10);
-    expect(thickness.bunBottom).toBeCloseTo(7.4, 10);
+    expect(thickness.lettuce).toBeCloseTo(8, 10);
+    expect(thickness.patty).toBeCloseTo(12, 10);
+    expect(thickness.bunBottom).toBeCloseTo(11, 10);
   });
 
   it('advances less per tick than the alignment window, so ladders cannot be skipped', () => {

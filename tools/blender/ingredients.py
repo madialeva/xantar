@@ -163,6 +163,18 @@ def slab_profile(radius, height, m=8.0):
     return points
 
 
+CROWN_TIP = 0.25
+
+
+def crown_taper(x, edge):
+    """How much of its height the top bun keeps along x: all of it in the middle tiles, which the
+    game repeats, and down to CROWN_TIP at the tips over the first and last tile, along a curve
+    that leaves the middle tiles flat, so that the bun reads as a dome from the front too."""
+    into_end = max(TILE - x, x - (WIDTH - TILE), 0.0) / (TILE - edge)
+    u = min(into_end, 1.0)
+    return CROWN_TIP + (1.0 - CROWN_TIP) * (1.0 + math.cos(math.pi * u)) / 2
+
+
 def resample(profile, spacing):
     """The same outline with points about `spacing` apart along it, keeping both ends."""
     points = np.array(profile)
@@ -207,11 +219,13 @@ def grid_faces(frame_count, rows):
     return faces
 
 
-def sweep_mesh(name, footprint, profile, spacing, flat_top=None):
-    """Sweeps a (r, z) profile round the footprint."""
+def sweep_mesh(name, footprint, profile, spacing, flat_top=None, height_at=None):
+    """Sweeps a (r, z) profile round the footprint; `height_at(x, z)`, if given, reshapes the
+    height of each point along the ingredient."""
     frames = footprint.frames(spacing)
+    reshape = height_at or (lambda _x, z: z)
     verts = [
-        (sx + r * nx, sy + r * ny, z + LIFT)
+        (sx + r * nx, sy + r * ny, reshape(sx + r * nx, z) + LIFT)
         for (sx, sy), (nx, ny), _ in frames
         for r, z in profile
     ]
@@ -379,12 +393,12 @@ def patty_material(height):
         clamp=True,
     )
     stops = [
-        (0.0, "#8C6A54"),
-        (0.22, "#735341"),
-        (0.42, "#5A3E2F"),
-        (0.62, "#422B20"),
-        (0.8, "#271810"),
-        (1.0, "#100905"),
+        (0.0, "#DCA675"),
+        (0.22, "#C4885A"),
+        (0.42, "#A86B43"),
+        (0.62, "#85502F"),
+        (0.8, "#57311C"),
+        (1.0, "#2A160C"),
     ]
     feed(tree, bsdf.inputs["Base Color"], ramp(tree, level, stops))
     roughness = add(
@@ -478,12 +492,17 @@ def periodic_poisson(rng, half_depth, min_dist, attempts=4000):
     return points
 
 
-def add_seeds(scene, footprint, profile, foot, reach=0.84, min_dist=5.0, seed=7):
-    """Lays sesame seeds on the crown with a pattern that repeats every tile."""
+def add_seeds(scene, footprint, profile, foot, height_at, reach=0.84, min_dist=5.0, seed=7):
+    """Lays sesame seeds on the crown with a pattern that repeats every tile, on the surface
+    that `height_at` gives the profile along the ingredient."""
     dome = [(r, z) for r, z in profile if z >= foot]
     r_arr = np.array([r for r, _ in reversed(dome)])
     z_arr = np.array([z for _, z in reversed(dome)])
-    slope_arr = np.gradient(z_arr, r_arr)
+
+    def surface(x, y):
+        return height_at(x, float(np.interp(math.hypot(x - footprint.spine(x), y), r_arr, z_arr)))
+
+    step = 0.05
     mesh = seed_mesh()
     mesh.materials.append(seed_material())
     rng = random.Random(seed)
@@ -496,10 +515,10 @@ def add_seeds(scene, footprint, profile, foot, reach=0.84, min_dist=5.0, seed=7)
             dist = math.hypot(dx, dy)
             if dist > reach * footprint.radius:
                 continue
-            z = float(np.interp(dist, r_arr, z_arr))
-            slope = float(np.interp(dist, r_arr, slope_arr))
-            ux, uy = (dx / dist, dy / dist) if dist > 1e-6 else (0.0, 0.0)
-            normal = Vector((-slope * ux, -slope * uy, 1.0)).normalized()
+            z = surface(gx, y)
+            slope_x = (surface(gx + step, y) - surface(gx - step, y)) / (2 * step)
+            slope_y = (surface(gx, y + step) - surface(gx, y - step)) / (2 * step)
+            normal = Vector((-slope_x, -slope_y, 1.0)).normalized()
             along = Vector((math.cos(turn), math.sin(turn), 0.0))
             along = (along - along.dot(normal) * normal).normalized()
             across = normal.cross(along)
@@ -589,16 +608,21 @@ BUN_FOOTPRINT = Footprint(edge=1.5, radius=14.0)
 
 def build_bun_top(scene):
     height = 13.5
-    profile = crown_profile(BUN_FOOTPRINT.radius, height)
-    mesh = sweep_mesh("bunTop", BUN_FOOTPRINT, profile, spacing=1.0)
+    foot = 2.0
+    profile = crown_profile(BUN_FOOTPRINT.radius, height, foot=foot)
+
+    def height_at(x, z):
+        return z if z <= foot else foot + (z - foot) * crown_taper(x, BUN_FOOTPRINT.c0 - BUN_FOOTPRINT.radius)
+
+    mesh = sweep_mesh("bunTop", BUN_FOOTPRINT, profile, spacing=1.0, height_at=height_at)
     stops = [(0.0, "#EAC995"), (0.06, "#DDA963"), (0.18, "#CB8A3E"), (0.5, "#B56C2E"), (0.8, "#A35A25"), (1.0, "#8F4C1E")]
     add_object(scene, "bunTop", mesh, crust_material("crown", height, stops, coat=0.3, relief_strength=0.22))
-    points = [v.co.copy() for v in mesh.vertices] + add_seeds(scene, BUN_FOOTPRINT, profile, foot=2.0)
+    points = [v.co.copy() for v in mesh.vertices] + add_seeds(scene, BUN_FOOTPRINT, profile, foot, height_at)
     return points, height
 
 
 def build_bun_bottom(scene):
-    height = 8.4
+    height = 12.0
     mesh = sweep_mesh("bunBottom", BUN_FOOTPRINT, heel_profile(BUN_FOOTPRINT.radius, height), spacing=1.0, flat_top=height)
     stops = [(0.0, "#6E3A18"), (0.35, "#8A4B1E"), (0.65, "#A35E29"), (0.85, "#B26E31"), (1.0, "#C2803B")]
     add_object(scene, "bunBottom", mesh, crust_material("heel", height, stops, coat=0.25, relief_strength=0.35), crumb_material())
@@ -609,7 +633,7 @@ PATTY_FOOTPRINT = Footprint(edge=1.0, radius=14.0)
 
 
 def build_patty(scene):
-    height = 9.2
+    height = 13.0
     profile = resample(slab_profile(PATTY_FOOTPRINT.radius, height), 0.25)
     mesh = sweep_mesh("patty", PATTY_FOOTPRINT, profile, spacing=0.25)
     add_object(scene, "patty", mesh, patty_material(height))
@@ -621,8 +645,8 @@ def build_patty(scene):
 
 
 LETTUCE_LAYERS = [
-    {"edge": 1.5, "radius": 14.0, "top": 5.2, "hem": 1.0, "amp": 2.4, "waves": [(2, 1.0), (3, 0.5), (4, 0.25)], "frill": 1.6, "crinkle": 1.1},
-    {"edge": 3.0, "radius": 12.0, "top": 7.0, "hem": 3.4, "amp": 2.0, "waves": [(2, 1.0), (3, 0.45), (5, 0.2)], "frill": 1.2, "crinkle": 0.9},
+    {"edge": 1.5, "radius": 14.0, "top": 8.5, "hem": 1.6, "amp": 2.4, "waves": [(2, 1.0), (3, 0.5), (4, 0.25)], "frill": 1.6, "crinkle": 1.1},
+    {"edge": 3.0, "radius": 12.0, "top": 10.5, "hem": 5.0, "amp": 2.0, "waves": [(2, 1.0), (3, 0.45), (5, 0.2)], "frill": 1.2, "crinkle": 0.9},
 ]
 
 
@@ -655,9 +679,9 @@ def build_lettuce(scene):
 
 INGREDIENTS = {
     "bunTop": {"frame": 18, "build": build_bun_top},
-    "lettuce": {"frame": 12, "build": build_lettuce},
-    "patty": {"frame": 14, "build": build_patty},
-    "bunBottom": {"frame": 14, "build": build_bun_bottom},
+    "lettuce": {"frame": 14, "build": build_lettuce},
+    "patty": {"frame": 17, "build": build_patty},
+    "bunBottom": {"frame": 16, "build": build_bun_bottom},
 }
 
 

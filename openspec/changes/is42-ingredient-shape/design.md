@@ -164,11 +164,14 @@ encima del pie (2 unidades) se multiplica por `crown_taper(x)`:
 
 - 1 en los dos tramos centrales (16 ≤ x ≤ 48), para que se sigan repitiendo sin
   costuras;
-- en el primer y el último trozo, un cuarto de elipse que baja desde 1 en el
-  borde interior hasta `CROWN_TIP = 0,35` en la punta. Con el pie, la punta
-  mide 2 + 0,35 · 11,5 ≈ 6 unidades de 13,5 (un 44 %; en el original, unos 3 px
-  de 7). En el borde interior la pendiente es cero, así que la unión con el
-  tramo central es suave.
+- en el primer y el último trozo, un coseno elevado que baja desde 1 en el
+  borde interior hasta `CROWN_TIP = 0,25` en la punta. En el borde interior la
+  pendiente es cero, así que la unión con el tramo central es suave.
+
+Un primer render con un cuarto de elipse y la punta al 35 % apenas se notaba:
+la huella ya redondea la punta y la parte alta de la cúpula seguía casi recta
+hasta el borde. Con el coseno y el 25 %, el pan visto de frente es un trapecio
+de lados curvos, como el sprite del original (3·4·5·6·6·7 px).
 
 Las semillas de sésamo se colocan con la misma función, para que sigan sobre
 la superficie. Solo se vuelve a renderizar `bunTop`
@@ -184,20 +187,20 @@ Se busca un grosor visible cercano al del original (×2: carne 14–16, lechuga
 10–12, pan de abajo 14) sin que la carne parezca un ladrillo junto a un pan de
 13:
 
-- **Carne:** el disco pasa de 9,2 a unas 13 unidades de alto, con un grosor
-  visible de unas 12. Su imagen pasa a 16×18.
-- **Lechuga:** se suben la parte alta y el borde de las dos hojas (de 5,2 y 7,0
-  a unas 8,5 y 10,5) para que su grosor visible sea de unas 8. Su imagen pasa a
-  16×16.
-- **Pan de abajo:** el talón pasa de 8,4 a unas 12 unidades de alto, con un
-  grosor visible de unas 11 y la miga del corte a la vista. Su imagen pasa a
-  16×18.
+- **Carne:** el disco pasa de 9,2 a 13 unidades de alto, con un grosor visible
+  de 12. Su imagen pasa a 16×17 (en 16 no cabe por 0,2).
+- **Lechuga:** la parte alta y el borde de las dos hojas pasan de 5,2 y 7,0 a
+  8,5 y 10,5 (bordes de 1,0 y 3,4 a 1,6 y 5,0), con un grosor visible de 8. Su
+  imagen pasa a 16×14.
+- **Pan de abajo:** el talón pasa de 8,4 a 12 unidades de alto, con un grosor
+  visible de 11 y la miga del corte a la vista. Su imagen pasa a 16×16.
 
-Las tres medidas se ajustan mirando el render. `INGREDIENT_THICKNESS`,
-`INGREDIENT_HEIGHTS`, el catálogo y el requisito "Grosor de los ingredientes"
-toman los valores medidos en `metrics.json`; si no salen 12, 8 y 11 exactos, se
-corrige la delta de la spec con los medidos. Se vuelven a renderizar `lettuce`,
-`patty` y `bunBottom`.
+En los sólidos, el grosor es la altura del modelo (`support` en `metrics.json`)
+menos la unidad del margen de la sombra, el mismo criterio que daba 7,4 al pan
+de abajo de 8,4. La lechuga sube 3,2 sobre los 4,8 de antes. Se comprueba
+componiendo una hamburguesa apilada con los PNG: cada ingrediente descansa
+sobre el de debajo sin huecos ni solapes raros. Los marcos son los más bajos en
+los que cabe cada render.
 
 Consecuencias en el juego: un ingrediente que cae golpea antes a una lechuga o
 a una carne quietas (su parte de arriba está más alta) y cada hamburguesa
@@ -210,13 +213,12 @@ gruesos que el pan de arriba.
 
 ### 6. Carne más clara
 
-En `patty_material` la rampa de color sube de tono: de un marrón dorado claro
-(≈ `#B98458`) en las zonas altas a uno medio cálido (≈ `#7A4A2A`), dejando los
-marrones muy oscuros (≈ `#2A160C`) solo para las marcas de parrilla y las
-grietas. El objetivo es una luminancia media de la imagen de 80–100: muy por
-encima del fondo y por debajo de los panes, así que se sigue distinguiendo del
-pan de abajo al apilarla. Se comprueba midiendo los PNG con el mismo script que
-dio el 44 de hoy, y en el juego.
+En `patty_material` la rampa de color sube de tono: de `#DCA675` en las zonas
+claras a `#85502F` en las medias, dejando los marrones muy oscuros (`#2A160C`)
+solo para las marcas de parrilla y las grietas. El objetivo es una luminancia
+media de la imagen de 80–100: muy por encima del fondo y por debajo de los
+panes, así que se sigue distinguiendo del pan de abajo al apilarla. Medida con
+el mismo script que dio el 44: 87. Una primera rampa algo más oscura daba 79.
 
 ### 7. Pruebas
 
@@ -246,6 +248,12 @@ dio el 44 de hoy, y en el juego.
 - **Ingredientes más gruesos tapan más los pies del chef y de los enemigos al
   cruzarlos.** En el original pasa lo mismo, en la misma proporción; se revisa
   en el smoke.
+- **Con hamburguesas más altas, un plato muy cerca del piso de encima deja de
+  tener sitio.** Pan de abajo, carne y lechuga suman 31 unidades: si el plato
+  está a dos filas (32) del piso de encima, el pan de arriba se para en ese
+  piso. En el nivel clásico hay 80 unidades; la cuadrícula de pruebas de
+  `IngredientField` tenía el plato a dos filas y pasa a tres. El validador no
+  lo comprueba todavía; queda para el editor de niveles (#7).
 - **Una carne más clara puede confundirse con el pan de abajo en el plato.**
   Por eso el objetivo se queda en 80–100, con las marcas oscuras; se revisa en
   la hoja de arte con la hamburguesa apilada.
