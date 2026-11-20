@@ -23,8 +23,8 @@
 
 ## 5. Las pantallas en la partida
 
-- [ ] 5.1 Hacer que `GameScene` cargue `SCREEN_DOCUMENTS` con `loadLevel` y los pase como `screens`, y que en `boardStarted` rehaga el `MazeView` si cambia `sim.level` y las `EnemyView` si cambia la lista `sim.enemies`; verificar con `npm run typecheck`, `npm run lint`, `npm run smoke` y, en `npm run dev`, que al completar la primera pantalla aparece la Pirámide con sus enemigos, sin restos de la clásica
-- [ ] 5.2 Añadir `?screen=N` solo en desarrollo: `main.ts` lo lee bajo `import.meta.env.DEV` y `GameScene` empieza la partida en `firstLevelOfScreen(N, boardsPerScreen(dificultad))`, ignorando valores que no sean una pantalla; documentarlo en `docs/MANUAL.md` (§7.1 y §9.11); verificar en `npm run dev` con `?screen=2`, `?screen=3` y `?screen=4` en Normal y en Fácil y con un valor no válido, y que el bundle de `npm run build` no contiene la lectura del parámetro
+- [x] 5.1 Hacer que `GameScene` cargue `SCREEN_DOCUMENTS` con `loadLevel` y los pase como `screens`, y que en `boardStarted` rehaga el `MazeView` si cambia `sim.level` y las `EnemyView` si cambia la lista `sim.enemies`; verificar con `npm run typecheck`, `npm run lint`, `npm run smoke` y, en `npm run dev`, que al completar la primera pantalla aparece la Pirámide con sus enemigos, sin restos de la clásica
+- [x] 5.2 Añadir `?screen=N` solo en desarrollo: `main.ts` lo lee bajo `import.meta.env.DEV` y `GameScene` empieza la partida en `firstLevelOfScreen(N, boardsPerScreen(dificultad))`, ignorando valores que no sean una pantalla; documentarlo en `docs/MANUAL.md` (§7.1 y §9.11); verificar en `npm run dev` con `?screen=2`, `?screen=3` y `?screen=4` en Normal y en Fácil y con un valor no válido, y que el bundle de `npm run build` no contiene la lectura del parámetro
 
 ## 6. Integración
 
