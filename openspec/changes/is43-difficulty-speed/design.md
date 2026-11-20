@@ -93,6 +93,19 @@ Otros hechos de la grabación:
   hasta que el pan se asienta y todo se congela a 121,0 s. No se ve ningún
   contacto en ese intervalo.
 
+Una tercera grabación (`tmp/ejemplo-partida-3.webm`, 1 min 48 s, pantalla 1)
+muestra el contacto que faltaba. A 97,8 s el chef pisa el último segmento del
+pan de la calle 3 con el huevo encima; el pan baja con el huevo montado. A
+98,73 s un perrito que baja por la escalera atrapa al chef:
+
+- Los enemigos se congelan en el acto (el perrito no se mueve más) y el chef
+  hace su animación de morir.
+- El pan sigue cayendo con el huevo: para un momento en el piso más bajo y baja
+  al plato; a 99,6 s la hamburguesa está completa y sale el "500" del montado.
+- A 99,8 s el chef ya está de pie, de frente, en la pose de celebración, y todo
+  queda congelado como en cualquier final de pantalla. La muerte ha durado
+  ~1,1 s: no espera a la duración de una muerte normal.
+
 ## Goals / Non-Goals
 
 **Goals:**
@@ -110,8 +123,9 @@ Otros hechos de la grabación:
 - Velocidades distintas por tipo de enemigo (#17): en la grabación son iguales.
 - Escalones más allá de 65 s o vueltas más rápidas tras la sexta pantalla: no
   se ven en la grabación.
-- Una señal en pantalla del tablero asegurado, como la pose de celebración del
-  original al tocar el plato.
+- Una señal en pantalla del tablero asegurado mientras el chef sigue jugando, y
+  una pose de celebración propia al revivir: el chef vuelve con su pose normal
+  en `levelClear`.
 - Un récord por dificultad o mostrar la dificultad en el HUD (#26).
 - Cambiar la dificultad durante una partida: las opciones solo se abren desde el
   menú principal.
@@ -206,7 +220,7 @@ los eventos, un `EnemyRoster` que no monta, no aplasta ni suelta a nadie, y un
 receptor de puntos que los ignora. Avanza la copia, sin chef, hasta que ningún
 ingrediente se mueve, y mira si todas las hamburguesas están completas. Si lo
 están, el campo queda asegurado (`isSecured`) hasta que se reconstruye el
-tablero. `Simulation#checkContact` no quita vidas con el campo asegurado.
+tablero. Con el campo asegurado, el contacto no quita vidas (decisión 6).
 
 Para copiar: `Plate#copy()`, `Ingredient#copyFor(host)` y `copy()` en cada
 estado del ingrediente (los contadores de `BouncingState` y `StoppedState` y las
@@ -238,7 +252,37 @@ Alternativas descartadas:
   eventos y toca puntos y enemigos; habría que silenciarlo igual y restaurarlo
   es más arriesgado que tirar una copia.
 
-### 6. La dificultad en los ajustes y en el menú
+### 6. Muerte aparente: otro estado de la fase `dying`
+
+Con el campo asegurado, `#playTick` trata el contacto de otra manera: emite
+`chefHit` con las vidas que tiene (sin `loseLife`) y devuelve un resultado
+nuevo, `chefReprieved`, con el que `PlayingPhase` pasa a `ReprievePhase`. Es otro
+objeto State con el mismo nombre de fase, `dying`, así que la vista no cambia:
+el chef hace su animación de golpe, el HUD no muestra nada y suenan el golpe y,
+después, el nivel completado.
+
+`ReprievePhase` pide cada tick al anfitrión un `reprieveTick()` (nuevo en
+`PhaseHost`): la simulación avanza solo las caídas
+(`IngredientField#advanceFalls()`, el paso del campo sin pisadas, con sus
+golpes, aplastamientos, montados que se sueltan y puntos), mueve a los enemigos
+montados con su ingrediente y comprueba el final de nivel. El resultado es
+`falling`, `levelCleared` (pasa a `LevelClearPhase` en ese tick, sin duración
+mínima, como en el original) o `stalled`. Este último no debería darse porque
+la previsión es exacta, pero evita que la partida se quede colgada si algún
+día falla: el chef pierde la vida que se le había perdonado
+(`PhaseHost.forfeitLife()`) y la fase sigue como una `DyingPhase` normal.
+
+Por qué una fase con nombre `dying` y no un nombre nuevo: para la vista es una
+muerte (animación, sonido, sin mensajes) y para las reglas es otra cosa; el
+patrón State ya separa las dos cosas sin tocar la vista ni el contrato de
+eventos.
+
+Alternativas descartadas: seguir con el chef jugando e inmune (lo que hacía la
+primera versión de este cambio; el autor prefiere la sensación del original) y
+una fase `dying` normal que, al terminar, mire si el tablero quedó completo
+(los ingredientes no caerían durante la muerte y el final llegaría tarde).
+
+### 7. La dificultad en los ajustes y en el menú
 
 `PlayerSettings` gana `difficulty` (Normal por defecto), leído con
 `isDifficulty` como los demás campos; el registro sigue en la versión 1.
@@ -250,7 +294,7 @@ uno). `GameScene.create()` pasa `settings.values.difficulty` a la
 `difficulty.easy|normal|hard` (DIFICULTAD, FÁCIL, NORMAL, DIFÍCIL / DIFFICULTY,
 EASY, NORMAL, HARD).
 
-### 7. Pruebas
+### 8. Pruebas
 
 - Ritmo: los dos ritmos y la fábrica (factores constantes, escalones a 1305,
   2610 y 3915 ticks, tope, inicio en el nivel 4).
@@ -259,7 +303,11 @@ EASY, NORMAL, HARD).
 - Reglas de `Simulation`: velocidades por dificultad, reloj que se para fuera de
   `playing` y vuelve a cero al perder una vida y al empezar el tablero, pisadas
   deshechas al volver a jugar con apilados y caídas intactos, tablero asegurado
-  en los cuatro casos de la spec y contacto normal cuando la caída no basta.
+  en los casos de la spec y contacto normal cuando la caída no basta; muerte
+  aparente (vidas intactas, enemigos quietos, montado que baja con su
+  ingrediente, `levelClear` en el tick en que se completa).
+- Fases: `ReprievePhase` con un anfitrión doble (sigue mientras caen, pasa a
+  `levelClear` y, si las caídas se paran sin completar, pierde la vida).
 - `IngredientField`: la copia no emite eventos ni da puntos y deja intacto el
   campo real; previsión verdadera y falsa; monotonía con una caída posterior.
 - Ajustes: lectura con y sin dificultad, valor desconocido, `setDifficulty`.
@@ -279,9 +327,9 @@ EASY, NORMAL, HARD).
 - **[Escalón inicial del nivel 4 con un solo ejemplo]** → La pantalla 4 empieza
   en ×1,07 dos veces en la grabación; si #49 muestra que va con la pantalla y no
   con el número de nivel, pasará a ser un dato del nivel.
-- **[Enemigos que atraviesan al chef]** → Con el tablero asegurado, un enemigo
-  puede pasar por encima del chef sin consecuencias y sin aviso. Es lo que pide
-  el autor; una señal visual queda fuera (Non-Goals).
+- **[La partida colgada en `dying`]** → Si la previsión se equivocara, las
+  caídas se pararían sin completar el tablero; `ReprievePhase` lo detecta y
+  termina como una muerte normal.
 - **[La copia y el campo real se separan]** → Si se añade estado a un
   ingrediente y no a su `copy()`, la previsión fallaría en silencio; una prueba
   compara, tick a tick, una caída real con la de su copia.

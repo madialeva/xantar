@@ -834,13 +834,26 @@ describe('Simulation: secured board', () => {
       })
     );
 
-  /** Plays until the board is cleared or the chef is hit, holding `input` until the drop. */
+  /** Plays until the chef is caught or the board is cleared, holding `input` until the drop. */
   const playOut = (sim: Simulation, input: Partial<SimInput>): SimEvent[] => {
     const events: SimEvent[] = [];
     for (let i = 0; i < 1500 && sim.phase === 'playing'; i++) {
       events.push(...run(sim, 1, sim.boardSecured ? {} : input));
     }
     return events;
+  };
+
+  /** Plays the caught chef's fall to its end, checking that only riders move meanwhile. */
+  const lieDown = (sim: Simulation): { events: SimEvent[]; ticks: number } => {
+    const events: SimEvent[] = [];
+    let ticks = 0;
+    for (; ticks < 1500 && sim.phase === 'dying'; ticks++) {
+      const still = sim.enemies.filter((enemy) => !enemy.riding).map((enemy) => [enemy.x, enemy.y]);
+      const free = sim.enemies.filter((enemy) => !enemy.riding);
+      events.push(...run(sim, 1, { left: true, pepper: true }));
+      expect(free.map((enemy) => [enemy.x, enemy.y])).toEqual(still);
+    }
+    return { events, ticks };
   };
 
   /** Whether a free enemy is close enough to the chef to take a life. */
@@ -854,30 +867,45 @@ describe('Simulation: secured board', () => {
         Math.abs(enemy.y - sim.chef.y) < CONTACT_Y
     );
 
-  /** Plays and reports whether an enemy touched the chef after the board was secured. */
-  const touchedWhileSecured = (sim: Simulation, input: Partial<SimInput>): boolean => {
-    let touched = false;
-    for (let i = 0; i < 1500 && sim.phase === 'playing'; i++) {
-      run(sim, 1, sim.boardSecured ? {} : input);
-      touched ||= sim.boardSecured && touching(sim);
-    }
-    return touched;
-  };
-
   /** An enemy that walks in from the left just after the chef has crossed the ingredient. */
   const latecomer: LevelEntry = { row: 1, col: 0, delayMs: 950 };
+  const lastOne: GridSpec = {
+    structure: ['........', '========', '........', '.____...'],
+    ingredients: ['........', '.TTTT...', '........', '........'],
+    actors: ['........', 'h.....C.', '........', '........']
+  };
 
-  it('keeps the lives when an enemy catches the chef while the last ingredient falls', () => {
-    const sim = board(
-      {
-        structure: ['........', '========', '........', '.____...'],
-        ingredients: ['........', '.TTTT...', '........', '........'],
-        actors: ['........', 'h.....C.', '........', '........']
-      },
-      [latecomer]
-    );
-    expect(touchedWhileSecured(sim, { left: true })).toBe(true);
-    expect([sim.phase, sim.stats.lives, sim.stats.level]).toEqual(['levelClear', START_LIVES, 2]);
+  it('knocks the chef down without a life while the last ingredient falls, then clears', () => {
+    const sim = board(lastOne, [latecomer]);
+    const caught = playOut(sim, { left: true });
+    const [top] = sim.ingredients;
+    expect([sim.phase, sim.boardSecured, top.phase === 'stacked']).toEqual(['dying', true, false]);
+    expect(ofType(caught, 'chefHit')).toEqual([{ type: 'chefHit', livesLeft: START_LIVES }]);
+    const { events, ticks } = lieDown(sim);
+    expect([sim.phase, sim.stats.lives, sim.stats.level, top.phase]).toEqual([
+      'levelClear',
+      START_LIVES,
+      2,
+      'stacked'
+    ]);
+    expect(ticks).toBeLessThan(DYING_TICKS);
+    expect(ofType(events, 'levelCleared')).toHaveLength(1);
+    expect(
+      ofType([...caught, ...events], 'phaseChanged').map(({ from, to }) => [from, to])
+    ).toEqual([
+      ['playing', 'dying'],
+      ['dying', 'levelClear']
+    ]);
+    expect(ofType(events, 'pepperThrown')).toEqual([]);
+  });
+
+  it('keeps playing to the level clear when nobody catches the chef', () => {
+    const sim = board(lastOne, [{ row: 1, col: 0, delayMs: 600_000 }]);
+    const events = playOut(sim, { left: true });
+    expect([sim.phase, sim.stats.lives]).toEqual(['levelClear', START_LIVES]);
+    expect(ofType(events, 'phaseChanged').map(({ from, to }) => [from, to])).toEqual([
+      ['playing', 'levelClear']
+    ]);
   });
 
   /** The chef peppers an enemy standing on the ingredient, then drops it with the enemy on. */
@@ -891,11 +919,14 @@ describe('Simulation: secured board', () => {
       events.push(...run(sim, 1, { left: true }));
     }
     expect(sim.enemies[1].riding).toBe(true);
+    events.push(...playOut(sim, { left: true }));
+    expect([sim.phase, sim.stats.lives]).toEqual(['dying', START_LIVES]);
+    events.push(...lieDown(sim).events);
     return { sim, events };
   };
 
-  it('keeps the lives when a rider takes the last ingredient down from two floors up', () => {
-    const { sim } = dropWithRider(
+  it('keeps the life when a rider takes the last ingredient down from two floors up', () => {
+    const { sim, events } = dropWithRider(
       [
         '..........',
         '==========',
@@ -917,22 +948,23 @@ describe('Simulation: secured board', () => {
         '..........'
       ]
     );
-    expect(sim.boardSecured).toBe(true);
-    expect(touchedWhileSecured(sim, { left: true })).toBe(true);
-    expect([sim.phase, sim.stats.lives]).toEqual(['levelClear', START_LIVES]);
+    expect(ofType(events, 'ridersDropped').map((event) => event.points)).toEqual([500]);
+    expect([sim.phase, sim.stats.lives, sim.enemies[1].riding]).toEqual([
+      'levelClear',
+      START_LIVES,
+      false
+    ]);
   });
 
-  it('keeps the lives when a ridden ingredient pushes the last one into the plate', () => {
+  it('keeps the life when a ridden ingredient pushes the last one into the plate', () => {
     const { sim, events } = dropWithRider(
       ['..........', '==========', '..........', '==========', '..........', '.____.....'],
       ['..........', '.TTTT.....', '..........', '.BBBB.....', '..........', '..........']
     );
-    events.push(...playOut(sim, { left: true }));
     expect(ofType(events, 'ingredientsTriggered').map((event) => event.ingredientIds)).toEqual([
       [0],
       [1]
     ]);
-    expect(ofType(events, 'chefHit')).toEqual([]);
     expect([sim.phase, sim.stats.lives]).toEqual(['levelClear', START_LIVES]);
   });
 
@@ -956,9 +988,12 @@ describe('Simulation: secured board', () => {
       false,
       'idle'
     ]);
-    run(sim, 1, { left: true });
+    const events = run(sim, 1, { left: true });
     expect([enemy.stunned, sim.boardSecured, touching(sim)]).toEqual([false, true, true]);
-    expect([sim.phase, sim.stats.lives]).toEqual(['playing', START_LIVES]);
+    expect(ofType(events, 'chefHit')).toEqual([{ type: 'chefHit', livesLeft: START_LIVES }]);
+    expect([sim.phase, sim.stats.lives]).toEqual(['dying', START_LIVES]);
+    lieDown(sim);
+    expect([sim.phase, sim.stats.lives]).toEqual(['levelClear', START_LIVES]);
   });
 
   it('takes a life as usual when the drop does not finish the board', () => {

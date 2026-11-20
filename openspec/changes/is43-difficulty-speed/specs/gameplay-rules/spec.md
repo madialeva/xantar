@@ -66,16 +66,17 @@ tablero y al volver a jugar tras perder una vida.
 Cuando el chef suelta un ingrediente y las caídas en curso, junto con las que
 estas provoquen, bastan para completar todas las hamburguesas sin más pisadas,
 el tablero SHALL quedar asegurado desde ese tick hasta que se reconstruye. Con
-el tablero asegurado, el contacto con un enemigo SHALL NOT quitar vidas ni
-pasar a `dying`; el chef SHALL seguir jugando y el nivel SHALL completarse
-como siempre, al quedar completa la última hamburguesa.
+el tablero asegurado, el contacto con un enemigo SHALL NOT quitar vidas; el
+chef SHALL caer como en el requisito «Muerte aparente con el tablero
+asegurado». Sin contacto, el chef SHALL seguir jugando y el nivel SHALL
+completarse como siempre.
 
 #### Scenario: Último ingrediente camino del plato
 - **WHEN** el chef pisa el último segmento del único ingrediente que falta,
   situado en el piso más bajo, y un enemigo le alcanza antes de que ese
   ingrediente llegue al plato
-- **THEN** no se pierde ninguna vida, la fase sigue en `playing` y, al quedar
-  completa la hamburguesa, pasa a `levelClear` con el nivel aumentado en uno
+- **THEN** no se pierde ninguna vida, la fase pasa a `dying` y, al quedar
+  completa la hamburguesa, a `levelClear` con el nivel aumentado en uno
 
 #### Scenario: Ingrediente con enemigos montados desde un piso superior
 - **WHEN** el chef suelta desde dos pisos por encima del más bajo el último
@@ -97,10 +98,47 @@ como siempre, al quedar completa la última hamburguesa.
   completa el tablero y un enemigo le alcanza
 - **THEN** no se pierde ninguna vida
 
+#### Scenario: Sin contacto
+- **WHEN** el chef suelta el último ingrediente y ningún enemigo le alcanza
+  antes de que se complete la hamburguesa
+- **THEN** la fase sigue en `playing` hasta que pasa a `levelClear`
+
 #### Scenario: Caída que no basta
 - **WHEN** el chef suelta un ingrediente que se quedará en un piso intermedio,
   aún faltan ingredientes por bajar y un enemigo le alcanza
 - **THEN** pierde una vida como siempre
+
+### Requirement: Muerte aparente con el tablero asegurado
+Si un enemigo alcanza al chef con el tablero asegurado, SHALL emitirse el
+evento de chef golpeado sin restar ninguna vida y la partida SHALL pasar a
+`dying`. En ella los enemigos SHALL quedarse quietos, salvo los montados, que
+bajan con su ingrediente, y las caídas SHALL seguir con sus golpes,
+aplastamientos y puntos. En el tick en que se completa la última hamburguesa,
+la partida SHALL pasar a `levelClear` con el nivel aumentado en uno, sin
+esperar a que se cumplan los 2 s de `dying`.
+
+#### Scenario: Atrapado mientras cae el último ingrediente
+- **WHEN** un enemigo alcanza al chef con 3 vidas mientras el último
+  ingrediente cae hacia su plato
+- **THEN** se emite el evento de chef golpeado con 3 vidas, la fase pasa a
+  `dying`, el ingrediente sigue cayendo y, al completarse la hamburguesa, la
+  fase pasa a `levelClear` con 3 vidas
+
+#### Scenario: Enemigos quietos
+- **WHEN** el chef está en `dying` con el tablero asegurado
+- **THEN** ningún enemigo que no vaya montado cambia de posición
+
+#### Scenario: Enemigo montado mientras el chef está caído
+- **WHEN** el chef está en `dying` con el tablero asegurado y el último
+  ingrediente baja con un enemigo montado
+- **THEN** el enemigo baja con el ingrediente y, al quedar este quieto, sale
+  del tablero con su bonificación
+
+#### Scenario: Revivir enseguida
+- **WHEN** la última hamburguesa se completa 10 ticks después de que atrapen al
+  chef con el tablero asegurado
+- **THEN** la fase pasa a `levelClear` en ese tick, antes de los 2 s de
+  `dying`
 
 ## MODIFIED Requirements
 
@@ -323,7 +361,8 @@ La partida SHALL comenzar con 3 vidas. Si un enemigo activo, no aturdido y no
 montado en un ingrediente está a menos de 16 unidades horizontales y 18
 unidades verticales del chef y el tablero no está asegurado, el chef SHALL
 perder una vida y la partida SHALL pasar a la fase `dying`, en la que nada se
-mueve. Al terminar `dying` con vidas restantes, chef y enemigos SHALL volver a
+mueve (con el tablero asegurado, ver «Muerte aparente con el tablero
+asegurado»). Al terminar `dying` con vidas restantes, chef y enemigos SHALL volver a
 sus posiciones iniciales, los ingredientes quietos en una plataforma SHALL
 quedar con todos sus segmentos sin pisar, los apilados SHALL seguir apilados y
 los que estaban cayendo SHALL terminar su caída al volver a `playing`; la
@@ -348,7 +387,8 @@ partida SHALL pasar a `ready`. Si era la última vida, SHALL pasar a `gameOver`.
 
 #### Scenario: Tablero asegurado
 - **WHEN** un enemigo no aturdido alcanza al chef con el tablero asegurado
-- **THEN** no se pierde ninguna vida y la fase sigue en `playing`
+- **THEN** no se pierde ninguna vida; la fase pasa a `dying` y, al completarse
+  el tablero, a `levelClear`
 
 #### Scenario: Ingredientes tras perder una vida
 - **WHEN** el chef pierde una vida con segmentos pisados en varios

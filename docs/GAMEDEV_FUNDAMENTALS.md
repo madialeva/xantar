@@ -265,7 +265,10 @@ mudos (no emiten eventos ni dan puntos), lo avanza sin el chef hasta que nada
 se mueve y mira el resultado. Así la previsión usa las mismas reglas que el
 juego y no puede desviarse de ellas, algo que sí pasaría con un cálculo aparte.
 Con eso, el chef no pierde vidas una vez soltado el ingrediente que gana el
-tablero.
+tablero: si le atrapan, cae como si muriera mientras las caídas terminan y se
+levanta al completarse la pantalla, como en el original. Esa "muerte aparente"
+es otro objeto State con el mismo nombre de fase que la muerte de verdad, así
+que la vista la dibuja igual y solo cambian las reglas.
 
 Otro patrón muy común en juegos, que aquí no usamos todavía, es **ECS**
 (*Entity Component System*): las entidades son solo identificadores, los datos

@@ -33,6 +33,11 @@
 - [x] 6.1 Ejecutar las comprobaciones de entrega completas (`npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build`, `npm run smoke`) y `openspec validate is43-difficulty-speed --strict`; verificar que todo termina sin errores
 - [ ] 6.2 Jugar en `npm run dev` y en `npm run dev:desktop` comparando con la grabación: velocidades del chef y de los enemigos, acelerón de Normal hacia el minuto de juego y vuelta a la base al perder una vida, Fácil y Difícil, pisadas deshechas al perder una vida y tablero asegurado al soltar el último ingrediente (lo verifica el autor)
 
+## 7. Muerte aparente con el tablero asegurado
+
+- [x] 7.1 Añadir a `PhaseHost` `reprieveTick()` y `forfeitLife()`, el resultado `chefReprieved` y la fase `ReprievePhase` (nombre `dying`); en `Simulation`, emitir `chefHit` sin restar vidas y devolver `chefReprieved` si el contacto llega con el campo asegurado, y en `reprieveTick()` avanzar solo las caídas (`IngredientField#advanceFalls()`) y a los enemigos montados y comprobar el final de nivel; verificar con pruebas de fases (anfitrión doble: sigue, `levelClear`, `stalled` pierde la vida) y de reglas (vidas intactas y `chefHit` con 3 vidas, `dying` y luego `levelClear` en el tick en que se completa, enemigos quietos, montado que baja y da su bonificación, contacto en el mismo tick, caída que no basta) y `npm run test`
+- [x] 7.2 Documentar la muerte aparente en `README.md` ("Lives and game over"), `docs/MANUAL.md` (§8.5 punto 9 y diagrama de fases de §8.8) y `docs/GAMEDEV_FUNDAMENTALS.md`, y actualizar la issue #43; verificar con `npm run format:check`, las comprobaciones de entrega completas, `npm run smoke` y `openspec validate is43-difficulty-speed --strict`
+
 ## Workflow follow-up
 
 - El autor hace el push; PR hacia `develop/v1.0.0` con `Closes #43`.

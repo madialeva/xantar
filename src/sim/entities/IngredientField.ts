@@ -116,12 +116,23 @@ export class IngredientField implements IngredientHost {
     if (chef.onPlatform) {
       for (const ingredient of this.ingredients) this.#stomp(ingredient, chef);
     }
-    this.#advance();
+    this.advanceFalls();
     if (this.#dropped && !this.#secured) this.#secured = this.#forecastsCompletion();
     this.#dropped = false;
   }
 
-  #advance(): void {
+  /** Whether any ingredient is still on its way down (falling, bouncing or stopped). */
+  get hasFalls(): boolean {
+    return this.ingredients.some(
+      (ingredient) => !ingredient.isIdle && ingredient.phase !== 'stacked'
+    );
+  }
+
+  /**
+   * Moves the falling ingredients a tick, with no stomping: the knocks, the crushes, the riders
+   * and the points go on as usual.
+   */
+  advanceFalls(): void {
     for (const ingredient of this.ingredients) {
       const wasMoving = ingredient.isMoving;
       ingredient.step();
@@ -133,14 +144,8 @@ export class IngredientField implements IngredientHost {
   /** Plays the falls under way to their end on a copy, and tells whether they finish the board. */
   #forecastsCompletion(): boolean {
     const twin = this.copy();
-    for (let tick = 0; tick < FORECAST_TICKS && twin.#hasFalls(); tick++) twin.#advance();
+    for (let tick = 0; tick < FORECAST_TICKS && twin.hasFalls; tick++) twin.advanceFalls();
     return twin.isComplete;
-  }
-
-  #hasFalls(): boolean {
-    return this.ingredients.some(
-      (ingredient) => !ingredient.isIdle && ingredient.phase !== 'stacked'
-    );
   }
 
   strike(ingredient: IngredientSnapshot, toY: number): number | undefined {

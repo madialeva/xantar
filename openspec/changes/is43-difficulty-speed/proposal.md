@@ -31,6 +31,11 @@ muestra:
 - **Al soltar el último ingrediente**, el chef sigue andando hasta que este
   toca el plato y entonces celebra, mientras los enemigos se siguen moviendo
   hasta que el ingrediente se asienta.
+- **Atrapado con la pantalla ganada** (`tmp/ejemplo-partida-3.webm`): si un
+  enemigo atrapa al chef mientras el último ingrediente baja al plato, el chef
+  hace la animación de morir, los enemigos se congelan (el montado sigue
+  bajando con su ingrediente) y, en cuanto se completa la hamburguesa, el chef
+  se levanta y celebra: no pierde la vida.
 
 ## What Changes
 
@@ -52,7 +57,10 @@ muestra:
   completarán todas las hamburguesas sin que el chef haga nada más (el último
   ingrediente, o uno con enemigos montados que acabará en el plato, empujando
   si hace falta al último), el tablero queda asegurado: los enemigos ya no le quitan
-  vidas al chef, que sigue jugando hasta que se completa el nivel como hoy.
+  vidas al chef, que sigue jugando hasta que se completa el nivel como hoy. Si un
+  enemigo le alcanza entonces, el chef cae como si muriera, los enemigos se
+  quedan quietos y las caídas siguen; al completarse la última hamburguesa se
+  levanta y pasa al nivel siguiente con las mismas vidas, como en el original.
 - **BREAKING (sensación de juego):** el chef y los enemigos van más despacio que
   ahora y los enemigos suben las escaleras a la mitad de su velocidad.
 
@@ -70,7 +78,10 @@ Ninguna.
   (velocidad de andar del momento), "Pisado de segmentos" y "Contacto con
   enemigos y vidas" (pisadas que se deshacen al perder una vida; sin pérdida de
   vida con el tablero asegurado); nuevos requisitos "Velocidad de los enemigos
-  según la dificultad" y "Tablero asegurado".
+  según la dificultad", "Tablero asegurado" y "Muerte aparente con el tablero
+  asegurado".
+- `simulation-core`: "Estado de partida" (con el tablero asegurado, `dying`
+  sigue moviendo las caídas y dura hasta que se completa).
 - `player-settings`: "Ajustes persistentes" y "Datos ausentes o dañados"
   (dificultad guardada, Normal por defecto).
 - `game-flow`: "Menú principal y opciones" (opción de dificultad).

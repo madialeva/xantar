@@ -12,7 +12,13 @@ import { EventQueue, type SimEvent } from './events';
 import { GameStats, type StatsSnapshot } from './GameStats';
 import type { Level } from './level/Level';
 import type { NavPlace } from './nav/NavPlace';
-import type { GamePhase, GamePhaseName, PhaseHost, PlayOutcome } from './phases/GamePhase';
+import type {
+  GamePhase,
+  GamePhaseName,
+  PhaseHost,
+  PlayOutcome,
+  ReprieveOutcome
+} from './phases/GamePhase';
 import { ReadyPhase } from './phases/phases';
 import type { Rng } from './rng';
 import { CONTACT_X, CONTACT_Y, SCORE } from './rules';
@@ -152,6 +158,8 @@ export class Simulation {
         return stats.lives;
       },
       playTick: (input) => this.#playTick(input),
+      reprieveTick: () => this.#reprieveTick(),
+      forfeitLife: () => this.#stats.loseLife(),
       respawn: () => this.#respawn(),
       rebuildBoard: () => this.startBoard(),
       endGame: () => this.#events.emit({ type: 'gameOver' })
@@ -166,7 +174,21 @@ export class Simulation {
     for (const enemy of this.#enemies) enemy.step(this.#chef, this.#rng, gait);
     this.#playTicks += 1;
     if (input.pepper) this.#throwPepper();
-    return this.#checkContact() ? 'chefHit' : 'continue';
+    return this.#checkContact();
+  }
+
+  /**
+   * A tick with the chef caught on a secured board: only the falls go on, and the enemies
+   * riding them; the board is cleared as soon as the last burger is done.
+   */
+  #reprieveTick(): ReprieveOutcome {
+    this.#field.advanceFalls();
+    const gait = enemyGait(this.pace);
+    for (const enemy of this.#enemies) {
+      if (enemy.riding) enemy.step(this.#chef, this.#rng, gait);
+    }
+    if (this.#checkLevelClear()) return 'levelCleared';
+    return this.#field.hasFalls ? 'falling' : 'stalled';
   }
 
   /**
@@ -261,8 +283,8 @@ export class Simulation {
       .forEach((enemy) => enemy.stun());
   }
 
-  #checkContact(): boolean {
-    if (this.#field.isSecured) return false;
+  /** A free enemy touching the chef takes a life, or only knocks him down on a secured board. */
+  #checkContact(): PlayOutcome {
     const touching = this.#enemies.some(
       (enemy) =>
         enemy.active &&
@@ -271,10 +293,11 @@ export class Simulation {
         Math.abs(enemy.x - this.#chef.x) < CONTACT_X &&
         Math.abs(enemy.y - this.#chef.y) < CONTACT_Y
     );
-    if (!touching) return false;
-    this.#stats.loseLife();
+    if (!touching) return 'continue';
+    const secured = this.#field.isSecured;
+    if (!secured) this.#stats.loseLife();
     this.#events.emit({ type: 'chefHit', livesLeft: Math.max(0, this.#stats.lives) });
-    return true;
+    return secured ? 'chefReprieved' : 'chefHit';
   }
 
   #checkLevelClear(): boolean {

@@ -200,8 +200,10 @@ disconnected. The pause menu lets you resume or quit to the main menu.
   half stepped on are whole again: you have to cross them again from the start.
 - Once the ingredients on their way are bound to finish every burger (the last
   one is falling to its plate, or carrying enemies that will take it there), the
-  board is won: enemies can no longer take a life, and the level ends when the
-  last burger is complete.
+  board is won: enemies can no longer take a life. If one catches you then, the
+  chef goes down as if he had lost, the enemies freeze and the ingredients keep
+  falling; when the last burger is complete he gets back up and you move on to
+  the next level with all your lives, as in the original.
 - Complete all four burgers to advance to the next level: after a short **LEVEL
   CLEAR!** pause the board is rebuilt on its own, and your score, lives and
   pepper carry over (every level uses the same layout for now).
