@@ -13,10 +13,10 @@ describe('difficulty', () => {
     ]);
   });
 
-  it('keeps the enemies at three quarters of their speed on easy, all the time', () => {
+  it('keeps the enemies at 85 % of their speed on easy, all the time', () => {
     const easy = paceFor('easy');
     expect([easy.factor(1, 0), easy.factor(1, 7200), easy.factor(9, 99_999)]).toEqual([
-      0.75, 0.75, 0.75
+      0.85, 0.85, 0.85
     ]);
   });
 

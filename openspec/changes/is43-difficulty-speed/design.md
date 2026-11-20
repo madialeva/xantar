@@ -126,7 +126,7 @@ Otros hechos de la grabación:
 `ENEMY_WALK_SPEED = fromPx(54)` y `ENEMY_CLIMB_SPEED = fromPx(27)` (sustituyen
 a `ENEMY_SPEED`). La curva y los factores también son constantes del núcleo:
 `PACE_STEPS = [1, 1.03, 1.07, 1.25]`, `PACE_STEP_TICKS = fromMs(21_750)` (1305
-ticks), `LATE_PACE_LEVEL = 4` con `LATE_PACE_FIRST_STEP = 2`, `EASY_PACE = 0.75`
+ticks), `LATE_PACE_LEVEL = 4` con `LATE_PACE_FIRST_STEP = 2`, `EASY_PACE = 0.85`
 y `HARD_PACE = 1.25`.
 
 Por qué: con las caídas ya en la escala del original, mantener el chef y los
@@ -270,7 +270,7 @@ EASY, NORMAL, HARD).
 - **[El juego se siente más lento]** → Es el original: el chef un 25 % más
   lento andando y casi la mitad subiendo. El autor lo valida jugando antes del
   PR; los valores están en `rules.ts`.
-- **[Fácil y Difícil son propuestas]** (×0,75 y ×1,25, la velocidad más alta
+- **[Fácil y Difícil son propuestas]** (×0,85 y ×1,25, la velocidad más alta
   medida) → Si al jugar no se sienten bien, se ajustan las constantes y, con
   ellas, la spec y las pruebas en este mismo cambio.
 - **[Las calles de Xantar son más anchas]** (7 casillas frente a 6 caracteres:

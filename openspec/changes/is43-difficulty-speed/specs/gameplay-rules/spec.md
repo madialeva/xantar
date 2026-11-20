@@ -3,7 +3,7 @@
 ### Requirement: Velocidad de los enemigos según la dificultad
 Los enemigos SHALL andar a 54 unidades por segundo y subir o bajar escaleras a
 27, multiplicadas por el factor de ritmo de la dificultad de la partida. En
-Fácil el factor SHALL ser siempre 0,75 y en Difícil, siempre 1,25. En Normal
+Fácil el factor SHALL ser siempre 0,85 y en Difícil, siempre 1,25. En Normal
 SHALL seguir la curva del requisito «Curva de ritmo en Normal». Una partida
 creada sin indicar la dificultad SHALL ser Normal. La dificultad SHALL NOT
 cambiar la velocidad del chef ni la de las caídas.
@@ -11,7 +11,7 @@ cambiar la velocidad del chef ni la de las caídas.
 #### Scenario: Fácil
 - **WHEN** en una partida en Fácil un enemigo anda 60 ticks seguidos por una
   plataforma, al empezar el tablero o pasados dos minutos de juego
-- **THEN** avanza 40,5 unidades
+- **THEN** avanza 45,9 unidades
 
 #### Scenario: Difícil
 - **WHEN** en una partida en Difícil un enemigo sube por una escalera durante

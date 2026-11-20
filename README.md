@@ -88,8 +88,8 @@ goes back (in the main menu, when there is **Quit**, it selects it).
 The **difficulty** sets how fast the enemies go, and it applies to the next game
 you start:
 
-- **Easy**: the enemies always go at three quarters of their normal speed, so
-  you can learn the game calmly.
+- **Easy**: the enemies always go at 85 % of their normal speed, so you can
+  learn the game calmly.
 - **Normal** (the default): as in the original arcade game, the enemies start
   at their normal speed and get a little faster the longer you take on a board,
   with a big push after about a minute; they calm down again on a new board or

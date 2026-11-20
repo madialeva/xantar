@@ -48,7 +48,7 @@ export const PACE_STEPS: readonly number[] = [1, 1.03, 1.07, 1.25];
 export const PACE_STEP_TICKS = fromMs(21_750);
 export const LATE_PACE_LEVEL = 4;
 export const LATE_PACE_FIRST_STEP = 2;
-export const EASY_PACE = 0.75;
+export const EASY_PACE = 0.85;
 export const HARD_PACE = 1.25;
 
 export const STUN_TICKS = fromMs(5000);

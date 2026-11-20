@@ -85,11 +85,11 @@ const clearBoard = (sim: Simulation): void => {
 };
 
 describe('Simulation: enemy speed by difficulty', () => {
-  it('keeps the enemies at three quarters of their speed on easy', () => {
+  it('keeps the enemies at 85 % of their speed on easy', () => {
     const sim = skipReady(simulate(apart, 'easy'));
-    expect(walked(sim, 60)).toBeCloseTo(40.5, 6);
+    expect(walked(sim, 60)).toBeCloseTo(45.9, 6);
     run(sim, 7200);
-    expect(sim.pace).toBe(0.75);
+    expect(sim.pace).toBe(0.85);
   });
 
   it('keeps the enemies at the fastest pace of the original on hard', () => {

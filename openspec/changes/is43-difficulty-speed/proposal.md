@@ -40,7 +40,7 @@ muestra:
   dificultad. La entrada por las pasarelas va a la velocidad de andar.
 - **Dificultad.** Nueva opción en Opciones: Fácil, Normal (por defecto) o
   Difícil. Se guarda con los demás ajustes y se aplica a la siguiente partida.
-  - **Fácil:** enemigos siempre a ×0,75.
+  - **Fácil:** enemigos siempre a ×0,85.
   - **Normal:** la curva del original: ×1 al empezar cada tablero o volver tras
     perder una vida, ×1,03 a los 21,75 s de juego, ×1,07 a los 43,5 s y ×1,25 a
     los 65,25 s. Desde el nivel 4, el tablero empieza en ×1,07.
