@@ -1,4 +1,5 @@
 import {
+  EASY_BOARDS_PER_SCREEN,
   EASY_PACE,
   HARD_PACE,
   LATE_PACE_FIRST_STEP,
@@ -46,3 +47,12 @@ const paces: Readonly<Record<Difficulty, EnemyPace>> = {
 
 /** The enemies' pace on a difficulty (Factory). */
 export const paceFor = (difficulty: Difficulty): EnemyPace => paces[difficulty];
+
+const boardsPerScreenOf: Readonly<Record<Difficulty, number>> = {
+  easy: EASY_BOARDS_PER_SCREEN,
+  normal: 1,
+  hard: 1
+};
+
+/** How many boards in a row each screen is played on a difficulty. */
+export const boardsPerScreen = (difficulty: Difficulty): number => boardsPerScreenOf[difficulty];

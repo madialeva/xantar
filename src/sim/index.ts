@@ -30,6 +30,7 @@ export * from './nav/NavPlace';
 export * from './phases/GamePhase';
 export * from './rng';
 export * from './rules';
+export * from './screenOrder';
 export * from './SimInput';
 export * from './Simulation';
 export * from './stepper';

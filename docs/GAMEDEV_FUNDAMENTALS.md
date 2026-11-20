@@ -654,10 +654,23 @@ dónde aparecen los enemigos.
   evolucionar sin romper niveles antiguos.
 - **Validador**: un conjunto de reglas que detecta niveles imposibles
   (ingredientes inalcanzables, escaleras que no llevan a ninguna parte).
+- **Progresión de pantallas**: el orden en que se juegan los niveles. Los
+  arcades clásicos encadenan unas pocas pantallas cada vez más difíciles (más
+  enemigos, recorridos más largos) y, tras la última, vuelven a la primera: el
+  jugador aprende una pantalla, la domina y pasa a la siguiente. Que el orden
+  sea un dato más (una lista de niveles) y no código permite cambiarlo sin
+  tocar las reglas.
+- **Curva de aprendizaje**: cómo de deprisa sube la exigencia. Una forma
+  sencilla de suavizarla para principiantes es **repetir** cada pantalla antes
+  de pasar a la siguiente: la segunda vez el jugador ya conoce el recorrido y
+  puede practicar lo que le costó. En Xantar, Fácil juega cada pantalla dos
+  veces seguidas; el número de nivel sigue contando tableros, para que el
+  jugador vea que avanza.
 
 En Xantar: [`classic.level.json`](../src/levels/classic.level.json),
-[`src/sim/level/`](../src/sim/level/) y la sección 8.6 del
-[manual](MANUAL.md).
+[`src/sim/level/`](../src/sim/level/), el orden de pantallas en
+[`screenOrder.ts`](../src/sim/screenOrder.ts) y las secciones 8.5 (punto 10)
+y 8.6 del [manual](MANUAL.md).
 
 ---
 

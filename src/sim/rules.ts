@@ -51,6 +51,9 @@ export const LATE_PACE_FIRST_STEP = 2;
 export const EASY_PACE = 0.85;
 export const HARD_PACE = 1.25;
 
+/** How many boards in a row each screen is played on Easy, so beginners can practise it. */
+export const EASY_BOARDS_PER_SCREEN = 2;
+
 export const STUN_TICKS = fromMs(5000);
 export const RESPAWN_TICKS = fromMs(2500);
 export const DECISION_MIN_TICKS = fromMs(500);

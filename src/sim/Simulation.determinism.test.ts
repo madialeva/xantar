@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import classicDocument from '../levels/classic.level.json';
 import type { SimEvent } from './events';
+import { assembleLevel } from './level/assembleLevel';
 import { type Level } from './level/Level';
 import { parseLevelDocument } from './level/levelJson';
 import { loadLevel } from './level/loadLevel';
 import { SeededRng } from './rng';
 import { NO_INPUT, type SimInput } from './SimInput';
 import { Simulation } from './Simulation';
+import { documentFromGrid, tinyGrid } from './testing/grids';
 
 const classic = parseLevelDocument(classicDocument);
 const level = loadLevel(classic);
@@ -47,7 +49,7 @@ const stateOf = (sim: Simulation): string =>
   });
 
 const play = (seed: number, board: Level = level): { states: string[]; events: SimEvent[] } => {
-  const sim = new Simulation({ level: board, rng: new SeededRng(seed) });
+  const sim = new Simulation({ screens: [board], rng: new SeededRng(seed) });
   const states: string[] = [];
   const events: SimEvent[] = [];
   for (const input of scriptedInputs(TICKS)) {
@@ -78,11 +80,41 @@ describe('Simulation determinism', () => {
   it('diverges for a different seed', () => {
     expect(play(8).states).not.toEqual(play(7).states);
   });
+
+  it('gives the same states across a change of screen', () => {
+    const quick = assembleLevel(
+      documentFromGrid({
+        name: 'Quick',
+        structure: tinyGrid.structure,
+        ingredients: tinyGrid.structure.map((_, row) => (row === 5 ? '.BBBB...' : '........')),
+        actors: tinyGrid.actors
+      })
+    );
+    const playAcross = (seed: number): { states: string[]; screens: string[] } => {
+      const sim = new Simulation({ screens: [quick, level], rng: new SeededRng(seed) });
+      const script = scriptedInputs(TICKS);
+      const states: string[] = [];
+      const screens = new Set<string>();
+      script.forEach((input, tick) => {
+        if (sim.phase === 'gameOver') sim.newGame();
+        const onQuick = sim.level === quick;
+        sim.step(
+          onQuick ? { ...NO_INPUT, left: true, confirm: sim.phase === 'levelClear' } : input
+        );
+        states.push(`${tick} ${sim.level.name} ${stateOf(sim)}`);
+        screens.add(sim.level.name);
+      });
+      return { states, screens: [...screens] };
+    };
+    const first = playAcross(5);
+    expect(first.screens).toEqual(['Quick', 'Classic']);
+    expect(playAcross(5).states).toEqual(first.states);
+  });
 });
 
 describe('Simulation interpolation state', () => {
   it('has no interpolation streak when everyone is put back after the chef is hit', () => {
-    const sim = new Simulation({ level, rng: new SeededRng(3) });
+    const sim = new Simulation({ screens: [level], rng: new SeededRng(3) });
     let respawned = false;
     for (let tick = 0; tick < 4000 && !respawned; tick++) {
       respawned = sim
@@ -96,7 +128,7 @@ describe('Simulation interpolation state', () => {
   });
 
   it('has no interpolation streak after the board restarts', () => {
-    const sim = new Simulation({ level, rng: new SeededRng(3) });
+    const sim = new Simulation({ screens: [level], rng: new SeededRng(3) });
     for (let tick = 0; tick < 100; tick++) sim.step({ ...NO_INPUT, left: true });
     sim.startBoard();
     for (const entity of [sim.chef, ...sim.enemies]) {

@@ -11,7 +11,7 @@ import { skipReady } from './testing/simulation';
 const classic = loadLevel(parseLevelDocument(classicDocument));
 const start = classic.chefStart;
 
-const create = (): Simulation => new Simulation({ level: classic, rng: new SeededRng(1) });
+const create = (): Simulation => new Simulation({ screens: [classic], rng: new SeededRng(1) });
 
 describe('Simulation', () => {
   it('starts getting ready with the chef at the level start and announces the board', () => {

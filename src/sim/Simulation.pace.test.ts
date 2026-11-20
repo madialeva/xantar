@@ -15,7 +15,7 @@ const simulate = (
   entries?: readonly LevelEntry[]
 ): Simulation =>
   new Simulation({
-    level: assembleLevel({ ...documentFromGrid(grid), ...(entries ? { entries } : {}) }),
+    screens: [assembleLevel({ ...documentFromGrid(grid), ...(entries ? { entries } : {}) })],
     rng: new StubRng(0.99),
     ...(difficulty ? { difficulty } : {})
   });

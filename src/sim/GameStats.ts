@@ -15,14 +15,18 @@ export interface StatsSnapshot {
  */
 export class GameStats implements StatsSnapshot {
   readonly #events: EventSink;
+  readonly #startLevel: number;
   #score = 0;
   #lives = START_LIVES;
   #peppers = START_PEPPERS;
-  #level = 1;
+  #level: number;
   #combo = 0;
 
-  constructor(events: EventSink) {
+  /** `startLevel` is the level a game starts on, the first one unless told otherwise. */
+  constructor(events: EventSink, startLevel = 1) {
     this.#events = events;
+    this.#startLevel = Math.max(1, Math.floor(startLevel));
+    this.#level = this.#startLevel;
   }
 
   get score(): number {
@@ -87,7 +91,7 @@ export class GameStats implements StatsSnapshot {
     this.#score = 0;
     this.#lives = START_LIVES;
     this.#peppers = START_PEPPERS;
-    this.#level = 1;
+    this.#level = this.#startLevel;
     this.#combo = 0;
   }
 }
