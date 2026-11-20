@@ -39,26 +39,27 @@ export const enemyRigs: Readonly<Record<EnemyKind, RigDefinition>> = {
       { name: 'eyes', graphic: 'hotdog.eyes', x: 2.6, y: -20 }
     ]
   },
-  pickle: {
-    scale: 0.82,
+  onion: {
+    scale: 0.91,
     parts: [
-      { name: 'legLeft', graphic: 'pickle.leg', x: -2.2, y: 2, originY: 0 },
-      { name: 'legRight', graphic: 'pickle.leg', x: 2.6, y: 2, originY: 0 },
+      { name: 'legLeft', graphic: 'onion.leg', x: -2.2, y: 2, originY: 0 },
+      { name: 'legRight', graphic: 'onion.leg', x: 2.6, y: 2, originY: 0 },
       {
         name: 'body',
-        graphic: 'pickle.body',
+        graphic: 'onion.body',
         x: 0,
         y: 4,
         originY: 1,
         frames: [
-          'pickle.wiggleBack2',
-          'pickle.wiggleBack1',
-          'pickle.body',
-          'pickle.wiggleFront1',
-          'pickle.wiggleFront2'
+          'onion.body',
+          'onion.turn1',
+          'onion.turn2',
+          'onion.turn3',
+          'onion.turn4',
+          'onion.turn5'
         ]
       },
-      { name: 'eyes', graphic: 'pickle.eyes', x: 1.6, y: -21 }
+      { name: 'eyes', graphic: 'onion.eyes', x: 1.2, y: -22.5 }
     ]
   },
   egg: {

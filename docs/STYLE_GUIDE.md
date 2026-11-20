@@ -60,8 +60,9 @@ Lo generan los scripts de `tools/blender/` (ver el manual del desarrollador,
 - **Materiales** realistas pero apetecibles: corteza dorada y brillante en el
   pan, miga pálida y porosa, carne a la brasa con tonos claros y oscuros y
   marcas de parrilla, lechuga verde translúcida con nervios, salchicha roja y
-  muy brillante, clara de huevo con el borde tostado y crujiente, pepinillo
-  verde oscuro con verrugas, tela mate con brillo suave en la ropa del chef.
+  muy brillante, clara de huevo con el borde tostado y crujiente, cebolla
+  morada jugosa y algo translúcida, con la piel brillante, y tela mate con
+  brillo suave en la ropa del chef.
 - Sin contorno dibujado: la silueta la marcan la luz y el contraluz.
 
 ### 2.2 Ingredientes
@@ -109,17 +110,27 @@ Lo generan los scripts de `tools/blender/` (ver el manual del desarrollador,
 - **Tamaño en el juego**: las partes se renderizan para un personaje de unas 38
   unidades de los pies a la cabeza, y cada rig lleva una escala (`scale` en
   `src/view/rigs/rigs.ts`) que lo deja en **32 unidades**, dos casillas: el chef
-  a 0,82 y los enemigos entre 30 y 33 (salchicha y pepinillo a 0,82; el huevo,
-  más bajo, a 0,9). La escala se aplica alrededor de los pies, que siguen en el
+  a 0,82 y los enemigos entre 30 y 33 (la salchicha a 0,82, el huevo a 0,9 y
+  la cebolla a 0,91). La escala se aplica alrededor de los pies, que siguen en el
   suelo. `rigHeights.test.ts` mide la altura con los píxeles opacos.
 - **Enemigos**: de la altura del chef, con piernas de su color y zapatillas blancas, ojos grandes con cejas
   de enfadado. Partes: `body`, `eyes` y `leg` (una imagen para las dos piernas).
-- **Bailes**: cada enemigo tiene cinco imágenes de su cuerpo, del mismo tamaño,
-  de un extremo a otro de su baile con `body` en el centro:
+- **Bailes**: la salchicha y el huevo tienen cinco imágenes de su cuerpo, del
+  mismo tamaño, de un extremo a otro de su baile con `body` en el centro:
   `<enemigo>.<baile>Back2`, `Back1`, `body`, `Front1`, `Front2`. La salchicha
-  se dobla (`bend`), el pepinillo se contonea en S (`wiggle`) y la clara del
-  huevo ondula (`ripple`). Los ojos son una parte aparte que el juego desplaza
-  para seguir el baile.
+  se dobla (`bend`) y la clara del huevo ondula (`ripple`). Los ojos son una
+  parte aparte que el juego desplaza para seguir el baile.
+- **Cebolla**: una rodaja gruesa de cebolla morada (24 unidades de diámetro y 5
+  de grueso, con los bordes redondeados) de pie sobre dos piernas moradas. De
+  frente se ven anillos concéntricos blancos con el borde violeta, más morados
+  hacia fuera, dentro de una piel morada oscura y brillante; de canto, una
+  barra morada. Los ojos asoman por encima del borde de arriba. En lugar de
+  bailar, **gira como una moneda** alrededor del eje horizontal, como el
+  pepinillo del original: seis imágenes de media vuelta en pasos de 30°,
+  `onion.body` (de frente, la postura base) y `onion.turn1` a `onion.turn5`
+  (`turn3`, de canto). Al andar da media vuelta por paso y al trepar, la mitad
+  de deprisa; los ojos bajan con el borde de arriba de la rodaja en cada
+  fotograma.
 - El resto de la animación (rebote, balanceo, *squash & stretch*) se hace
   moviendo y escalando partes.
 

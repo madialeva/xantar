@@ -18,7 +18,7 @@
 **Xantar** is a single-screen arcade game where you control a chef running over
 giant burger ingredients. Walking across an ingredient from side to side makes
 it fall down the platforms and stack on the plates, eventually building whole
-burgers. Meanwhile, anthropomorphic food (hot dogs, pickles and eggs) chases
+burgers. Meanwhile, anthropomorphic food (hot dogs, onions and eggs) chases
 you across walkways and ladders.
 
 It is written in **TypeScript** with the **Phaser** engine and bundled with
@@ -148,8 +148,10 @@ disconnected. The pause menu lets you resume or quit to the main menu.
 ### Enemies
 
 - On the first screen, three **Mr. Hot Dogs** and a **Mr. Egg** roam the maze
-  and chase you using the ladders, always taking the shortest way to you
-  (**Mr. Pickle** is ready for later screens).
+  and chase you using the ladders, always taking the shortest way to you.
+- **Mr. Onion**, a thick slice of red onion, white and violet, joins them on
+  later screens. It chases you just like the others and keeps **turning like a
+  coin** as it walks and climbs.
 - A board starts empty: the enemies **walk in one by one from the sides** of
   the screen, along short walkways at the ends of some floors, and come back
   the same way after you lose a life.
@@ -228,10 +230,10 @@ while the game is in the background.
 - The burger ingredients and the characters are **rendered 3D art**: a sesame
   bun, a barbecued patty with grill marks, lettuce and a bottom bun that look
   like real food, a blond chef with a ponytail, and a hot dog, a fried egg and
-  a pickle as tall as the chef. The characters are made of separate parts that
-  bounce, swing and squash as they move, and each enemy **dances its own way**
-  as it walks: the hot dog bends one way and the other, the pickle wiggles and
-  the egg's white wobbles.
+  a slice of red onion as tall as the chef. The characters are made of separate
+  parts that bounce, swing and squash as they move, and each enemy **dances its
+  own way** as it walks: the hot dog bends one way and the other, the egg's
+  white wobbles and the onion slice turns round and round.
 - Finished burgers stack on their plates piece on piece, like real ones.
 - The maze, plates, effects and panels are crisp **vector art**.
 - The game looks best on a **Full HD** screen or larger; smaller screens show

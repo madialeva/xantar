@@ -1,6 +1,12 @@
 import type Phaser from 'phaser';
 import type { CharacterRig, PoseOffset } from './CharacterRig';
 
+/** A part that takes one pose for each frame of another part, so the two never drift apart. */
+export interface FrameFollower {
+  readonly part: string;
+  readonly poses: readonly PoseOffset[];
+}
+
 /** Tween helpers that move the parts of one rig relative to their base pose. */
 export class RigMotion {
   readonly #rig: CharacterRig;
@@ -56,6 +62,35 @@ export class RigMotion {
       repeat: -1,
       ease: 'Sine.easeInOut',
       onUpdate: () => this.#rig.showFrame(part, Math.round(counter.frame))
+    });
+  }
+
+  /**
+   * Steps a part forward through its frames at a steady pace, back to the first after the last,
+   * until the state changes: `ms` for each pass, as for something that keeps turning. Each
+   * follower takes its pose for the frame shown.
+   */
+  loop(part: string, ms: number, followers: readonly FrameFollower[] = []): void {
+    const count = this.#rig.frameCount(part);
+    if (count < 2) return;
+    const riding = followers.filter((follower) => this.#rig.has(follower.part));
+    const show = (frame: number): void => {
+      this.#rig.showFrame(part, frame);
+      for (const follower of riding) {
+        const pose = follower.poses[frame];
+        if (pose !== undefined) this.#rig.pose(follower.part, pose);
+      }
+    };
+    const counter = { frame: 0 };
+    this.#counters.push(counter);
+    show(0);
+    this.#tweens.add({
+      targets: counter,
+      frame: count,
+      duration: ms,
+      repeat: -1,
+      ease: 'Linear',
+      onUpdate: () => show(Math.round(counter.frame) % count)
     });
   }
 

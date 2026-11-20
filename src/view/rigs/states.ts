@@ -1,5 +1,6 @@
 import type { EnemyKind } from '../../sim';
 import type { AnimationState } from './AnimationState';
+import type { PoseOffset } from './CharacterRig';
 import type { RigMotion } from './RigMotion';
 import type { ChefAnimation, EnemyAnimation } from './chooseAnimation';
 
@@ -59,11 +60,30 @@ export const chefStates: Readonly<Record<ChefAnimation, AnimationState>> = {
 
 /** How far the eyes follow a dancing body between its first and last frames. */
 const BEND_EYES_DX = 3;
-const WIGGLE_EYES_DX = 2.2;
+/**
+ * How far the onion's eyes drop on each frame of its half turn (0°, 30°… 150°), riding the top
+ * edge of the slice: its radius (12) less the height of the turned edge, 12·|cos a| + 2.5·|sin a|.
+ */
+const ONION_EYES_DROP: readonly PoseOffset[] = [0, 0.36, 3.83, 9.5, 3.83, 0.36].map((dy) => ({
+  dy
+}));
 
 const stepLegs = (motion: RigMotion): void => {
   motion.swing('legLeft', { angle: 28 }, { angle: -28 }, STEP_MS);
   motion.swing('legRight', { angle: -28 }, { angle: 28 }, STEP_MS);
+};
+
+const climbLegs = (motion: RigMotion): void => {
+  motion.swing('legLeft', { dy: 0 }, { dy: -2 }, CLIMB_MS);
+  motion.swing('legRight', { dy: -2 }, { dy: 0 }, CLIMB_MS);
+};
+
+/**
+ * The onion's slice turns like a coin, half a turn every `ms`, and its eyes ride its top edge:
+ * down to the middle when the slice is edge-on and up again.
+ */
+const turnSlice = (motion: RigMotion, ms: number): void => {
+  motion.loop('body', ms, [{ part: 'eyes', poses: ONION_EYES_DROP }]);
 };
 
 const enemyWalk: AnimationState = {
@@ -80,8 +100,7 @@ const commonEnemyStates: Readonly<Record<EnemyAnimation, AnimationState>> = {
     enter(motion) {
       motion.swing('body', { angle: -4 }, { angle: 4 }, CLIMB_MS);
       motion.swing('eyes', { dx: -1 }, { dx: 1 }, CLIMB_MS);
-      motion.swing('legLeft', { dy: 0 }, { dy: -2 }, CLIMB_MS);
-      motion.swing('legRight', { dy: -2 }, { dy: 0 }, CLIMB_MS);
+      climbLegs(motion);
     }
   },
   stunned: {
@@ -104,8 +123,10 @@ const commonEnemyStates: Readonly<Record<EnemyAnimation, AnimationState>> = {
 
 /**
  * The animations of each enemy kind. Each one dances its own way as it walks, stepping its
- * body through its frames in time with its legs: the hot dog bends one way and the other,
- * the pickle wiggles in an S and the egg's white wobbles like jelly as it bounces.
+ * body through its frames in time with its legs: the hot dog bends one way and the other, the
+ * egg's white wobbles like jelly as it bounces and the onion's slice turns like a coin, half a
+ * turn a step, as the pickle of the original does; the onion keeps turning, half as fast, on a
+ * ladder.
  */
 export const enemyStates: Readonly<
   Record<EnemyKind, Readonly<Record<EnemyAnimation, AnimationState>>>
@@ -136,13 +157,18 @@ export const enemyStates: Readonly<
       }
     }
   },
-  pickle: {
+  onion: {
     ...commonEnemyStates,
     walk: {
       enter(motion) {
-        enemyWalk.enter(motion);
-        motion.cycle('body', STEP_MS);
-        motion.swing('eyes', { dx: WIGGLE_EYES_DX }, { dx: -WIGGLE_EYES_DX }, STEP_MS);
+        stepLegs(motion);
+        turnSlice(motion, STEP_MS);
+      }
+    },
+    climb: {
+      enter(motion) {
+        climbLegs(motion);
+        turnSlice(motion, 2 * STEP_MS);
       }
     }
   }

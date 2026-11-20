@@ -37,10 +37,18 @@ describe('rigs', () => {
     }
   });
 
-  it('gives every enemy a dancing body', () => {
-    for (const rig of Object.values(enemyRigs)) {
-      expect(rig.parts.find((part) => part.name === 'body')?.frames?.length).toBe(5);
-    }
+  it('gives every enemy a dancing body: five frames to dance, six for half a turn', () => {
+    const frames = (kind: keyof typeof enemyRigs): readonly string[] =>
+      enemyRigs[kind].parts.find((part) => part.name === 'body')?.frames ?? [];
+    expect([frames('hotdog').length, frames('egg').length, frames('onion').length]).toEqual([
+      5, 5, 6
+    ]);
+  });
+
+  it('turns the onion from face-on, its base pose, to edge-on on the fourth frame', () => {
+    const body = enemyRigs.onion.parts.find((part) => part.name === 'body');
+    expect(body?.frames?.[0]).toBe(body?.graphic);
+    expect(body?.frames?.[3]).toBe('onion.turn3');
   });
 
   it('gives the chef a head, a hat, arms and legs', () => {

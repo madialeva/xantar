@@ -13,7 +13,7 @@ const rng = new StubRng(0.99);
 const [ladder] = level.graph.ladders;
 
 const enemyAtPlace = (place: NavPlace, active = true) => {
-  const enemy = createEnemy(0, 'pickle', new EventQueue(), level.graph, [entryAt(place)]);
+  const enemy = createEnemy(0, 'onion', new EventQueue(), level.graph, [entryAt(place)]);
   enemy.reset(place, rng);
   if (!active) enemy.squash();
   return enemy;
@@ -99,7 +99,7 @@ describe('pepper on a ladder', () => {
       structure: ['===+====', ...Array.from({ length: 8 }, () => '...H....'), '===+===='],
       actors: [...Array.from({ length: 9 }, () => '........'), 'C.......']
     });
-    const far = createEnemy(0, 'pickle', new EventQueue(), tall.graph, [
+    const far = createEnemy(0, 'onion', new EventQueue(), tall.graph, [
       entryAt(tall.graph.placeAt(0, 3.5))
     ]);
     far.reset(tall.graph.placeAt(0, 3.5), rng);

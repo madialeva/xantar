@@ -817,7 +817,7 @@ describe('Simulation: enemies riding an ingredient', () => {
   });
 
   it('gives no bonus when the chef loses a life during the ride', () => {
-    const sim = create(column('..h...C.......p.....'));
+    const sim = create(column('..h...C.......o.....'));
     dropWithRider(sim);
     const [rider] = sim.enemies;
     expect(rider.riding).toBe(true);

@@ -161,6 +161,22 @@ describe('assembleLevel', () => {
     actors[2] = '.X......';
     expect(() => levelFromGrid(withGrid({ actors }))).toThrow(/Unknown symbol "X"/);
   });
+
+  it('places an onion where an o stands in the actors layer', () => {
+    const actors = [...(tinyGrid.actors ?? [])];
+    actors[2] = '......o.';
+    expect(levelFromGrid(withGrid({ actors })).enemySpawns).toEqual([
+      { kind: 'onion', row: 2, x: 6.5, delayTicks: 0 }
+    ]);
+  });
+
+  it('no longer knows the pickle: a p is an unknown symbol with its layer, row and column', () => {
+    const actors = [...(tinyGrid.actors ?? [])];
+    actors[2] = '...p....';
+    const error = capture(() => levelFromGrid(withGrid({ actors })));
+    expect([error.layer, error.row, error.col]).toEqual(['actors', 2, 3]);
+    expect(error.message).toMatch(/Unknown symbol "p"/);
+  });
 });
 
 describe('Level landing and destinations', () => {

@@ -6,7 +6,7 @@ Blender z is the rig's y turned upwards (z = -y), the origin is the centre of th
 tile and the feet touch y = +10. Characters face right; the game mirrors them.
 
 Run from the repository root:
-    blender -b --factory-startup --python tools/blender/characters.py -- [--only hotdog] [--samples N]
+    blender -b --factory-startup --python tools/blender/characters.py -- [--only onion] [--samples N]
 
 Writes <graphic>.png at 4x the logical size to the art sources (src/view/art/sources/), and
 a preview of each part to tmp/blender/characters/. The rectangles here must match the parts'
@@ -185,30 +185,35 @@ def sausage_material():
     return material
 
 
-def pickle_material():
-    """Dill pickle: deep green with pale speckles and warts, wet and glossy."""
-    material, tree = new_material("pickle")
-    bsdf, output = principled(tree)
+def onion_material():
+    """Red onion: concentric layers of juicy white flesh, each edged with violet, inside a glossy
+    purple skin. Built for a slice whose faces lie across y, with the centre at the origin."""
+    material, tree = new_material("onion")
+    bsdf, _ = principled(tree)
     vector, split = object_coords(tree)
-    warts = voronoi4(tree, vector, 0.0, 0.42)
-    mottle = noise4(tree, vector, 0.0, 0.3, detail=4)
-    stripes = noise4(tree, vector, 0.0, 0.9, detail=3)
-    wart = map_range(tree, warts, 0.0, 0.32, 1.0, 0.0)
-    displacement = tree.nodes.new("ShaderNodeDisplacement")
-    feed(tree, displacement.inputs["Height"], wart)
-    displacement.inputs["Midlevel"].default_value = 0.0
-    displacement.inputs["Scale"].default_value = 0.45
-    tree.links.new(displacement.outputs["Displacement"], output.inputs["Displacement"])
-    use_displacement(material)
-    level = add(tree, 0.5, centred(tree, mottle, 0.5), centred(tree, stripes, 0.3), scaled(tree, wart, -0.35), clamp=True)
-    stops = [(0.0, "#A9C266"), (0.3, "#7FA347"), (0.6, "#557F2E"), (1.0, "#2F5219")]
+    radial = math_op(
+        tree,
+        "SQRT",
+        add(tree, math_op(tree, "MULTIPLY", split.outputs["X"], split.outputs["X"]), math_op(tree, "MULTIPLY", split.outputs["Z"], split.outputs["Z"])),
+    )
+    wobble = noise4(tree, vector, 0.0, 0.18, detail=3)
+    fine = noise4(tree, vector, 0.0, 1.6, detail=5)
+    radius = add(tree, radial, centred(tree, wobble, 0.9))
+    layer = math_op(tree, "FRACT", math_op(tree, "DIVIDE", math_op(tree, "SUBTRACT", radius, ONION_CORE), ONION_LAYER))
+    edge = map_range(tree, layer, 0.5, 0.82, 0.0, 1.0)
+    outer = map_range(tree, radial, 0.0, ONION_RADIUS, 0.55, 1.0)
+    rings = scaled(tree, math_op(tree, "MULTIPLY", edge, outer), 0.7)
+    skin = map_range(tree, radial, ONION_RADIUS - 1.0, ONION_RADIUS - 0.55, 0.0, 1.0)
+    level = add(tree, math_op(tree, "MAXIMUM", rings, skin), centred(tree, fine, 0.06), clamp=True)
+    stops = [(0.0, "#FAF3F8"), (0.2, "#F0DCEC"), (0.4, "#D59ACB"), (0.6, "#A2408F"), (0.75, "#7E2672"), (0.9, "#5E1A55"), (1.0, "#46123F")]
     feed(tree, bsdf.inputs["Base Color"], ramp(tree, level, stops))
-    bsdf.inputs["Roughness"].default_value = 0.4
-    bsdf.inputs["Coat Weight"].default_value = 0.6
-    bsdf.inputs["Coat Roughness"].default_value = 0.1
-    bsdf.inputs["Subsurface Weight"].default_value = 0.15
-    bsdf.inputs["Subsurface Radius"].default_value = (0.4, 1.0, 0.3)
-    bsdf.inputs["Subsurface Scale"].default_value = 0.8
+    bsdf.inputs["Roughness"].default_value = 0.28
+    bsdf.inputs["Coat Weight"].default_value = 0.65
+    bsdf.inputs["Coat Roughness"].default_value = 0.08
+    bsdf.inputs["Subsurface Weight"].default_value = 0.3
+    bsdf.inputs["Subsurface Radius"].default_value = (1.0, 0.8, 0.95)
+    bsdf.inputs["Subsurface Scale"].default_value = 0.6
+    feed(tree, bsdf.inputs["Normal"], bump(tree, add(tree, edge, scaled(tree, fine, 0.3)), 0.18, 0.25))
     return material
 
 
@@ -354,26 +359,46 @@ def egg_eyes(scene, group):
     add_eyes(scene, group, eyes, 0.0, size=0.95)
 
 
-PICKLE_WIGGLE = 2.2
+ONION_RADIUS = 12.0
+ONION_THICKNESS = 5.0
+ONION_CORE = 1.4
+ONION_LAYER = 2.05
+ONION_CENTRE_Y = -9.0
+ONION_TURN_DEGREES = 30
 
 
-def build_pickle(scene, group, wiggle=0.0):
-    """Mr Pickle: an upright, slightly curved pickle from y = 3 to y = -28."""
-    stations, radii = capsule_radii(6.0, 72, p=2.6)
-    bottom, top = 3.0, -28.0
-    centres = [rig_point(-1.2 * math.sin(math.pi * t) + PICKLE_WIGGLE * wiggle * math.sin(2 * math.pi * t), bottom + (top - bottom) * t) for t in stations]
-    radii = [r * (0.92 + 0.08 * math.sin(math.pi * t)) for r, t in zip(radii, stations)]
-    place(scene, "pickle", tube("pickle", centres, radii, ring=96), pickle_material(), Matrix.Identity(4), group)
+def onion_slice():
+    """A thick round slice with rounded edges, its faces across y and its centre at the origin."""
+    bm = bmesh.new()
+    bmesh.ops.create_cone(bm, cap_ends=True, cap_tris=False, segments=128, radius1=ONION_RADIUS, radius2=ONION_RADIUS, depth=ONION_THICKNESS)
+    bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0), matrix=Matrix.Rotation(math.pi / 2, 3, "X"))
+    rims = [edge for edge in bm.edges if all(abs(abs(v.co.y) - ONION_THICKNESS / 2) < 1e-4 and v.co.xz.length > ONION_RADIUS - 1e-3 for v in edge.verts) and edge.verts[0].co.y * edge.verts[1].co.y > 0]
+    bmesh.ops.bevel(bm, geom=rims, offset=0.9, offset_type="OFFSET", segments=5, profile=0.5, affect="EDGES")
+    mesh = bpy.data.meshes.new("onion")
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.shade_smooth()
+    return mesh
 
 
-def pickle_eyes(scene, group):
-    radius = 5.7
-    eyes = []
-    for angle in (0.1, 0.6):
-        centre_x = -1.2 * math.sin(math.pi * 0.75)
-        surface = Vector((centre_x + radius * math.sin(angle), -radius * math.cos(angle), 21.0))
-        eyes.append((surface + Vector((math.sin(angle), -math.cos(angle), 0.0)) * 0.25, angle))
-    add_eyes(scene, group, eyes, 0.0)
+def build_onion(scene, group, turn=0.0):
+    """Mr Onion: a slice of red onion standing on its edge, turned `turn` degrees about the
+    horizontal axis: face-on at 0, edge-on at 90."""
+    matrix = Matrix.Translation(rig_point(0.0, ONION_CENTRE_Y)) @ Matrix.Rotation(math.radians(turn), 4, "X")
+    place(scene, "onion", onion_slice(), onion_material(), matrix, group)
+
+
+def onion_eyes(scene, group):
+    """Eyes peeking over the top edge of the slice."""
+    top = -(ONION_CENTRE_Y - ONION_RADIUS)
+    eyes = [(Vector((x, -3.0, top + 1.5)), 0.0) for x in (-1.0, 3.4)]
+    add_eyes(scene, group, eyes, 0.0, size=0.9)
+
+
+def turn_frames(kind):
+    """The frames of half a turn of a spinning body, from face-on (its base pose) in equal steps."""
+    names = [f"{kind}.body"] + [f"{kind}.turn{step}" for step in range(1, 6)]
+    return {name: step * ONION_TURN_DEGREES for step, name in enumerate(names)}
 
 
 # --- Rendering ---
@@ -432,7 +457,7 @@ ENEMIES = {
         "body": rect_from(0, 4, 18, 34, 0.5, 1.0),
         "eyes": rect_from(2.6, -20, 12, 7),
         "build": build_sausage,
-        "dance": "bend",
+        "frames": dance_frames("hotdog", "bend"),
         "add_eyes": sausage_eyes,
     },
     "egg": {
@@ -440,16 +465,16 @@ ENEMIES = {
         "body": rect_from(0, 4, 30, 30, 0.5, 1.0),
         "eyes": rect_from(1.2, -13, 12, 7),
         "build": build_egg,
-        "dance": "ripple",
+        "frames": dance_frames("egg", "ripple"),
         "add_eyes": egg_eyes,
     },
-    "pickle": {
-        "leg": "#5E8A33",
-        "body": rect_from(0, 4, 18, 34, 0.5, 1.0),
-        "eyes": rect_from(1.6, -21, 12, 7),
-        "build": build_pickle,
-        "dance": "wiggle",
-        "add_eyes": pickle_eyes,
+    "onion": {
+        "leg": "#7B2D6E",
+        "body": rect_from(0, 4, 30, 30, 0.5, 1.0),
+        "eyes": rect_from(1.2, -22.5, 12, 7),
+        "build": build_onion,
+        "frames": turn_frames("onion"),
+        "add_eyes": onion_eyes,
     },
 }
 
@@ -464,7 +489,7 @@ def render_enemy(kind, samples):
     spec["add_eyes"](scene, group)
     render_part(scene, f"{kind}.eyes", spec["eyes"])
     clear_group(group)
-    for graphic, amount in dance_frames(kind, spec["dance"]).items():
+    for graphic, amount in spec["frames"].items():
         spec["build"](scene, group, amount)
         render_part(scene, graphic, spec["body"])
         clear_group(group)

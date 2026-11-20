@@ -477,6 +477,15 @@ La clásica: se dibuja cada postura y se muestran en secuencia, como un dibujo
 animado (*frame-by-frame*, con hojas de sprites). Da control total al artista,
 pero cada animación nueva son muchos dibujos nuevos.
 
+Con arte renderizado, los fotogramas salen del modelo 3D: basta con girarlo o
+deformarlo y volver a renderizar. Así gira la cebolla de Xantar: seis imágenes
+de la rodaja girada media vuelta (de frente, cada vez más de canto y otra vez
+casi de frente) que el juego recorre siempre hacia delante y vuelve a empezar.
+Como una rodaja vista de frente o de espaldas se ve igual, media vuelta basta
+para un giro sin fin. Lo que acompaña a esos fotogramas (los ojos, que bajan con
+el borde de la rodaja) debe moverse con el mismo contador que los cambia: dos
+animaciones con el mismo periodo pero relojes distintos acaban desfasándose.
+
 ### 9.2 Interpolación (tweens) y curvas de suavizado
 
 Un **tween** cambia una propiedad de un valor a otro en un tiempo dado: mover
