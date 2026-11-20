@@ -31,7 +31,7 @@
 ## 6. Integración
 
 - [x] 6.1 Ejecutar las comprobaciones de entrega completas (`npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build`, `npm run smoke`) y `openspec validate is43-difficulty-speed --strict`; verificar que todo termina sin errores
-- [ ] 6.2 Jugar en `npm run dev` y en `npm run dev:desktop` comparando con la grabación: velocidades del chef y de los enemigos, acelerón de Normal hacia el minuto de juego y vuelta a la base al perder una vida, Fácil y Difícil, pisadas deshechas al perder una vida y tablero asegurado al soltar el último ingrediente (lo verifica el autor)
+- [x] 6.2 Jugar en `npm run dev` y en `npm run dev:desktop` comparando con la grabación: velocidades del chef y de los enemigos, acelerón de Normal hacia el minuto de juego y vuelta a la base al perder una vida, Fácil y Difícil, pisadas deshechas al perder una vida y tablero asegurado al soltar el último ingrediente (lo verifica el autor)
 
 ## 7. Muerte aparente con el tablero asegurado
 
