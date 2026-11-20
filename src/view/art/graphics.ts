@@ -1,4 +1,4 @@
-import type { IngredientKind } from '../../sim';
+import { type IngredientKind, ROW_UNITS } from '../../sim';
 
 export interface GraphicSize {
   readonly width: number;
@@ -23,13 +23,14 @@ const ingredient = <K extends IngredientKind>(kind: K) => {
 };
 
 export const GRAPHICS = {
-  'board.backdrop': size(624, 480),
-  'platform.left': size(16, 12),
-  'platform.mid': size(16, 12),
-  'platform.right': size(16, 12),
-  crossing: size(16, 12),
-  walkway: size(16, 12),
-  ladder: size(16, 16),
+  'board.backdrop': size(624, 30 * ROW_UNITS),
+  'platform.left': size(16, 8),
+  'platform.mid': size(16, 8),
+  'platform.right': size(16, 8),
+  crossing: size(16, 8),
+  walkway: size(16, 8),
+  ladder: size(16, ROW_UNITS),
+  'ladder.rails': size(16, 8),
   'plate.left': size(16, 10),
   'plate.mid': size(16, 10),
   'plate.right': size(16, 10),

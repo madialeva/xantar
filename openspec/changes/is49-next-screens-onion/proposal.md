@@ -59,6 +59,24 @@ misma línea.
   sus enemigos.
 - **Ayuda de desarrollo.** En el servidor de desarrollo, `?screen=N` empieza la
   partida en la pantalla N, para probar las pantallas sin pasar las anteriores.
+- **Correcciones tras la primera revisión del autor:**
+  - **Escaleras dentro de los pisos.** Los enemigos se atascaban en escaleras
+    que tocaban un piso en su última casilla; cada piso sigue ahora al menos
+    una casilla más allá, como en la clásica, y el validador avisa
+    (`ladder-at-floor-end`).
+  - **Proporción vertical del original.** Un tramo de escalera (dos filas) debe
+    dejar algo más que la altura del chef, para que nadie atraviese con la
+    cabeza el piso de arriba y 2, 3 o 4 tramos midan 2, 3 o 4 cocineros. Sin
+    encoger a los personajes: el tablero conserva las 30 filas del original,
+    cada fila mide 21 unidades en vez de 16 y las plataformas, 8 en vez de 12.
+    El tablero pasa a 624×630 y el área de juego, a 630 de alto. Subir un
+    tramo o caer un piso dura lo mismo que en el original. El validador avisa
+    de lo que quede justo encima de un piso (`floor-headroom`).
+  - **Escalera renderizada** con Blender, de madera, con cuatro peldaños por
+    fila en vez de dos.
+  - **Cebolla más lenta:** media vuelta por zancada en vez de por paso.
+- **BREAKING (aspecto):** el tablero es más alto y, en la misma ventana, se ve
+  algo más pequeño, con paneles laterales más anchos.
 
 ## Capabilities
 
@@ -69,17 +87,30 @@ Ninguna.
 ### Modified Capabilities
 
 - `level-data`: nuevo requisito "Pantallas del juego" (las cuatro pantallas,
-  sus enemigos y sus entradas).
+  sus enemigos y sus entradas); "Casillas de medio cocinero" (filas de 21 y un
+  tramo algo más alto que el chef).
 - `level-pieces`: "Piezas de la versión 1" (`o` cebolla en lugar de `p`
   pepinillo).
 - `gameplay-rules`: "Fin de nivel" (el tablero siguiente es el de la pantalla
-  que toca); nuevo requisito "Orden de las pantallas".
+  que toca); nuevo requisito "Orden de las pantallas"; "Escaleras del chef",
+  "Comportamiento de los enemigos", "Velocidad y rebote de la caída" y
+  "Velocidad de los enemigos según la dificultad" (velocidades verticales en
+  filas por segundo).
 - `character-rigs`: "Bailes de los enemigos" (la cebolla gira en lugar del
-  contoneo del pepinillo).
-- `rendered-assets`: "Fotogramas de baile" (fotogramas de giro de la cebolla);
-  nuevo requisito "Aspecto de la cebolla".
+  contoneo del pepinillo) y "Personajes por partes" (32 unidades, el ancho de
+  dos casillas).
+- `rendered-assets`: "Fotogramas de baile" (fotogramas de giro de la cebolla) y
+  "Gráficos renderizados reproducibles" (también la escalera); nuevos
+  requisitos "Aspecto de la cebolla" y "Escalera renderizada".
 - `view-adapter`: "Laberinto a partir del nivel cargado" (se redibuja al
-  cambiar de pantalla, con sus enemigos).
+  cambiar de pantalla, con sus enemigos) y "Dibujo interpolado" (columnas y
+  filas con su propio tamaño).
+- `level-validation`: nuevo requisito "Escaleras dentro de los pisos y altura
+  libre".
+- `screen-layout`: "Tablero central intacto" (624×630) y "Área de juego
+  adaptable" (630 de alto, de 816 a 1512 de ancho).
+- `vector-assets`: "Guía de estilo" (casillas de 16×21) y "Fuentes SVG para
+  todo lo visible" (la escalera pasa a renderizada).
 
 ## Impact
 
@@ -98,6 +129,10 @@ Ninguna.
   (pantallas y orden, cebolla, `--only onion`, `?screen=N`),
   `docs/STYLE_GUIDE.md` (cebolla) y `docs/GAMEDEV_FUNDAMENTALS.md` (progresión
   de pantallas y curva de aprendizaje).
+- Geometría: `src/sim/rules.ts` (`ROW_UNITS`, alturas dibujadas en filas),
+  `pepper.ts`, `src/config.ts`, `computeLayout`, los menús, las piezas SVG del
+  laberinto, `tools/blender/maze.py` (nuevo) y `common.py`, la prueba de humo
+  (toques táctiles) y las reglas del validador.
 - Sin dependencias nuevas. El formato de nivel sigue en la versión 1.
 - GitHub: issue #49, que pasa a describir pantallas de diseño propio, el orden
   con Fácil y la cebolla; hito `v1.0.0`.

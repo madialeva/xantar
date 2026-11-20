@@ -980,7 +980,8 @@ describe('Simulation: secured board', () => {
     });
     const [enemy] = sim.enemies;
     for (let i = 0; i < 60 && sim.chef.x >= 3.05; i++) run(sim, 1, { left: true });
-    for (let i = 0; i < 600 && !(enemy.isClimbing && enemy.y > 2); i++) run(sim, 1);
+    const near = sim.chef.y - CONTACT_Y + 0.05;
+    for (let i = 0; i < 600 && !(enemy.isClimbing && enemy.y > near); i++) run(sim, 1);
     run(sim, 1, { pepper: true });
     expect(enemy.stunned).toBe(true);
     const step = CHEF_SPEED * TICK_SECONDS;

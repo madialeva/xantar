@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH, type RenderTier } from '../config';
+import { GAME_HEIGHT, GAME_WIDTH, MENU_TOP, type RenderTier } from '../config';
 import { LANGUAGES } from '../i18n/language';
 import type { ActionReader } from '../input/actions';
 import type { Localization } from '../i18n/Localization';
@@ -28,7 +28,12 @@ export interface MenuSceneDependencies {
 type Page = 'main' | 'options' | 'controls';
 
 const OPTION_ROWS = { language: 1, controls: 5, back: 6 } as const;
-const OPTIONS_STYLE = { titleY: 78, y: 150, spacing: 38, size: 22 } as const;
+const OPTIONS_STYLE = {
+  titleY: MENU_TOP + 78,
+  y: MENU_TOP + 150,
+  spacing: 38,
+  size: 22
+} as const;
 
 const cycle = <T>(values: readonly T[], current: T, direction: 1 | -1): T =>
   values[(values.indexOf(current) + direction + values.length) % values.length];
@@ -78,7 +83,7 @@ export default class MenuScene extends Phaser.Scene {
     };
     const style = {
       x: GAME_WIDTH / 2,
-      y: 230,
+      y: MENU_TOP + 230,
       spacing: 44,
       size: 24,
       color: palette.hudText,
@@ -94,7 +99,7 @@ export default class MenuScene extends Phaser.Scene {
         onBack: () => this.#show('options', OPTION_ROWS.controls)
       });
     } else if (page === 'main') {
-      text(110, localization.t('game.title'), 64, palette.hudAccent);
+      text(MENU_TOP + 110, localization.t('game.title'), 64, palette.hudAccent);
       text(
         GAME_HEIGHT - 96,
         localization.t('menu.best', { score: this.#deps.settings.bestScore }),

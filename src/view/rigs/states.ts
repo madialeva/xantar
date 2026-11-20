@@ -64,6 +64,8 @@ const BEND_EYES_DX = 3;
  * How far the onion's eyes drop on each frame of its half turn (0°, 30°… 150°), riding the top
  * edge of the slice: its radius (12) less the height of the turned edge, 12·|cos a| + 2.5·|sin a|.
  */
+/** Half a turn of the onion's slice for each stride (two steps), slow enough to follow. */
+const ONION_TURN_MS = 2 * STEP_MS;
 const ONION_EYES_DROP: readonly PoseOffset[] = [0, 0.36, 3.83, 9.5, 3.83, 0.36].map((dy) => ({
   dy
 }));
@@ -125,7 +127,7 @@ const commonEnemyStates: Readonly<Record<EnemyAnimation, AnimationState>> = {
  * The animations of each enemy kind. Each one dances its own way as it walks, stepping its
  * body through its frames in time with its legs: the hot dog bends one way and the other, the
  * egg's white wobbles like jelly as it bounces and the onion's slice turns like a coin, half a
- * turn a step, as the pickle of the original does; the onion keeps turning, half as fast, on a
+ * turn a stride, as the pickle of the original does; the onion keeps turning, half as fast, on a
  * ladder.
  */
 export const enemyStates: Readonly<
@@ -162,13 +164,13 @@ export const enemyStates: Readonly<
     walk: {
       enter(motion) {
         stepLegs(motion);
-        turnSlice(motion, STEP_MS);
+        turnSlice(motion, ONION_TURN_MS);
       }
     },
     climb: {
       enter(motion) {
         climbLegs(motion);
-        turnSlice(motion, 2 * STEP_MS);
+        turnSlice(motion, 2 * ONION_TURN_MS);
       }
     }
   }

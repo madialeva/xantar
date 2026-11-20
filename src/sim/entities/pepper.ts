@@ -1,8 +1,10 @@
 import {
+  CELL_UNITS,
   PEPPER_CLOUD_LIFT,
   PEPPER_CLOUD_OFFSET,
   PEPPER_REACH_ACROSS,
-  PEPPER_REACH_ALONG
+  PEPPER_REACH_ALONG,
+  ROW_UNITS
 } from '../rules';
 import type { EnemySnapshot } from './Enemy';
 
@@ -32,19 +34,21 @@ export interface PepperCloud {
   readonly direction: ThrowDirection;
 }
 
+/** Where the cloud of a pepper thrown by the chef appears, in cells and rows. */
 export const pepperCloudFor = (chef: PepperSource): PepperCloud => {
   const { dx, dy } = THROW_VECTORS[chef.throwDirection];
   return {
-    x: chef.x + dx * PEPPER_CLOUD_OFFSET,
-    y: chef.y + dy * PEPPER_CLOUD_OFFSET - PEPPER_CLOUD_LIFT,
+    x: chef.x + (dx * PEPPER_CLOUD_OFFSET) / CELL_UNITS,
+    y: chef.y + (dy * PEPPER_CLOUD_OFFSET - PEPPER_CLOUD_LIFT) / ROW_UNITS,
     direction: chef.throwDirection
   };
 };
 
+/** Whether the pepper the chef throws reaches an enemy; distances are measured in units. */
 export const isHitByPepper = (chef: PepperSource, enemy: EnemySnapshot): boolean => {
   const { dx, dy } = THROW_VECTORS[chef.throwDirection];
-  const offsetX = enemy.x - chef.x;
-  const offsetY = enemy.y - chef.y;
+  const offsetX = (enemy.x - chef.x) * CELL_UNITS;
+  const offsetY = (enemy.y - chef.y) * ROW_UNITS;
   const ahead = offsetX * dx + offsetY * dy;
   const aside = Math.abs(offsetX * dy) + Math.abs(offsetY * dx);
   return (

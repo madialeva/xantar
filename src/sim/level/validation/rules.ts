@@ -110,6 +110,63 @@ export const entriesHaveEnemies: LevelRule = {
   }
 };
 
+/**
+ * A ladder must meet each floor at least one tile in from its end: the characters cannot walk
+ * closer to the end of a floor than `EDGE_MARGIN`, so an enemy never reaches a ladder on its
+ * last tile and gets stuck there.
+ */
+export const laddersInsideFloors: LevelRule = {
+  check({ terrain }) {
+    const issues: LevelIssue[] = [];
+    for (let row = 0; row < terrain.rows; row++) {
+      for (let col = 0; col < terrain.cols; col++) {
+        if (!terrain.hasPlatform(row, col) || !terrain.hasLadder(row, col)) continue;
+        if (terrain.hasPlatform(row, col - 1) && terrain.hasPlatform(row, col + 1)) continue;
+        issues.push({
+          severity: 'warning',
+          code: 'ladder-at-floor-end',
+          message: 'This ladder meets the floor on its last tile, where enemies cannot reach it',
+          row,
+          col
+        });
+      }
+    }
+    return issues;
+  }
+};
+
+/**
+ * Nothing may stand on the row right above a tile a character walks on (a floor or an entry
+ * walkway): a row is shorter than a chef, so its head would go through it. Two rows up there is
+ * room enough, which is why floors joined by a ladder are an even number of rows apart.
+ */
+export const headroomOverFloors: LevelRule = {
+  check({ terrain }) {
+    const walkable = (row: number, col: number): boolean =>
+      terrain.hasPlatform(row, col) || terrain.hasWalkway(row, col);
+    const above = (row: number, col: number): boolean =>
+      walkable(row - 1, col) || terrain.plateIdAt(row - 1, col) !== undefined;
+    const issues: LevelIssue[] = [];
+    for (let row = 1; row < terrain.rows; row++) {
+      let inside = false;
+      for (let col = 0; col < terrain.cols; col++) {
+        const blocked = walkable(row, col) && above(row, col);
+        if (blocked && !inside) {
+          issues.push({
+            severity: 'warning',
+            code: 'floor-headroom',
+            message: 'A character walking here would put its head through the row above it',
+            row,
+            col
+          });
+        }
+        inside = blocked;
+      }
+    }
+    return issues;
+  }
+};
+
 export const hasIngredients: LevelRule = {
   check(level) {
     return level.ingredients.length > 0
@@ -173,6 +230,8 @@ export const defaultRules: readonly LevelRule[] = [
   ingredientsEndOnAPlate,
   noDanglingLadders,
   laddersSpanWholeChefs,
+  laddersInsideFloors,
+  headroomOverFloors,
   walkwaysLeadToPlatforms,
   entriesHaveEnemies,
   platesReceiveIngredients,

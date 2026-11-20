@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EventQueue } from '../events';
 import { NavPlace } from '../nav/NavPlace';
-import { CELL_UNITS } from '../rules';
+import { CELL_UNITS, ROW_UNITS } from '../rules';
 import { levelFromGrid, tinyGrid } from '../testing/grids';
 import { StubRng } from '../testing/rng';
 import { createEnemy } from './createEnemy';
@@ -34,7 +34,7 @@ describe('pepper on a platform', () => {
   it('places the cloud in front of the chef', () => {
     const cloud = pepperCloudFor(chef(4, 5, 'left'));
     expect(cloud.x).toBeCloseTo(4 - 24 / CELL_UNITS, 10);
-    expect(cloud.y).toBeCloseTo(5 - 2 / CELL_UNITS, 10);
+    expect(cloud.y).toBeCloseTo(5 - 2 / ROW_UNITS, 10);
     expect(cloud.direction).toBe('left');
   });
 
@@ -63,14 +63,14 @@ describe('pepper on a ladder', () => {
   it('places the cloud above the chef when thrown up', () => {
     const cloud = pepperCloudFor(chef(3.5, 4, 'up'));
     expect(cloud.x).toBe(3.5);
-    expect(cloud.y).toBeCloseTo(4 - 24 / CELL_UNITS - 2 / CELL_UNITS, 10);
+    expect(cloud.y).toBeCloseTo(4 - 24 / ROW_UNITS - 2 / ROW_UNITS, 10);
     expect(cloud.direction).toBe('up');
   });
 
   it('places the cloud below the chef when thrown down', () => {
     const cloud = pepperCloudFor(chef(3.5, 3, 'down'));
     expect(cloud.x).toBe(3.5);
-    expect(cloud.y).toBeCloseTo(3 + 24 / CELL_UNITS - 2 / CELL_UNITS, 10);
+    expect(cloud.y).toBeCloseTo(3 + 24 / ROW_UNITS - 2 / ROW_UNITS, 10);
   });
 
   it('hits an enemy climbing the same ladder above', () => {

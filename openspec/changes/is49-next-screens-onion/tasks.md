@@ -31,6 +31,15 @@
 - [x] 6.1 Ejecutar las comprobaciones de entrega completas (`npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build`, `npm run smoke`) y `openspec validate is49-next-screens-onion --strict`; verificar que todo termina sin errores
 - [ ] 6.2 Jugar en `npm run dev` y en `npm run dev:desktop`: las cuatro pantallas en orden y la vuelta a la primera en Normal, cada pantalla dos veces en Fácil, Difícil, la cebolla girando al andar y al trepar, las hamburguesas del Mostrador y las de la fila 29 de Torres sin tocar los pisos de encima, y el equilibrio de cada pantalla (lo verifica el autor)
 
+## 7. Correcciones tras la primera revisión del autor
+
+- [x] 7.1 Hacer que la cebolla dé media vuelta por zancada (dos pasos) al andar y a la mitad al trepar (`ONION_TURN_MS` en `states.ts`) y actualizar `docs/STYLE_GUIDE.md` y `docs/MANUAL.md`; verificar con las pruebas de rigs y la lámina de arte
+- [x] 7.2 Añadir al validador los avisos `ladder-at-floor-end` (escalera en la primera o la última casilla de un piso) y `floor-headroom` (algo en la fila justo encima de una casilla por la que se anda); verificar con `validateLevel.test.ts` (aviso, escalera una casilla hacia dentro, piso y plato encima, pisos a un tramo), que la clásica sigue sin incidencias y `npm run test`
+- [x] 7.3 Pasar a filas de 21 unidades y plataformas de 8: `ROW_UNITS` y las alturas dibujadas en filas en `rules.ts`, la pimienta en unidades por eje, `config.ts` (`ROW`, `GAME_HEIGHT` 630, `PLATFORM_TOP`, `characterY`), las piezas SVG de 16×8 y el fondo de 624×630, `computeLayout` (630 de alto, 816–1512), los menús centrados con `MENU_TOP` y los toques de la prueba de humo; documentarlo en `AGENTS.md`, `README.md`, `docs/MANUAL.md`, `docs/STYLE_GUIDE.md` y `docs/GAMEDEV_FUNDAMENTALS.md`; verificar con las pruebas de reglas, pimienta, campo de ingredientes y layout, `npm run smoke` (también `touch` y `portrait`) y capturas del juego con el chef bajo un piso a un tramo
+- [x] 7.4 Renderizar la escalera con `tools/blender/maze.py` (fila de 16×21 con cuatro peldaños, largueros de 16×8 sobre los cruces), llevar el encuadre de cámara a `common.py`, cambiar el catálogo, borrar `ladder.svg` y dibujar los largueros en `MazeView`; verificar con la prueba de arte, una pila de filas sin costuras y la lámina de arte
+- [x] 7.5 Alargar una casilla los pisos de Pirámide, Mostrador y Torres que terminaban en una escalera, a partir del generador de borradores; verificar con las pruebas de cada pantalla (sin incidencias de validación con los avisos nuevos) y `npm run test`
+- [x] 7.6 Ejecutar las comprobaciones de entrega completas, `npm run smoke` y `openspec validate is49-next-screens-onion --strict`; verificar que todo termina sin errores
+
 ## Workflow follow-up
 
 - El autor hace el push; PR hacia `develop/v1.0.0` con `Closes #49`.

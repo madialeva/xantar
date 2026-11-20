@@ -226,8 +226,8 @@ disconnected. The pause menu lets you resume or quit to the main menu.
   falling; when the last burger is complete he gets back up and you move on to
   the next level with all your lives, as in the original.
 - Complete all four burgers to advance to the next level: after a short **LEVEL
-  CLEAR!** pause the board is rebuilt on its own, and your score, lives and
-  pepper carry over (every level uses the same layout for now).
+  CLEAR!** pause the next screen comes on its own (on Easy, the same screen
+  once more), and your score, lives and pepper carry over.
 - When you lose every life, **GAME OVER** shows your score and whether it is a
   new best score; confirm to go back to the main menu.
 
@@ -243,9 +243,13 @@ while the game is in the background.
 ### Screen and looks
 
 - The board sits in the middle of the screen, and the score, level, lives
-  and pepper shots are shown in **side panels**. On widescreen monitors and on
-  phones held sideways the game fills the whole screen; narrower screens show
-  bars above and below. The left panel also shows your best score.
+  and pepper shots are shown in **side panels**. On widescreen and 4:3 monitors
+  and on phones held sideways the game fills the whole screen; squarer screens
+  show bars above and below. The left panel also shows your best score.
+- The board keeps the 30 rows of the original, but its floors are a little
+  further apart: one run of ladder leaves the chef some room under the floor
+  above, so no one ever puts their head through it, and two, three or four runs
+  are two, three or four chefs tall.
 - The burger ingredients and the characters are **rendered 3D art**: a sesame
   bun, a barbecued patty with grill marks, lettuce and a bottom bun that look
   like real food, a blond chef with a ponytail, and a hot dog, a fried egg and
@@ -254,7 +258,8 @@ while the game is in the background.
   own way** as it walks: the hot dog bends one way and the other, the egg's
   white wobbles and the onion slice turns round and round.
 - Finished burgers stack on their plates piece on piece, like real ones.
-- The maze, plates, effects and panels are crisp **vector art**.
+- The ladders are rendered too, varnished wood with closely spaced rungs; the
+  platforms, plates, effects and panels are crisp **vector art**.
 - The game looks best on a **Full HD** screen or larger; smaller screens show
   it scaled down.
 

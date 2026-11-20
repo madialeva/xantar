@@ -19,7 +19,7 @@ const DOUBLE = ['bunTop', 'lettuce', 'patty', 'lettuce', 'patty', 'bunBottom'];
 const rowsOf = (col: number): number[] => lane(level, col).map(([, row]) => row);
 
 describe('towers screen', () => {
-  it('is a 39×30 board of 16-unit cells with ingredients of four segments and no issues', () => {
+  it('is a 39×30 board with ingredients of four segments and no issues', () => {
     expect([level.name, level.cols, level.rows, level.segments]).toEqual(['Towers', 39, 30, 4]);
     expect(validateLevel(level)).toEqual([]);
     expect(oddLadders(level)).toEqual([]);
@@ -55,7 +55,7 @@ describe('towers screen', () => {
 
   it('bridges the two middle towers on row 13', () => {
     const bridge = level.graph.platforms.find((platform) => platform.row === 13);
-    expect([bridge?.left, bridge?.right]).toEqual([12, 35]);
+    expect([bridge?.left, bridge?.right]).toEqual([11, 35]);
   });
 
   it('puts the chef in the middle of the bottom floor', () => {

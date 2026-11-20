@@ -37,3 +37,21 @@ enemigos, sin restos de la anterior.
 - **WHEN** en Fácil empieza el segundo tablero de una pantalla
 - **THEN** la vista muestra el mismo laberinto, con los ingredientes en su
   posición inicial
+
+### Requirement: Dibujo interpolado
+La vista SHALL dibujar chef, enemigos e ingredientes interpolando entre el estado
+de los dos últimos ticks según la fracción de tick acumulada, de modo que el
+movimiento sea continuo con independencia de la frecuencia del monitor. La
+vista SHALL convertir la posición de la simulación a unidades lógicas
+multiplicando las columnas por el ancho de casilla y las filas por el alto de
+fila de la configuración. La altura de cada ingrediente SHALL ser la que da la
+simulación, sin aceleraciones ni curvas propias de la vista.
+
+#### Scenario: Movimiento suave
+- **WHEN** el chef camina y el monitor refresca más rápido que la simulación
+- **THEN** su posición dibujada cambia en cada fotograma
+
+#### Scenario: Ingrediente que cae
+- **WHEN** un ingrediente cae, rebota o se detiene en un piso intermedio
+- **THEN** la vista lo dibuja a la altura interpolada de la simulación, que baja
+  a velocidad constante mientras cae

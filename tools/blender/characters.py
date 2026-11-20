@@ -27,27 +27,20 @@ from mathutils import Matrix, Vector
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from common import (  # noqa: E402
-    ART_DIR,
-    BACKDROP,
     PREVIEW_DIR,
-    SUPERSAMPLE,
-    TIER,
     add,
+    board_point,
     bump,
     centred,
-    downsample,
-    enlarge,
     feed,
-    load_rgba,
     map_range,
     math_op,
     new_material,
     new_scene,
     noise4,
-    over,
     principled,
     ramp,
-    save_rgba,
+    render_framed,
     scaled,
     srgb,
     use_displacement,
@@ -70,9 +63,7 @@ def dance_frames(kind, name):
     }
 
 
-def rig_point(x, y, depth=0.0):
-    """A point given in rig coordinates (y down) as a Blender location."""
-    return Vector((x, depth, -y))
+rig_point = board_point
 
 
 # --- Meshes ---
@@ -413,35 +404,8 @@ def clear_group(group):
     group.clear()
 
 
-def frame_camera(scene, rect):
-    """Orthographic front camera framing the rig rectangle (left, top, width, height)."""
-    left, top, width, height = rect
-    camera = scene.camera
-    if camera is None:
-        data = bpy.data.cameras.new("camera")
-        data.type = "ORTHO"
-        data.clip_start = 1
-        data.clip_end = 2000
-        camera = bpy.data.objects.new("camera", data)
-        camera.rotation_euler = (math.pi / 2, 0, 0)
-        scene.collection.objects.link(camera)
-        scene.camera = camera
-    camera.data.ortho_scale = max(width, height)
-    camera.location = rig_point(left + width / 2, top + height / 2, -500)
-    scale = TIER * SUPERSAMPLE
-    scene.render.resolution_x = round(width * scale)
-    scene.render.resolution_y = round(height * scale)
-
-
 def render_part(scene, graphic, rect):
-    frame_camera(scene, rect)
-    raw = os.path.join(CHARACTER_PREVIEWS, f"{graphic}.raw.png")
-    scene.render.filepath = raw
-    bpy.ops.render.render(write_still=True)
-    pixels = downsample(load_rgba(raw), SUPERSAMPLE)
-    save_rgba(pixels, os.path.join(ART_DIR, f"{graphic}.png"))
-    save_rgba(enlarge(over(pixels, BACKDROP), 2), os.path.join(CHARACTER_PREVIEWS, f"{graphic}.preview.png"))
-    print(f"rendered {graphic}")
+    render_framed(scene, graphic, rect, CHARACTER_PREVIEWS)
 
 
 def rect_from(x, y, width, height, origin_x=0.5, origin_y=0.5):

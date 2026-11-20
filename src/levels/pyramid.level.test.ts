@@ -18,7 +18,7 @@ const level = assembleLevel(document);
 const BURGER = ['bunTop', 'lettuce', 'patty', 'bunBottom'];
 
 describe('pyramid screen', () => {
-  it('is a 39×30 board of 16-unit cells with ingredients of four segments and no issues', () => {
+  it('is a 39×30 board with ingredients of four segments and no issues', () => {
     expect([level.name, level.cols, level.rows, level.segments]).toEqual(['Pyramid', 39, 30, 4]);
     expect(validateLevel(level)).toEqual([]);
     expect(oddLadders(level)).toEqual([]);
@@ -32,7 +32,7 @@ describe('pyramid screen', () => {
     expect(floorRows(level)).toEqual([5, 9, 13, 15, 17, 19, 23]);
     for (const row of [5, 9]) {
       const floors = level.graph.platforms.filter((platform) => platform.row === row);
-      expect(floors.map((platform) => [platform.left, platform.right])).toEqual([[12, 27]]);
+      expect(floors.map((platform) => [platform.left, platform.right])).toEqual([[11, 28]]);
     }
   });
 

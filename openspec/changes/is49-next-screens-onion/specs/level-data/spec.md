@@ -42,3 +42,29 @@ entran por pasarelas, y SHALL validarse sin incidencias.
 - **THEN** cada hamburguesa tiene seis ingredientes, de arriba abajo pan
   superior, lechuga, carne, lechuga, carne y pan inferior, y cada plato espera
   seis
+
+## MODIFIED Requirements
+
+### Requirement: Casillas de medio cocinero
+Cada casilla de la cuadrícula de un nivel SHALL medir 16 unidades de ancho, la
+mitad que el chef de pie (como un carácter del juego original a escala ×2), y
+21 de alto, y el tablero SHALL conservar las 39 columnas y 30 filas del
+original. Con plataformas de 8 unidades de grueso, dos pisos separados por dos
+filas (un tramo de escalera) SHALL dejar entre ellos algo más que la altura del
+chef, de modo que 2, 3 o 4 tramos midan 2, 3 o 4 cocineros sin contar lo que la
+escalera se solapa con las plataformas.
+
+#### Scenario: Escalera de un cocinero
+- **WHEN** un tramo de escalera une dos plataformas separadas por dos filas y el
+  chef está de pie en la de abajo, al pie de la escalera
+- **THEN** lo alto de su gorro queda 2 unidades por debajo de la plataforma de
+  arriba
+
+#### Scenario: Ingrediente de dos cocineros
+- **WHEN** se dibuja un ingrediente de cuatro segmentos
+- **THEN** mide de ancho lo mismo que dos cocineros de alto
+
+#### Scenario: Dos tramos
+- **WHEN** una escalera une dos pisos separados por cuatro filas
+- **THEN** deja 76 unidades libres entre sus plataformas: dos cocineros y algo
+  más

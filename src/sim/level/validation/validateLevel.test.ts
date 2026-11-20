@@ -130,6 +130,70 @@ describe('validateLevel', () => {
     expect(found).toContain('ingredient-no-plate');
   });
 
+  describe('ladders at the end of a floor', () => {
+    const level = (structure: readonly string[]) =>
+      levelFromGrid({
+        structure,
+        ingredients: ['........', '..TTTT..', '........', '........', '........'],
+        actors: ['........', '........', '........', '..C.....', '........']
+      });
+
+    it('warns about a ladder that meets a floor on its last tile', () => {
+      const issues = validateLevel(
+        level(['........', '.=====+.', '......H.', '======+=', '..____..'])
+      ).filter((issue) => issue.code === 'ladder-at-floor-end');
+      expect(issues).toEqual([expect.objectContaining({ severity: 'warning', row: 1, col: 6 })]);
+    });
+
+    it('says nothing about a ladder one tile in from the end of both floors', () => {
+      const issues = validateLevel(
+        level(
+          ['........', '.======.', '.....H..', '=====+==', '..____..'].map((row, index) =>
+            index === 1 ? '.====+=.' : row
+          )
+        )
+      );
+      expect(issues.filter((issue) => issue.code === 'ladder-at-floor-end')).toEqual([]);
+    });
+  });
+
+  describe('room for the head', () => {
+    const level = (structure: readonly string[]) =>
+      levelFromGrid({
+        structure,
+        ingredients: ['........', '........', '..TTTT..', '........', '........', '........'],
+        actors: ['........', '........', '..C.....', '........', '........', '........']
+      });
+
+    it('warns about a floor walked under one row below another, once per run', () => {
+      const issues = validateLevel(
+        level(['........', '...===..', '=+======', '.H......', '=+======', '..____..'])
+      ).filter((issue) => issue.code === 'floor-headroom');
+      expect(issues).toEqual([expect.objectContaining({ severity: 'warning', row: 2, col: 3 })]);
+    });
+
+    it('warns about a plate right above a floor', () => {
+      const issues = validateLevel(
+        levelFromGrid({
+          structure: ['........', '=+======', '.H......', '=+======', '.____...', '==......'],
+          ingredients: ['........', '..TTTT..', '........', '........', '........', '........'],
+          actors: ['........', '........', '........', '...C....', '........', '........']
+        })
+      ).filter((issue) => issue.code === 'floor-headroom');
+      expect(issues).toEqual([expect.objectContaining({ row: 5, col: 1 })]);
+    });
+
+    it('leaves two rows between floors alone', () => {
+      expect(
+        codes({
+          structure: ['........', '=+======', '.H......', '=+======', '........', '..____..'],
+          ingredients: ['........', '..TTTT..', '........', '........', '........', '........'],
+          actors: ['........', '........', '........', '...C....', '........', '........']
+        })
+      ).not.toContain('floor-headroom');
+    });
+  });
+
   describe('entry walkways', () => {
     const level = (structure: readonly string[], entries = [{ row: 1, col: 0, delayMs: 500 }]) =>
       assembleLevel({
@@ -140,14 +204,14 @@ describe('validateLevel', () => {
         }),
         entries
       });
-    const floors = ['........', '----===+', '.......H', '=======+', '..____..'];
+    const floors = ['........', '----==+=', '......H.', '======+=', '..____..'];
 
     it('finds nothing wrong in a walkway that leads to a reachable floor', () => {
       expect(validateLevel(level(floors))).toEqual([]);
     });
 
     it('reports a walkway that leads to no platform', () => {
-      const structure = ['--......', '----===+', '.......H', '=======+', '..____..'];
+      const structure = ['--......', '----==+=', '......H.', '======+=', '..____..'];
       expect(validateLevel(level(structure))).toContainEqual(
         expect.objectContaining({ severity: 'error', code: 'walkway-detached', row: 0, col: 0 })
       );

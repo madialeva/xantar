@@ -18,7 +18,7 @@ const level = assembleLevel(document);
 const MIDDLE_LANES = [14, 21];
 
 describe('counter screen', () => {
-  it('is a 39×30 board of 16-unit cells with ingredients of four segments and no issues', () => {
+  it('is a 39×30 board with ingredients of four segments and no issues', () => {
     expect([level.name, level.cols, level.rows, level.segments]).toEqual(['Counter', 39, 30, 4]);
     expect(validateLevel(level)).toEqual([]);
     expect(oddLadders(level)).toEqual([]);
