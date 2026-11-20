@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/platforms-Browser%20%2F%20Desktop-blue" alt="Browser and desktop" />
 </p>
 
-**Xantar** is a single-screen arcade game where you control a chef running over
+**Xantar** is an arcade game where you control a chef running over
 giant burger ingredients. Walking across an ingredient from side to side makes
 it fall down the platforms and stack on the plates, eventually building whole
 burgers. Meanwhile, anthropomorphic food (hot dogs, onions and eggs) chases
@@ -49,6 +49,7 @@ comes next.
 |   ✅   | The grid and the first screen of the original: half-chef cells, two-chef burgers, ladders on every side   |   —    |  #45  |
 |   ✅   | Enemies walk in from the sides one by one, as in the original, and riders come back where they stopped    |   —    |  #46  |
 |   ✅   | Speeds of the original, Easy, Normal and Hard difficulty, and a board won by its last drop                |   —    |  #43  |
+|   ✅   | Three more screens of our own in a loop, every screen twice on Easy, and Mr. Onion instead of Mr. Pickle  |   —    |  #49  |
 |   ✅   | Gamepad and touch controls, music and sound effects, CI and a hardened desktop app                        |   —    |  #6   |
 |   ✅   | Public web version at madialeva.github.io                                                                 |   —    |  #14  |
 |   ⬜   | Replay recording and debug tooling                                                                        | v1.0.0 |  #8   |
@@ -65,10 +66,24 @@ Assemble **every burger** on the screen. Each burger has four pieces: bottom
 bun, patty, lettuce and top bun. They start spread over the platforms and you
 must bring them all the way down to the plate.
 
-The first screen follows the first screen of the original arcade game: eight
-floors at different heights, linked by ladders one to several chefs tall, and
-four burgers that never stand side by side: there is always a ladder on each
-side of a burger, and another one running under it.
+When a screen is done the next one comes, and after the fourth the first one
+comes back:
+
+1. **Classic**: the first screen of the original arcade game, with eight floors
+   at different heights, linked by ladders one to several chefs tall, and four
+   burgers that never stand side by side: there is always a ladder on each side
+   of a burger, and another one running under it.
+2. **Pyramid**: the two top floors only cover the middle burgers, and the
+   enemies walk in halfway up.
+3. **Counter**: the two middle burgers end on plates halfway down the screen,
+   on a counter you can walk under.
+4. **Towers**: staggered towers of short floors and double burgers of six
+   pieces (two patties and two lettuce leaves) on the last screen before the
+   loop.
+
+Screens 2 to 4 are Xantar's own: they follow the way the original gets harder
+(more enemies, plates at different heights, taller burgers) without copying its
+layouts.
 
 ### Starting a game
 
@@ -88,8 +103,9 @@ goes back (in the main menu, when there is **Quit**, it selects it).
 The **difficulty** sets how fast the enemies go, and it applies to the next game
 you start:
 
-- **Easy**: the enemies always go at 85 % of their normal speed, so you can
-  learn the game calmly.
+- **Easy**: the enemies always go at 85 % of their normal speed, and you play
+  **every screen twice** before moving on to the next one, so you can learn
+  the game calmly. The level number counts every board you clear.
 - **Normal** (the default): as in the original arcade game, the enemies start
   at their normal speed and get a little faster the longer you take on a board,
   with a big push after about a minute; they calm down again on a new board or
@@ -147,8 +163,11 @@ disconnected. The pause menu lets you resume or quit to the main menu.
 
 ### Enemies
 
-- On the first screen, three **Mr. Hot Dogs** and a **Mr. Egg** roam the maze
-  and chase you using the ladders, always taking the shortest way to you.
+- **Mr. Hot Dogs** and **Mr. Eggs** roam the maze and chase you using the
+  ladders, always taking the shortest way to you. Each screen has its own
+  line-up, as in the original: three hot dogs and an egg on the first two
+  screens, two hot dogs, two onions and an egg on the third, and four hot dogs
+  and two onions on the fourth.
 - **Mr. Onion**, a thick slice of red onion, white and violet, joins them on
   later screens. It chases you just like the others and keeps **turning like a
   coin** as it walks and climbs.

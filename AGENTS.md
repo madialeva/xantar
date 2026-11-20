@@ -10,9 +10,11 @@ assets.
 
 The game is written in **TypeScript** with **Phaser 4** and bundled with
 **Vite**. The same code runs in the browser and ships as a desktop app through
-**Electron + electron-builder**. It is currently a single-screen game with one
-classic level; the mechanics and the content will be extended over time. The
-roadmap lives in the GitHub issues and in the README.
+**Electron + electron-builder**. It has four screens played in a loop (each
+one twice on Easy): the first follows the first screen of the original and the
+other three are the author's own designs, which follow the original's
+progression without copying its layouts. The mechanics and the content will be
+extended over time. The roadmap lives in the GitHub issues and in the README.
 
 ## Stack and constraints
 
