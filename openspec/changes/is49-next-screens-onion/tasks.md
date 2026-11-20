@@ -28,7 +28,7 @@
 
 ## 6. Integración
 
-- [ ] 6.1 Ejecutar las comprobaciones de entrega completas (`npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build`, `npm run smoke`) y `openspec validate is49-next-screens-onion --strict`; verificar que todo termina sin errores
+- [x] 6.1 Ejecutar las comprobaciones de entrega completas (`npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build`, `npm run smoke`) y `openspec validate is49-next-screens-onion --strict`; verificar que todo termina sin errores
 - [ ] 6.2 Jugar en `npm run dev` y en `npm run dev:desktop`: las cuatro pantallas en orden y la vuelta a la primera en Normal, cada pantalla dos veces en Fácil, Difícil, la cebolla girando al andar y al trepar, las hamburguesas del Mostrador y las de la fila 29 de Torres sin tocar los pisos de encima, y el equilibrio de cada pantalla (lo verifica el autor)
 
 ## Workflow follow-up
