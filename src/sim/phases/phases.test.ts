@@ -1,17 +1,34 @@
 import { describe, expect, it } from 'vitest';
 import { DYING_TICKS, LEVEL_CLEAR_TICKS, READY_TICKS } from '../rules';
 import { NO_INPUT, type SimInput } from '../SimInput';
-import type { GamePhase, PhaseHost, PlayOutcome } from './GamePhase';
-import { DyingPhase, GameOverPhase, LevelClearPhase, PlayingPhase, ReadyPhase } from './phases';
+import type { GamePhase, PhaseHost, PlayOutcome, ReprieveOutcome } from './GamePhase';
+import {
+  DyingPhase,
+  GameOverPhase,
+  LevelClearPhase,
+  PlayingPhase,
+  ReadyPhase,
+  ReprievePhase
+} from './phases';
 
 class FakeHost implements PhaseHost {
   livesLeft = 2;
   outcome: PlayOutcome = 'continue';
+  reprieve: ReprieveOutcome = 'falling';
   readonly calls: string[] = [];
 
   playTick(): PlayOutcome {
     this.calls.push('play');
     return this.outcome;
+  }
+
+  reprieveTick(): ReprieveOutcome {
+    this.calls.push('falls');
+    return this.reprieve;
+  }
+
+  forfeitLife(): void {
+    this.calls.push('forfeit');
   }
 
   respawn(): void {
@@ -48,9 +65,34 @@ describe('game phases', () => {
     expect(playing.step(NO_INPUT, host)).toBe(playing);
     host.outcome = 'chefHit';
     expect(playing.step(NO_INPUT, host).name).toBe('dying');
+    host.outcome = 'chefReprieved';
+    const reprieve = playing.step(NO_INPUT, host);
+    expect([reprieve.name, reprieve instanceof ReprievePhase]).toEqual(['dying', true]);
     host.outcome = 'levelCleared';
     expect(playing.step(NO_INPUT, host).name).toBe('levelClear');
-    expect(host.calls).toEqual(['play', 'play', 'play']);
+    expect(host.calls).toEqual(['play', 'play', 'play', 'play']);
+  });
+
+  it('lets the falls finish a won board while the caught chef lies down, however long', () => {
+    const host = new FakeHost();
+    const phase = advance(new ReprievePhase(), host, DYING_TICKS * 3);
+    expect([phase.name, phase instanceof ReprievePhase]).toEqual(['dying', true]);
+    host.reprieve = 'levelCleared';
+    expect(advance(phase, host, 1).name).toBe('levelClear');
+    expect(host.calls).toHaveLength(DYING_TICKS * 3 + 1);
+    expect(host.calls.every((call) => call === 'falls')).toBe(true);
+  });
+
+  it('takes the spared life and dies as usual if the falls stop short of the board', () => {
+    const host = new FakeHost();
+    host.reprieve = 'stalled';
+    const phase = advance(new ReprievePhase(), host, 1);
+    expect([phase.name, phase instanceof DyingPhase, host.calls]).toEqual([
+      'dying',
+      true,
+      ['falls', 'forfeit']
+    ]);
+    expect(advance(phase, host, DYING_TICKS).name).toBe('ready');
   });
 
   it('respawns and gets ready after dying with lives left', () => {

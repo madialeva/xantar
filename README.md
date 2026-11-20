@@ -48,6 +48,7 @@ comes next.
 |   ✅   | Ingredients fall like in the original, crush enemies on contact and carry riders two extra floors each    |   —    |  #41  |
 |   ✅   | The grid and the first screen of the original: half-chef cells, two-chef burgers, ladders on every side   |   —    |  #45  |
 |   ✅   | Enemies walk in from the sides one by one, as in the original, and riders come back where they stopped    |   —    |  #46  |
+|   ✅   | Speeds of the original, Easy, Normal and Hard difficulty, and a board won by its last drop                |   —    |  #43  |
 |   ✅   | Gamepad and touch controls, music and sound effects, CI and a hardened desktop app                        |   —    |  #6   |
 |   ✅   | Public web version at madialeva.github.io                                                                 |   —    |  #14  |
 |   ⬜   | Replay recording and debug tooling                                                                        | v1.0.0 |  #8   |
@@ -72,17 +73,28 @@ side of a burger, and another one running under it.
 ### Starting a game
 
 The title screen waits for a click, a tap or any key, then opens the **main
-menu**: **Play** starts a game and **Options** lets you choose the **language**
-(Spanish or English; the first time it follows your browser), the **music** and **effects**
-volumes (left and right change them; tapping, clicking or confirming one turns
-it up and, from the top, back to zero), whether the **sound** is on, and the
-keyboard **controls**. Your choices and your **best
-score** are remembered between sessions. In the desktop app the menu also has
+menu**: **Play** starts a game and **Options** lets you choose the
+**difficulty**, the **language** (Spanish or English; the first time it follows
+your browser), the **music** and **effects** volumes (left and right change
+them; tapping, clicking or confirming one turns it up and, from the top, back to
+zero), whether the **sound** is on, and the keyboard **controls**. Your choices
+and your **best score** are remembered between sessions. In the desktop app the menu also has
 **Quit**, which closes the game; in the browser it has **Quit** when you opened
 the game from another page of the same site (such as the home page of the
 published game), and it takes you back to that page. Menus work with the arrow
 keys and `Enter`, or by clicking or tapping an entry, or with a gamepad; `Esc`
 goes back (in the main menu, when there is **Quit**, it selects it).
+
+The **difficulty** sets how fast the enemies go, and it applies to the next game
+you start:
+
+- **Easy**: the enemies always go at 85 % of their normal speed, so you can
+  learn the game calmly.
+- **Normal** (the default): as in the original arcade game, the enemies start
+  at their normal speed and get a little faster the longer you take on a board,
+  with a big push after about a minute; they calm down again on a new board or
+  after you lose a life. From level 4 boards start a bit faster.
+- **Hard**: the enemies always go at the fastest speed of the original.
 
 ### Controls
 
@@ -119,10 +131,11 @@ disconnected. The pause menu lets you resume or quit to the main menu.
 ### Ingredients and falls
 
 - Every ingredient is made of **segments** (four in the classic level). When the
-  chef **steps on a segment** it is pressed down, and it stays pressed; the
-  segments pressed before it sink a little further, so a half-pressed ingredient
-  tilts. Press all the segments of an ingredient and it falls one platform down,
-  slowly and at a steady pace, as in the original arcade game.
+  chef **steps on a segment** it is pressed down, and it stays pressed until the
+  ingredient falls or you lose a life; the segments pressed before it sink a
+  little further, so a half-pressed ingredient tilts. Press all the segments of
+  an ingredient and it falls one platform down, slowly and at a steady pace, as
+  in the original arcade game.
 - When a falling ingredient reaches another one, it **knocks it down too** and
   bounces up for a moment before going on: a chain reaction from the top down
   that only affects the ingredients it actually hits.
@@ -140,6 +153,8 @@ disconnected. The pause menu lets you resume or quit to the main menu.
 - A board starts empty: the enemies **walk in one by one from the sides** of
   the screen, along short walkways at the ends of some floors, and come back
   the same way after you lose a life.
+- They are slower than you, as in the original: they walk at about five eighths
+  of your pace and climb ladders at half their walking speed.
 - If they touch you, you **lose a life**.
 - You can **crush them** by dropping an ingredient on top of them. An enemy is
   crushed when the falling ingredient reaches it: one that gets out of the way
@@ -180,8 +195,15 @@ disconnected. The pause menu lets you resume or quit to the main menu.
 - You have **3 lives**.
 - Every touch from a non-stunned enemy costs a life.
 - Every board starts with a short **GET READY!** pause. When an enemy catches
-  you, the chef falls, everyone goes back to the start and you get ready again;
-  the ingredients stay as they were.
+  you, the chef falls, everyone goes back to the start and you get ready again.
+  Ingredients that already fell stay where they are, but the ones you had only
+  half stepped on are whole again: you have to cross them again from the start.
+- Once the ingredients on their way are bound to finish every burger (the last
+  one is falling to its plate, or carrying enemies that will take it there), the
+  board is won: enemies can no longer take a life. If one catches you then, the
+  chef goes down as if he had lost, the enemies freeze and the ingredients keep
+  falling; when the last burger is complete he gets back up and you move on to
+  the next level with all your lives, as in the original.
 - Complete all four burgers to advance to the next level: after a short **LEVEL
   CLEAR!** pause the board is rebuilt on its own, and your score, lives and
   pepper carry over (every level uses the same layout for now).

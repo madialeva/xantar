@@ -1,4 +1,5 @@
 import { type Language, isLanguage } from '../i18n/language';
+import { DEFAULT_DIFFICULTY, type Difficulty, isDifficulty } from '../sim';
 import { DEFAULT_BINDINGS, type KeyBindings, validateBindings } from '../input/bindings';
 
 export const SETTINGS_VERSION = 1;
@@ -22,6 +23,8 @@ export interface PlayerSettings {
   readonly sfxVolume: number;
   readonly muted: boolean;
   readonly keyBindings: KeyBindings;
+  /** How fast the enemies go in the games started from now on. */
+  readonly difficulty: Difficulty;
 }
 
 /** The settings the player starts with, before choosing anything. */
@@ -31,7 +34,8 @@ export const defaultSettings = (language: Language): PlayerSettings => ({
   musicVolume: DEFAULT_MUSIC_VOLUME,
   sfxVolume: DEFAULT_SFX_VOLUME,
   muted: false,
-  keyBindings: DEFAULT_BINDINGS
+  keyBindings: DEFAULT_BINDINGS,
+  difficulty: DEFAULT_DIFFICULTY
 });
 
 type UnknownRecord = Record<string, unknown>;
@@ -59,7 +63,8 @@ export function parseSettings(raw: unknown, defaults: PlayerSettings): PlayerSet
     musicVolume: isVolume(raw.musicVolume) ? raw.musicVolume : defaults.musicVolume,
     sfxVolume: isVolume(raw.sfxVolume) ? raw.sfxVolume : defaults.sfxVolume,
     muted: typeof raw.muted === 'boolean' ? raw.muted : defaults.muted,
-    keyBindings: validateBindings(raw.keyBindings) ?? defaults.keyBindings
+    keyBindings: validateBindings(raw.keyBindings) ?? defaults.keyBindings,
+    difficulty: isDifficulty(raw.difficulty) ? raw.difficulty : defaults.difficulty
   };
 }
 

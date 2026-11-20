@@ -1,4 +1,5 @@
 import type { Language } from '../i18n/language';
+import type { Difficulty } from '../sim';
 import type { KeyBindings } from '../input/bindings';
 import {
   type AudioBus,
@@ -45,6 +46,10 @@ export class Settings {
     return this.#values.keyBindings;
   }
 
+  get difficulty(): Difficulty {
+    return this.#values.difficulty;
+  }
+
   volume(bus: AudioBus): number {
     return bus === 'music' ? this.#values.musicVolume : this.#values.sfxVolume;
   }
@@ -65,6 +70,10 @@ export class Settings {
 
   setKeyBindings(keyBindings: KeyBindings): void {
     this.#update({ keyBindings });
+  }
+
+  setDifficulty(difficulty: Difficulty): void {
+    this.#update({ difficulty });
   }
 
   /** Keeps the score if it beats the best one; tells whether it did. */

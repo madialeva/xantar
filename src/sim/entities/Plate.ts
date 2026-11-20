@@ -54,6 +54,15 @@ export class Plate implements PlateSnapshot {
       .reduce((height, kind) => height + INGREDIENT_THICKNESS[kind], 0);
   }
 
+  /** A plate in the same state, for a forecast that must leave this one untouched. */
+  copy(): Plate {
+    const twin = new Plate(this);
+    twin.#kinds.push(...this.#kinds);
+    twin.#landed = this.#landed;
+    twin.#announced = this.#announced;
+    return twin;
+  }
+
   registerLanding(): boolean {
     this.#landed += 1;
     const justCompleted = this.isComplete && !this.#announced;

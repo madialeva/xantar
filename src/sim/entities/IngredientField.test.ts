@@ -135,6 +135,22 @@ describe('IngredientField stomping', () => {
     expect(ofType(context.events.drain(), 'ingredientsTriggered')).toHaveLength(1);
   });
 
+  it('lifts the stomps of the resting ingredients only, as after a lost life', () => {
+    const context = create();
+    const { field } = context;
+    field.step(chefAt(1, 1.5));
+    field.step(chefAt(1, 2.5));
+    stompAll(context, 3);
+    const [top, , , bottom] = field.ingredients;
+    expect(bottom.phase).toBe('falling');
+    field.liftStomps();
+    expect([top.stomped, top.sink]).toEqual([
+      [false, false, false, false],
+      [0, 0, 0, 0]
+    ]);
+    expect([bottom.phase, bottom.stomped.every(Boolean)]).toEqual(['falling', true]);
+  });
+
   it('does not stomp while the chef is on a ladder or on another row', () => {
     const context = create();
     context.field.step(chefAt(1, 2.5, false));
@@ -524,5 +540,133 @@ describe('IngredientField riders', () => {
     stompAll(context, 0);
     settle(context, 600);
     expect([top.phase, top.row, top.stackSlot]).toEqual(['stacked', 10, 3]);
+  });
+});
+
+describe('IngredientField forecast of a secured board', () => {
+  const chefRow = (row: number, rows: number): string[] =>
+    Array.from({ length: rows }, (_, index) => (index === row ? '......C.' : '........'));
+
+  /** One ingredient straight above its plate. */
+  const lastOne: GridSpec = {
+    structure: ['........', '========', '........', '.____...'],
+    ingredients: ['........', '.TTTT...', '........', '........'],
+    actors: chefRow(1, 4)
+  };
+
+  /** One ingredient two floors above the lowest one, three supports from its plate. */
+  const highUp: GridSpec = {
+    structure: [
+      '........',
+      '========',
+      '........',
+      '========',
+      '........',
+      '========',
+      '........',
+      '.____...'
+    ],
+    ingredients: [
+      '........',
+      '.TTTT...',
+      '........',
+      '........',
+      '........',
+      '........',
+      '........',
+      '........'
+    ],
+    actors: chefRow(1, 8)
+  };
+
+  /** Two ingredients of one burger, the lower one on the lowest floor. */
+  const pair: GridSpec = {
+    structure: ['........', '========', '........', '========', '........', '.____...'],
+    ingredients: ['........', '.TTTT...', '........', '.BBBB...', '........', '........'],
+    actors: chefRow(1, 6)
+  };
+
+  it('secures the board as soon as the chef drops the last ingredient bound for its plate', () => {
+    const context = create(lastOne);
+    stompAll(context, 0);
+    expect([context.field.isSecured, context.field.isComplete]).toEqual([true, false]);
+    settle(context);
+    expect([context.field.isSecured, context.field.isComplete]).toEqual([true, true]);
+  });
+
+  it('does not secure the board while there are ingredients left to drop', () => {
+    const context = create();
+    stompAll(context, 3);
+    expect(context.field.isSecured).toBe(false);
+    settle(context);
+    stompAll(context, 0);
+    settle(context);
+    expect([context.field.isSecured, context.field.isComplete]).toEqual([false, false]);
+  });
+
+  it('secures the board when a rider carries the last ingredient down to its plate', () => {
+    const ridden = create(highUp);
+    ridden.roster.riders = 1;
+    stompAll(ridden, 0);
+    expect(ridden.field.isSecured).toBe(true);
+    settle(ridden, 400);
+    expect(ridden.field.isComplete).toBe(true);
+
+    const alone = create(highUp);
+    stompAll(alone, 0);
+    expect(alone.field.isSecured).toBe(false);
+  });
+
+  it('secures the board when a ridden ingredient pushes the last one into the plate', () => {
+    const ridden = create(pair);
+    ridden.roster.riders = 1;
+    stompAll(ridden, 0);
+    expect(ridden.field.isSecured).toBe(true);
+    settle(ridden, 400);
+    expect(ridden.field.isComplete).toBe(true);
+
+    const alone = create(pair);
+    stompAll(alone, 0);
+    expect(alone.field.isSecured).toBe(false);
+    settle(alone, 400);
+    expect(alone.field.isComplete).toBe(false);
+  });
+
+  it('leaves the field untouched and tells nobody while it plays a copy', () => {
+    const context = create();
+    stompAll(context, 0);
+    context.events.drain();
+    const heights = context.field.ingredients.map((ingredient) => ingredient.y);
+    const counts = [context.crushes.length, context.released.length, context.stats.score];
+    const twin = context.field.copy();
+    for (let i = 0; i < 300; i++) twin.step(away);
+    expect(twin.ingredients.map((ingredient) => ingredient.y)).not.toEqual(heights);
+    expect(context.events.drain()).toEqual([]);
+    expect(context.field.ingredients.map((ingredient) => ingredient.y)).toEqual(heights);
+    expect([context.crushes.length, context.released.length, context.stats.score]).toEqual(counts);
+  });
+
+  it('plays the falls on a copy exactly as on the field', () => {
+    const context = create();
+    stompAll(context, 0);
+    context.field.step(away);
+    const twin = context.field.copy();
+    const state = (field: IngredientField) =>
+      field.ingredients.map(({ phase, y, row, stackSlot, stomped, sink }) => ({
+        phase,
+        y,
+        row,
+        stackSlot,
+        stomped,
+        sink
+      }));
+    for (let i = 0; i < 300; i++) {
+      expect(state(twin)).toEqual(state(context.field));
+      context.field.step(away);
+      twin.step(away);
+    }
+    expect(twin.plates.map((plate) => plate.landed)).toEqual(
+      context.field.plates.map((plate) => plate.landed)
+    );
   });
 });

@@ -1,6 +1,7 @@
+import { DEFAULT_DIFFICULTY, type Difficulty, type EnemyPace, paceFor } from './difficulty';
 import { Chef, type ChefSnapshot } from './entities/Chef';
 import { createEnemy } from './entities/createEnemy';
-import type { Enemy, EnemyEntry, EnemySnapshot } from './entities/Enemy';
+import { type Enemy, type EnemyEntry, type EnemySnapshot, enemyGait } from './entities/Enemy';
 import { isCrushedBy } from './entities/crush';
 import { isStandingOn } from './entities/riders';
 import { type EnemyRoster, IngredientField } from './entities/IngredientField';
@@ -11,7 +12,13 @@ import { EventQueue, type SimEvent } from './events';
 import { GameStats, type StatsSnapshot } from './GameStats';
 import type { Level } from './level/Level';
 import type { NavPlace } from './nav/NavPlace';
-import type { GamePhase, GamePhaseName, PhaseHost, PlayOutcome } from './phases/GamePhase';
+import type {
+  GamePhase,
+  GamePhaseName,
+  PhaseHost,
+  PlayOutcome,
+  ReprieveOutcome
+} from './phases/GamePhase';
 import { ReadyPhase } from './phases/phases';
 import type { Rng } from './rng';
 import { CONTACT_X, CONTACT_Y, SCORE } from './rules';
@@ -20,6 +27,8 @@ import type { SimInput } from './SimInput';
 export interface SimulationOptions {
   readonly level: Level;
   readonly rng: Rng;
+  /** Sets how fast the enemies go; Normal when left out. */
+  readonly difficulty?: Difficulty;
 }
 
 /**
@@ -30,6 +39,8 @@ export interface SimulationOptions {
 export class Simulation {
   readonly #level: Level;
   readonly #rng: Rng;
+  readonly #difficulty: Difficulty;
+  readonly #pace: EnemyPace;
   readonly #events = new EventQueue();
   readonly #stats = new GameStats(this.#events);
   readonly #chef: Chef;
@@ -44,11 +55,15 @@ export class Simulation {
   readonly #phaseHost: PhaseHost = this.#createPhaseHost();
   #field: IngredientField;
   #phase: GamePhase = new ReadyPhase();
+  /** Ticks of play on the board since it started or since the chef last came back. */
+  #playTicks = 0;
 
   constructor(options: SimulationOptions) {
-    const { level, rng } = options;
+    const { level, rng, difficulty = DEFAULT_DIFFICULTY } = options;
     this.#level = level;
     this.#rng = rng;
+    this.#difficulty = difficulty;
+    this.#pace = paceFor(difficulty);
     const graph = level.graph;
     this.#chefPlace = graph.placeAt(level.chefStart.row, level.chefStart.x);
     this.#chef = new Chef(this.#chefPlace);
@@ -92,6 +107,23 @@ export class Simulation {
     return this.#stats;
   }
 
+  get difficulty(): Difficulty {
+    return this.#difficulty;
+  }
+
+  /**
+   * Whether the falls under way will complete the board: from then on enemies no longer take
+   * lives.
+   */
+  get boardSecured(): boolean {
+    return this.#field.isSecured;
+  }
+
+  /** Factor over the enemies' speeds now, from the difficulty, the level and the time played. */
+  get pace(): number {
+    return this.#pace.factor(this.#stats.level, this.#playTicks);
+  }
+
   step(input: SimInput): readonly SimEvent[] {
     this.#chef.beginTick();
     for (const enemy of this.#enemies) enemy.beginTick();
@@ -102,6 +134,7 @@ export class Simulation {
 
   startBoard(): void {
     this.#field = this.#newField();
+    this.#playTicks = 0;
     this.#resetPositions();
     this.#events.emit({ type: 'boardStarted' });
     this.#enterPhase(new ReadyPhase());
@@ -125,7 +158,9 @@ export class Simulation {
         return stats.lives;
       },
       playTick: (input) => this.#playTick(input),
-      respawn: () => this.#resetPositions(),
+      reprieveTick: () => this.#reprieveTick(),
+      forfeitLife: () => this.#stats.loseLife(),
+      respawn: () => this.#respawn(),
       rebuildBoard: () => this.startBoard(),
       endGame: () => this.#events.emit({ type: 'gameOver' })
     };
@@ -135,9 +170,35 @@ export class Simulation {
     this.#chef.step(input, this.#level.graph);
     this.#field.step(this.#chef);
     if (this.#checkLevelClear()) return 'levelCleared';
-    for (const enemy of this.#enemies) enemy.step(this.#chef, this.#rng);
+    const gait = enemyGait(this.pace);
+    for (const enemy of this.#enemies) enemy.step(this.#chef, this.#rng, gait);
+    this.#playTicks += 1;
     if (input.pepper) this.#throwPepper();
-    return this.#checkContact() ? 'chefHit' : 'continue';
+    return this.#checkContact();
+  }
+
+  /**
+   * A tick with the chef caught on a secured board: only the falls go on, and the enemies
+   * riding them; the board is cleared as soon as the last burger is done.
+   */
+  #reprieveTick(): ReprieveOutcome {
+    this.#field.advanceFalls();
+    const gait = enemyGait(this.pace);
+    for (const enemy of this.#enemies) {
+      if (enemy.riding) enemy.step(this.#chef, this.#rng, gait);
+    }
+    if (this.#checkLevelClear()) return 'levelCleared';
+    return this.#field.hasFalls ? 'falling' : 'stalled';
+  }
+
+  /**
+   * Play resumes after a lost life: everyone back to the start, the pace back to its first step
+   * and the half-stomped ingredients whole again, as in the original.
+   */
+  #respawn(): void {
+    this.#playTicks = 0;
+    this.#resetPositions();
+    this.#field.liftStomps();
   }
 
   #newField(): IngredientField {
@@ -222,7 +283,8 @@ export class Simulation {
       .forEach((enemy) => enemy.stun());
   }
 
-  #checkContact(): boolean {
+  /** A free enemy touching the chef takes a life, or only knocks him down on a secured board. */
+  #checkContact(): PlayOutcome {
     const touching = this.#enemies.some(
       (enemy) =>
         enemy.active &&
@@ -231,10 +293,11 @@ export class Simulation {
         Math.abs(enemy.x - this.#chef.x) < CONTACT_X &&
         Math.abs(enemy.y - this.#chef.y) < CONTACT_Y
     );
-    if (!touching) return false;
-    this.#stats.loseLife();
+    if (!touching) return 'continue';
+    const secured = this.#field.isSecured;
+    if (!secured) this.#stats.loseLife();
     this.#events.emit({ type: 'chefHit', livesLeft: Math.max(0, this.#stats.lives) });
-    return true;
+    return secured ? 'chefReprieved' : 'chefHit';
   }
 
   #checkLevelClear(): boolean {

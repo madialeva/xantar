@@ -21,6 +21,8 @@ export class PlayingPhase implements GamePhase {
     switch (host.playTick(input)) {
       case 'chefHit':
         return new DyingPhase();
+      case 'chefReprieved':
+        return new ReprievePhase();
       case 'levelCleared':
         return new LevelClearPhase();
       case 'continue':
@@ -43,6 +45,27 @@ export class DyingPhase implements GamePhase {
     }
     host.endGame();
     return new GameOverPhase();
+  }
+}
+
+/**
+ * The chef was caught on a board the falls under way will win, as in the original: he lies
+ * down (it looks like `dying`) while only the falls go on, and gets up for the level clear in
+ * the tick the last burger is done, keeping his life.
+ */
+export class ReprievePhase implements GamePhase {
+  readonly name = 'dying';
+
+  step(_input: SimInput, host: PhaseHost): GamePhase {
+    switch (host.reprieveTick()) {
+      case 'levelCleared':
+        return new LevelClearPhase();
+      case 'stalled':
+        host.forfeitLife();
+        return new DyingPhase();
+      case 'falling':
+        return this;
+    }
   }
 }
 

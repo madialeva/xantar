@@ -71,6 +71,8 @@ interface IngredientState {
   readonly stomped: readonly boolean[];
   readonly sink: readonly number[];
   step(context: StateContext): IngredientState | undefined;
+  /** The same state for a copy of the ingredient; states with nothing that changes are shared. */
+  copy(): IngredientState;
 }
 
 const FALL_STEP = FALL_SPEED * TICK_SECONDS;
@@ -87,12 +89,16 @@ class IdleState implements IngredientState {
   readonly support = undefined;
   #sink: readonly number[];
 
-  constructor(width: number) {
-    this.#sink = filled(width, 0);
+  constructor(width: number, sink: readonly number[] = filled(width, 0)) {
+    this.#sink = sink;
   }
 
   get sink(): readonly number[] {
     return this.#sink;
+  }
+
+  copy(): IdleState {
+    return new IdleState(this.#sink.length, this.#sink);
   }
 
   get stomped(): readonly boolean[] {
@@ -147,6 +153,10 @@ class FallingState implements IngredientState {
     this.#settling = settling;
   }
 
+  copy(): FallingState {
+    return this;
+  }
+
   step(context: StateContext): IngredientState | undefined {
     const { ingredient, host, moveTo, restOn } = context;
     const { support } = this;
@@ -178,14 +188,19 @@ class BouncingState implements IngredientState {
   readonly sink: readonly number[];
   readonly #descent: Descent;
   readonly #thenSettle: boolean;
-  #elapsed = 0;
+  #elapsed: number;
 
-  constructor(width: number, descent: Descent, thenSettle: boolean) {
+  constructor(width: number, descent: Descent, thenSettle: boolean, elapsed = 0) {
     this.support = descent.support;
     this.stomped = filled(width, true);
     this.sink = filled(width, 0);
     this.#descent = descent;
     this.#thenSettle = thenSettle;
+    this.#elapsed = elapsed;
+  }
+
+  copy(): BouncingState {
+    return new BouncingState(this.stomped.length, this.#descent, this.#thenSettle, this.#elapsed);
   }
 
   step({ ingredient, moveTo }: StateContext): IngredientState | undefined {
@@ -206,12 +221,17 @@ class StoppedState implements IngredientState {
   readonly stomped: readonly boolean[];
   readonly sink: readonly number[];
   readonly #supportsLeft: number;
-  #elapsed = 0;
+  #elapsed: number;
 
-  constructor(width: number, supportsLeft: number) {
+  constructor(width: number, supportsLeft: number, elapsed = 0) {
     this.stomped = filled(width, true);
     this.sink = filled(width, 0);
     this.#supportsLeft = supportsLeft;
+    this.#elapsed = elapsed;
+  }
+
+  copy(): StoppedState {
+    return new StoppedState(this.stomped.length, this.#supportsLeft, this.#elapsed);
   }
 
   step(context: StateContext): IngredientState | undefined {
@@ -244,6 +264,10 @@ class StackedState implements IngredientState {
     this.support = support;
     this.stomped = filled(width, false);
     this.sink = filled(width, 0);
+  }
+
+  copy(): StackedState {
+    return this;
   }
 
   step(): undefined {
@@ -339,13 +363,22 @@ export class Ingredient extends MovingEntity implements IngredientSnapshot {
     return this.#state instanceof IdleState && this.#state.stomp(segment);
   }
 
+  /** The same ingredient, in the same state and place, answering to another host (Prototype). */
+  copyFor(host: IngredientHost): Ingredient {
+    const twin = new Ingredient(this, host);
+    twin.teleportTo(this.x, this.y);
+    twin.#row = this.#row;
+    twin.#state = this.#state.copy();
+    return twin;
+  }
+
   /** Starts falling to a support and, if it carries enemies, on down to the next ones. */
   fall(support: Support, supports = 1): void {
     if (this.isIdle)
       this.#state = new FallingState(this.width, { support, supportsLeft: supports });
   }
 
-  /** Lifts its stomped segments again; for an ingredient with nowhere to fall. */
+  /** Lifts its stomped segments again, if it is resting: nowhere to fall, or a lost life. */
   resetSegments(): void {
     if (this.isIdle) this.#state = new IdleState(this.width);
   }

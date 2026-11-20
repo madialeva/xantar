@@ -10,9 +10,10 @@ const fromPx = (pixels: number): number => pixels / CELL_UNITS;
 const fromMs = (milliseconds: number): number =>
   Math.round((milliseconds * TICKS_PER_SECOND) / 1000);
 
-export const CHEF_SPEED = fromPx(115);
-export const CLIMB_SPEED = fromPx(80);
-export const ENEMY_SPEED = fromPx(68);
+export const CHEF_SPEED = fromPx(86);
+export const CLIMB_SPEED = fromPx(43);
+export const ENEMY_WALK_SPEED = fromPx(54);
+export const ENEMY_CLIMB_SPEED = fromPx(27);
 
 export const ARRIVAL_THRESHOLD = fromPx(3);
 export const EDGE_MARGIN = fromPx(12);
@@ -37,6 +38,18 @@ export const INGREDIENT_THICKNESS: Readonly<Record<IngredientKind, number>> = {
 export const READY_TICKS = fromMs(1500);
 export const DYING_TICKS = fromMs(2000);
 export const LEVEL_CLEAR_TICKS = fromMs(3000);
+
+/**
+ * Pace of the enemies on Normal, as in the original: the factor of each step over their speeds,
+ * one step more every `PACE_STEP_TICKS` of play on a board; from `LATE_PACE_LEVEL` a board
+ * starts on `LATE_PACE_FIRST_STEP`. Easy and Hard keep a steady factor.
+ */
+export const PACE_STEPS: readonly number[] = [1, 1.03, 1.07, 1.25];
+export const PACE_STEP_TICKS = fromMs(21_750);
+export const LATE_PACE_LEVEL = 4;
+export const LATE_PACE_FIRST_STEP = 2;
+export const EASY_PACE = 0.85;
+export const HARD_PACE = 1.25;
 
 export const STUN_TICKS = fromMs(5000);
 export const RESPAWN_TICKS = fromMs(2500);

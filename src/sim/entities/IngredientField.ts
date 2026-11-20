@@ -1,7 +1,6 @@
 import type { EventSink } from '../events';
-import type { GameStats } from '../GameStats';
 import type { Level } from '../level/Level';
-import { EXTRA_SUPPORTS_PER_RIDER, SCORE } from '../rules';
+import { EXTRA_SUPPORTS_PER_RIDER, SCORE, TICKS_PER_SECOND } from '../rules';
 import type { ChefPosition } from './Chef';
 import {
   Ingredient,
@@ -24,6 +23,23 @@ export interface EnemyRoster {
   release(ingredient: IngredientSnapshot): void;
 }
 
+/** What the field gives the player for its falls: points and, for a burger, a pepper. */
+export interface FieldRewards {
+  addScore(points: number): void;
+  grantPepper(): void;
+}
+
+const SILENT_EVENTS: EventSink = { emit: () => undefined };
+const NO_REWARDS: FieldRewards = { addScore: () => undefined, grantPepper: () => undefined };
+const NO_ENEMIES: EnemyRoster = {
+  board: () => 0,
+  crushUnder: () => undefined,
+  release: () => undefined
+};
+
+/** How long a forecast may run before giving up: far longer than any chain of falls. */
+const FORECAST_TICKS = 60 * TICKS_PER_SECOND;
+
 const overlap = (
   a: Pick<IngredientSnapshot, 'left' | 'right'>,
   b: Pick<IngredientSnapshot, 'left' | 'right'>
@@ -39,17 +55,29 @@ export class IngredientField implements IngredientHost {
   readonly plates: readonly Plate[];
   readonly #level: Level;
   readonly #events: EventSink;
-  readonly #stats: GameStats;
+  readonly #rewards: FieldRewards;
   readonly #enemies: EnemyRoster;
   readonly #struck = new Set<Ingredient>();
+  #dropped = false;
+  #secured = false;
 
-  constructor(level: Level, events: EventSink, stats: GameStats, enemies: EnemyRoster) {
+  /** With `source`, the field starts as a copy of it (Prototype) instead of from the level. */
+  constructor(
+    level: Level,
+    events: EventSink,
+    rewards: FieldRewards,
+    enemies: EnemyRoster,
+    source?: IngredientField
+  ) {
     this.#level = level;
     this.#events = events;
-    this.#stats = stats;
+    this.#rewards = rewards;
     this.#enemies = enemies;
-    this.ingredients = level.ingredients.map((spec) => new Ingredient(spec, this));
-    this.plates = level.plates.map((spec) => new Plate(spec));
+    this.ingredients =
+      source?.ingredients.map((ingredient) => ingredient.copyFor(this)) ??
+      level.ingredients.map((spec) => new Ingredient(spec, this));
+    this.plates =
+      source?.plates.map((plate) => plate.copy()) ?? level.plates.map((spec) => new Plate(spec));
   }
 
   get isComplete(): boolean {
@@ -57,8 +85,26 @@ export class IngredientField implements IngredientHost {
     return withIngredients.length > 0 && withIngredients.every((plate) => plate.isComplete);
   }
 
+  /**
+   * Whether the falls under way, and the ones they cause, will complete every burger with no
+   * more stomps. Checked whenever the chef drops an ingredient; once true, it stays true.
+   */
+  get isSecured(): boolean {
+    return this.#secured;
+  }
+
+  /** A copy in the same state that tells nobody what happens to it (Prototype). */
+  copy(): IngredientField {
+    return new IngredientField(this.#level, SILENT_EVENTS, NO_REWARDS, NO_ENEMIES, this);
+  }
+
   beginTick(): void {
     for (const ingredient of this.ingredients) ingredient.beginTick();
+  }
+
+  /** Lifts the stomped segments of every resting ingredient, as when the chef loses a life. */
+  liftStomps(): void {
+    for (const ingredient of this.ingredients) ingredient.resetSegments();
   }
 
   /**
@@ -70,12 +116,36 @@ export class IngredientField implements IngredientHost {
     if (chef.onPlatform) {
       for (const ingredient of this.ingredients) this.#stomp(ingredient, chef);
     }
+    this.advanceFalls();
+    if (this.#dropped && !this.#secured) this.#secured = this.#forecastsCompletion();
+    this.#dropped = false;
+  }
+
+  /** Whether any ingredient is still on its way down (falling, bouncing or stopped). */
+  get hasFalls(): boolean {
+    return this.ingredients.some(
+      (ingredient) => !ingredient.isIdle && ingredient.phase !== 'stacked'
+    );
+  }
+
+  /**
+   * Moves the falling ingredients a tick, with no stomping: the knocks, the crushes, the riders
+   * and the points go on as usual.
+   */
+  advanceFalls(): void {
     for (const ingredient of this.ingredients) {
       const wasMoving = ingredient.isMoving;
       ingredient.step();
       if (wasMoving || ingredient.isMoving) this.#enemies.crushUnder(ingredient);
     }
     this.#knockDownStruck();
+  }
+
+  /** Plays the falls under way to their end on a copy, and tells whether they finish the board. */
+  #forecastsCompletion(): boolean {
+    const twin = this.copy();
+    for (let tick = 0; tick < FORECAST_TICKS && twin.hasFalls; tick++) twin.advanceFalls();
+    return twin.isComplete;
   }
 
   strike(ingredient: IngredientSnapshot, toY: number): number | undefined {
@@ -102,12 +172,12 @@ export class IngredientField implements IngredientHost {
   }
 
   cameToRest(ingredient: IngredientSnapshot, support: Support): void {
-    this.#stats.addScore(SCORE.ingredient);
+    this.#rewards.addScore(SCORE.ingredient);
     this.#enemies.release(ingredient);
     if (support.plateId === null) return;
     if (this.plates[support.plateId].registerLanding()) {
-      this.#stats.addScore(SCORE.burger);
-      this.#stats.grantPepper();
+      this.#rewards.addScore(SCORE.burger);
+      this.#rewards.grantPepper();
       this.#events.emit({ type: 'burgerDone', plateId: support.plateId, points: SCORE.burger });
     }
   }
@@ -117,7 +187,9 @@ export class IngredientField implements IngredientHost {
     const segment = ingredient.segmentAt(chef.x);
     if (segment === undefined || !ingredient.stomp(segment)) return;
     this.#events.emit({ type: 'segmentStomped', ingredientId: ingredient.id, segment });
-    if (ingredient.allStomped) this.#startFalls([ingredient], true);
+    if (!ingredient.allStomped) return;
+    this.#startFalls([ingredient], true);
+    this.#dropped = true;
   }
 
   #knockDownStruck(): void {
