@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { PLATFORM_TOP, TILE, platformY } from '../config';
 import type { IngredientSnapshot } from '../sim';
 import type { ArtFactory } from '../view/raster/ArtFactory';
-import { INGREDIENT_HEIGHTS, segmentParts } from '../view/art/graphics';
+import { INGREDIENT_HANGS, INGREDIENT_HEIGHTS, segmentParts } from '../view/art/graphics';
 import { interpolatedRow } from './interpolation';
 import { segmentPoses } from './segmentPoses';
 
@@ -16,6 +16,7 @@ const TOUCH_DOWN = { depth: 8, ms: 60, archMs: 230 };
  */
 export default class IngredientView extends Phaser.GameObjects.Container {
   readonly #height: number;
+  readonly #hang: number;
   readonly #body: Phaser.GameObjects.Container;
   readonly #segments: Phaser.GameObjects.Image[] = [];
   readonly #artScale: number;
@@ -24,12 +25,13 @@ export default class IngredientView extends Phaser.GameObjects.Container {
   constructor(scene: Phaser.Scene, art: ArtFactory, ingredient: IngredientSnapshot) {
     super(scene, ((ingredient.left + ingredient.right) / 2) * TILE, 0);
     this.#height = INGREDIENT_HEIGHTS[ingredient.kind];
+    this.#hang = INGREDIENT_HANGS[ingredient.kind];
     this.#artScale = art.scale;
     this.#body = scene.add.container(0, 0);
     segmentParts(ingredient.width).forEach((part, index) => {
       const offset = (index + 0.5 - ingredient.width / 2) * TILE;
       const segment = art
-        .image(`${ingredient.kind}.${part}`, offset, -this.#height / 2)
+        .image(`${ingredient.kind}.${part}`, offset, this.#hang - this.#height / 2)
         .setOrigin(0.5, 0.5);
       this.#segments.push(segment);
       this.#body.add(segment);
@@ -47,7 +49,7 @@ export default class IngredientView extends Phaser.GameObjects.Container {
     this.#segments.forEach((segment, index) => {
       const pose = poses[index];
       segment
-        .setY(-this.#height / 2 + (pose?.offset ?? 0))
+        .setY(this.#hang - this.#height / 2 + (pose?.offset ?? 0))
         .setRotation(pose?.angle ?? 0)
         .setScale(this.#artScale * (pose?.widthScale ?? 1), this.#artScale);
     });
@@ -55,7 +57,7 @@ export default class IngredientView extends Phaser.GameObjects.Container {
 
   segmentTop(index: number): { readonly x: number; readonly y: number } {
     const segment = this.#segments[index];
-    return { x: this.x + (segment?.x ?? 0), y: this.y - this.#height };
+    return { x: this.x + (segment?.x ?? 0), y: this.y + this.#hang - this.#height };
   }
 
   /** The ingredient has touched a floor: it sinks for a moment, comes back up and arches. */

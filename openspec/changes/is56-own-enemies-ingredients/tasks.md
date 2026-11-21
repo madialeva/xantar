@@ -11,19 +11,19 @@
 
 ## 2. Queso y tomate
 
-- [ ] 2.1 Pasar de `tmp/is56-drafts/ingredients.py` a `tools/blender/ingredients.py`:
+- [x] 2.1 Pasar de `tmp/is56-drafts/ingredients.py` a `tools/blender/ingredients.py`:
   - `build_cheese` (loncha de 2 con lágrimas periódicas por casilla y esquinas caídas, sin el suelo de sombra) y `build_tomato` (cuatro rodajas torneadas con `slab_profile`, inclinadas 8°), con sus materiales.
   - Entradas en `INGREDIENTS` con alturas de imagen 11 y 9.
   - Renderizar con `blender -b --factory-startup --python tools/blender/ingredients.py -- --only cheese --only tomato`.
   - Verificar: `tmp/blender/cheese.game.png` y `tomato.game.png` sin costuras entre tramos, `metrics.json` con los dos tipos y ningún aviso de encuadre.
-- [ ] 2.2 Añadir `cheese` y `tomato` a `IngredientKind`, las piezas `Q` y `O` al registro y `INGREDIENT_THICKNESS` (queso `rowsOf(2)`, tomate `rowsOf(6)`).
+- [x] 2.2 Añadir `cheese` y `tomato` a `IngredientKind`, las piezas `Q` y `O` al registro y `INGREDIENT_THICKNESS` (queso `rowsOf(2)`, tomate `rowsOf(6)`).
   - Verificar con pruebas de piezas (`Q` y `O` cargan un queso y un tomate de cuatro segmentos), de reglas (grosores en unidades) y de plato (pan de abajo, carne y tomate dejan el siguiente a 29 unidades; un ingrediente que cae golpea a un queso a 2 unidades del piso) y con `npm run test`.
-- [ ] 2.3 Vista:
+- [x] 2.3 Vista:
   - Gráficos `cheese.*` y `tomato.*` en el catálogo, con `INGREDIENT_HEIGHTS` 11 y 9.
   - `INGREDIENT_HANGS` con el queso (unas 5 unidades), que `IngredientView` suma al colocar los segmentos.
   - Los dos tipos en la fila de ingredientes de `ArtSheetScene`.
   - Verificar con las pruebas de arte y de catálogo, una prueba de que solo el queso cuelga, y en la lámina de arte (`npm run dev`, `/tools/art-sheet.html`): la loncha a la altura de la base de los demás, las lágrimas por delante del borde del piso y un queso pisado que se sigue viendo. Ajustar el valor si hace falta.
-- [ ] 2.4 Documentar:
+- [x] 2.4 Documentar:
   - `docs/STYLE_GUIDE.md`: aspecto, tamaños y colores del queso y el tomate; el queso cuelga de su base.
   - `docs/MANUAL.md`: §8.6 símbolos `Q` y `O`; §8.7 `--only cheese` y el queso sin suelo de sombra; `INGREDIENT_HANGS`.
   - Verificar con `npm run format:check` y las comprobaciones de entrega.

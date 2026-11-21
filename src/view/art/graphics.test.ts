@@ -1,16 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import { TILE } from '../../config';
-import { GRAPHICS, GRAPHIC_IDS, isGraphicId, segmentParts } from './graphics';
+import { GRAPHICS, GRAPHIC_IDS, INGREDIENT_HANGS, isGraphicId, segmentParts } from './graphics';
 
 describe('graphics catalogue', () => {
   it('has the three segment graphics of each ingredient, one tile wide', () => {
-    for (const kind of ['bunTop', 'lettuce', 'patty', 'bunBottom']) {
+    for (const kind of ['bunTop', 'lettuce', 'patty', 'bunBottom', 'cheese', 'tomato']) {
       for (const part of ['left', 'mid', 'right']) {
         const id = `${kind}.${part}`;
         expect(isGraphicId(id)).toBe(true);
         if (isGraphicId(id)) expect(GRAPHICS[id].width).toBe(TILE);
       }
     }
+  });
+
+  it('hangs only the cheese below its base, over what is under it', () => {
+    const hanging = Object.entries(INGREDIENT_HANGS).filter(([, units]) => units > 0);
+    expect(hanging.map(([kind]) => kind)).toEqual(['cheese']);
   });
 
   it('recognises only catalogue ids', () => {

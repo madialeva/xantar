@@ -48,6 +48,12 @@ const columnGrid: GridSpec = {
   ]
 };
 
+/** The column of `columnGrid` with another ingredient where the lettuce is. */
+const columnWith = (symbol: string): GridSpec => ({
+  ...columnGrid,
+  ingredients: (columnGrid.ingredients ?? []).map((row) => row.replaceAll('L', symbol))
+});
+
 interface Crush {
   readonly id: number;
   readonly y: number;
@@ -225,6 +231,17 @@ describe('IngredientField chain', () => {
     expect(lettuce.y).toBeGreaterThan(3);
   });
 
+  it('knocks a cheese down when the base of the one falling reaches 2 units over its floor', () => {
+    const context = create(columnWith('Q'));
+    const [top, cheese] = context.field.ingredients;
+    stompAll(context, 0);
+    context.events.drain();
+    until(context, () => !cheese.isIdle);
+    expect(top.y).toBeCloseTo(3 - INGREDIENT_THICKNESS.cheese, 10);
+    expect(top.y * ROW_UNITS).toBeCloseTo(3 * ROW_UNITS - 2, 10);
+    expect(cheese.phase).toBe('falling');
+  });
+
   it('drops the column from the top down, one support each, and pays when they rest', () => {
     const context = create();
     stompAll(context, 0);
@@ -399,8 +416,8 @@ describe('IngredientField chain', () => {
 });
 
 describe('IngredientField plates', () => {
-  const build = (): Context => {
-    const context = create();
+  const build = (grid?: GridSpec): Context => {
+    const context = create(grid);
     stompAll(context, 0);
     settle(context);
     stompAll(context, 2);
@@ -427,6 +444,14 @@ describe('IngredientField plates', () => {
     );
     expect(landed.map((event) => event.ingredientId)).toEqual([3, 2, 1, 0]);
     expect(landed.map((event) => event.stackSlot)).toEqual([0, 1, 2, 3]);
+  });
+
+  it('stacks the next piece 29 units over a plate with a bottom bun, a patty and a tomato', () => {
+    const context = build(columnWith('O'));
+    finish(context);
+    const [top, tomato] = context.field.ingredients;
+    expect(tomato.kind).toBe('tomato');
+    expect(top.y * ROW_UNITS).toBeCloseTo(10 * ROW_UNITS - 29, 10);
   });
 
   it('stacks each piece at the thickness of the ones below it', () => {

@@ -17,6 +17,8 @@ describe('PieceRegistry', () => {
     expect(registry.resolve('structure', '=')?.id).toBe('platform');
     expect(registry.resolve('structure', '+')?.id).toBe('crossing');
     expect(registry.resolve('ingredients', 'T')?.id).toBe('bunTop');
+    expect(registry.resolve('ingredients', 'Q')?.id).toBe('cheese');
+    expect(registry.resolve('ingredients', 'O')?.id).toBe('tomato');
     expect(registry.resolve('actors', 'h')?.id).toBe('hotdog');
     expect(registry.resolve('actors', 'C')?.id).toBe('chef');
   });
@@ -29,7 +31,7 @@ describe('PieceRegistry', () => {
         .map((piece) => piece.symbol)
         .join('');
     expect(symbols('structure')).toBe('.=H+_-');
-    expect(symbols('ingredients')).toBe('.TLPB');
+    expect(symbols('ingredients')).toBe('.TLPBQO');
     expect(symbols('actors')).toBe('.Choe');
   });
 

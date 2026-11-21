@@ -12,7 +12,23 @@ export const INGREDIENT_HEIGHTS: Readonly<Record<IngredientKind, number>> = {
   bunTop: 18,
   lettuce: 14,
   patty: 17,
-  bunBottom: 16
+  bunBottom: 16,
+  cheese: 11,
+  tomato: 9
+};
+
+/**
+ * How much lower than its base an ingredient's image is drawn, in logical units: the art of the
+ * melting cheese reaches below its base, so its tongues hang over what is under it instead of
+ * lifting the slice.
+ */
+export const INGREDIENT_HANGS: Readonly<Record<IngredientKind, number>> = {
+  bunTop: 0,
+  lettuce: 0,
+  patty: 0,
+  bunBottom: 0,
+  cheese: 5,
+  tomato: 0
 };
 
 const ingredient = <K extends IngredientKind>(kind: K) => {
@@ -39,6 +55,8 @@ export const GRAPHICS = {
   ...ingredient('lettuce'),
   ...ingredient('patty'),
   ...ingredient('bunBottom'),
+  ...ingredient('cheese'),
+  ...ingredient('tomato'),
   'chef.body': size(18, 14),
   'chef.head': size(16, 14),
   'chef.hat': size(20, 13),

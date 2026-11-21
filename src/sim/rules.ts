@@ -52,7 +52,9 @@ export const INGREDIENT_THICKNESS: Readonly<Record<IngredientKind, number>> = {
   bunTop: rowsOf(13),
   lettuce: rowsOf(8),
   patty: rowsOf(12),
-  bunBottom: rowsOf(11)
+  bunBottom: rowsOf(11),
+  cheese: rowsOf(2),
+  tomato: rowsOf(6)
 };
 
 export const READY_TICKS = fromMs(1500);
