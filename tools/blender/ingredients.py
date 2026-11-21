@@ -2,8 +2,8 @@
 
 Builds each ingredient procedurally, lights it with sun lamps only and renders it with Cycles.
 One Blender unit is one logical unit of the board, and x runs along the four tiles of the
-ingredient (a tile is one 16-unit cell, so an ingredient is 64 wide: two chefs, as in the
-original). The game draws the middle segment twice in a row, so nothing may change along x
+ingredient (a tile is one 18-unit cell, so an ingredient is 72 wide: about two chefs, as in
+the original). The game draws the middle segment twice in a row, so nothing may change along x
 from one tile to the next: directional light does not, and every texture, displacement and
 pattern repeats exactly once per tile. The rounded ends must fit in the first and last tile.
 
@@ -99,7 +99,7 @@ class Footprint:
         if abs(along * spacing - straight) > 1e-6 or abs(TILE / spacing - round(TILE / spacing)) > 1e-6:
             raise SystemExit(f"A spacing of {spacing} must divide both the straight part and a tile")
         around = max(8, round(math.pi * self.radius / spacing))
-        end = -straight + 16 * max(1, round((end_share * math.pi * self.radius + straight) / 16))
+        end = -straight + TILE * max(1, round((end_share * math.pi * self.radius + straight) / TILE))
         frames = []
         for i in range(along):
             x = self.c0 + spacing * i

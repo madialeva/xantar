@@ -22,14 +22,16 @@ extended over time. The roadmap lives in the GitHub issues and in the README.
   Oxlint (+ tsgolint) for linting, Prettier for formatting, Electron `^44`,
   electron-builder `^26`. Node `>=22.12` (development on Node 24, see
   `.nvmrc`).
-- The board has a fixed logical size of **624×630**: the 39×30 cells of the
-  original, each 16 units wide (one character of the original screen at ×2,
-  half the width of the chef) and 21 tall, so that two floors one ladder run
-  (two rows) apart leave the chef a little room under 8-unit platforms. It is
-  centred in a play area 630 high and 816–1512 wide whose sides hold the HUD
-  panels (`computeLayout`). The simulation owns the cell sizes (`CELL_UNITS` and
-  `ROW_UNITS` in `src/sim/rules.ts`) and `src/config.ts` derives `TILE` and
-  `ROW` from them. The canvas is that area times the render tier
+- The board has a fixed logical size of **702×630**: the 39×30 cells of the
+  original, each 18 units wide (one character of the original screen at ×2,
+  16, plus two to make better use of landscape screens) and 21 tall, so that
+  two floors one ladder run (two rows) apart leave the chef a little room under
+  8-unit platforms. Only the drawing is wider: the game counts in cells and
+  what was measured on the original still uses 16 units per cell
+  (`ORIGINAL_CELL_UNITS`). It is centred in a play area 630 high and 894–1512
+  wide whose sides hold the HUD panels (`computeLayout`). The simulation owns
+  the cell sizes (`CELL_UNITS` and `ROW_UNITS` in `src/sim/rules.ts`) and
+  `src/config.ts` derives `TILE` and `ROW` from them. The canvas is that area times the render tier
   (`RENDER_TIER`) and cameras zoom by it, so code works in logical units.
   Keep coordinates tied to `src/config.ts`; do not hardcode screen positions.
 - Movement is **custom** (platform/ladder grid), not Arcade Physics. There is

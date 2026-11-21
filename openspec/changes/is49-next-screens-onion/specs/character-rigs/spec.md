@@ -38,11 +38,13 @@ independientes, cada una con su gráfico renderizado, su punto de giro y su
 posición relativa: el chef con cuerpo, cabeza, ojos, gorro, coleta, dos brazos
 y dos piernas, y cada enemigo con cuerpo, ojos y dos piernas. Los brazos del
 chef SHALL girar alrededor del hombro sin que se vea separación entre el brazo
-y el cuerpo. El chef SHALL medir de pie 32 unidades (el ancho de dos casillas
-del tablero) de los pies a lo alto del gorro, y los enemigos SHALL tener
-aproximadamente la misma altura, con los pies en el suelo de su plataforma. La
-composición de cada personaje, incluida su escala, SHALL describirse como
-datos.
+y el cuerpo. El chef SHALL medir de pie 32 unidades (dos caracteres del
+original a escala ×2) de los pies a lo alto del gorro, y los enemigos SHALL
+tener aproximadamente la misma altura, con los pies en el suelo de su
+plataforma. Para ir con las casillas, más anchas que las del original, cada
+personaje SHALL dibujarse dos unidades más ancho por cada 32 de su arte (34/32)
+sin cambiar su altura. La composición de cada personaje, incluidos su escala y
+su ensanche, SHALL describirse como datos.
 
 #### Scenario: Sustituir el gorro del chef
 - **WHEN** se vuelve a generar el gráfico del gorro del chef con otro modelo
@@ -58,6 +60,11 @@ datos.
 - **THEN** mide 32 unidades, con una tolerancia de una unidad, de la suela de
   los zapatos a lo alto del gorro, y la suela queda sobre el suelo de la
   plataforma
+
+#### Scenario: Ancho de los personajes
+- **WHEN** el chef o un enemigo se dibuja en el tablero
+- **THEN** se ve 34/32 veces más ancho que su arte a su escala, con la misma
+  altura
 
 #### Scenario: Altura de los enemigos
 - **WHEN** el chef y un enemigo están de pie en la misma plataforma

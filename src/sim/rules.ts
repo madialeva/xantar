@@ -4,8 +4,17 @@ export const TICKS_PER_SECOND = 60;
 export const TICK_SECONDS = 1 / TICKS_PER_SECOND;
 export const TICK_MS = 1000 / TICKS_PER_SECOND;
 
-/** Width of a cell in logical units: one character of the original screen at ×2, half a chef. */
-export const CELL_UNITS = 16;
+/**
+ * How wide a cell is on the original screen at ×2, in logical units: one character, 16 wide.
+ * Distances and speeds measured on the original count cells and rows in these.
+ */
+export const ORIGINAL_CELL_UNITS = 16;
+/**
+ * Width of a cell in logical units: one character of the original screen at ×2 and two units
+ * more, so the board fills more of a landscape screen. Only the drawing gets wider: the game
+ * still counts in cells.
+ */
+export const CELL_UNITS = ORIGINAL_CELL_UNITS + 2;
 /**
  * Height of a row in logical units: taller than a cell is wide, so that two floors one ladder run
  * apart (two rows) leave the chef standing between their platforms with a little room to spare.
@@ -13,9 +22,9 @@ export const CELL_UNITS = 16;
 export const ROW_UNITS = 21;
 /**
  * A distance or a speed measured on the original screen at ×2, in cells or rows: 16 to a cell
- * and 16 to a row, so a ladder run takes as long to climb as in the original.
+ * and 16 to a row, so crossing a cell or climbing a ladder run takes as long as in the original.
  */
-const fromPx = (pixels: number): number => pixels / CELL_UNITS;
+const fromPx = (pixels: number): number => pixels / ORIGINAL_CELL_UNITS;
 /** A height of something drawn on the board, in logical units, in rows. */
 const rowsOf = (units: number): number => units / ROW_UNITS;
 const fromMs = (milliseconds: number): number =>
@@ -71,14 +80,22 @@ export const DECISION_MIN_TICKS = fromMs(500);
 export const DECISION_MAX_TICKS = fromMs(1100);
 export const ENEMY_REVERSE_CHANCE = 0.2;
 
+/** A distance measured both ways: in cells across the board and in rows up and down it. */
+export interface CellsAndRows {
+  readonly cells: number;
+  readonly rows: number;
+}
+
 /**
- * Where the pepper cloud appears and what it reaches, in logical units, the same either way:
- * along the throw and across it.
+ * Where the pepper cloud appears and what it reaches, along the throw and across it: across the
+ * board in cells, as measured on the original, and up and down it in rows, as the same distance
+ * drawn.
  */
-export const PEPPER_CLOUD_OFFSET = 24;
-export const PEPPER_CLOUD_LIFT = 2;
-export const PEPPER_REACH_ALONG = 44;
-export const PEPPER_REACH_ACROSS = 26;
+const reach = (units: number): CellsAndRows => ({ cells: fromPx(units), rows: rowsOf(units) });
+export const PEPPER_CLOUD_OFFSET = reach(24);
+export const PEPPER_CLOUD_LIFT = rowsOf(2);
+export const PEPPER_REACH_ALONG = reach(44);
+export const PEPPER_REACH_ACROSS = reach(26);
 
 /** How tall an enemy is for a falling ingredient to crush it, in rows: as tall as it is drawn. */
 export const ENEMY_HEIGHT = rowsOf(32);

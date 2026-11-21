@@ -9,7 +9,15 @@ const placed = (scale: number, y: number): number => {
 
 describe('rigPlacement', () => {
   it('leaves a rig without a scale as it is', () => {
-    expect(rigPlacement({ parts: [] })).toEqual({ scale: 1, y: 0 });
+    expect(rigPlacement({ parts: [] })).toEqual({ scaleX: 1, scale: 1, y: 0 });
+  });
+
+  it('stretches a rig sideways on top of its scale', () => {
+    expect(rigPlacement({ parts: [], scale: 0.5, widen: 1.25 })).toEqual({
+      scaleX: 0.625,
+      scale: 0.5,
+      y: FEET_Y / 2
+    });
   });
 
   it('scales a rig about its feet', () => {

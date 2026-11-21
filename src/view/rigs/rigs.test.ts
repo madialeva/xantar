@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GRAPHICS, isGraphicId } from '../art/graphics';
-import { chefRig, enemyRigs } from './rigs';
+import { CHARACTER_WIDEN, chefRig, enemyRigs } from './rigs';
 
 const rigs = { chef: chefRig, ...enemyRigs };
 
@@ -27,6 +27,13 @@ describe('rigs', () => {
         }
       }
     }
+  });
+
+  it('draws every character two units wider than its art over the 32 of the chef', () => {
+    for (const rig of [chefRig, ...Object.values(enemyRigs)]) {
+      expect(rig.widen).toBe(CHARACTER_WIDEN);
+    }
+    expect(32 * CHARACTER_WIDEN).toBe(34);
   });
 
   it('gives every enemy two legs', () => {

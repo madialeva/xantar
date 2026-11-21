@@ -62,8 +62,8 @@ alto, en su postura base, aproximadamente lo mismo que el chef.
   pies en la plataforma
 
 ### Requirement: Escalera renderizada
-La escalera SHALL ser de madera barnizada, con dos largueros y peldaños
-redondos, y SHALL dibujarse fila a fila con una misma imagen de la altura de una
+La escalera SHALL ser de madera de abedul, clara y cremosa, para que el
+tablero no se vea oscuro, con dos largueros y peldaños redondos, y SHALL dibujarse fila a fila con una misma imagen de la altura de una
 fila que se repite sin costuras: cuatro peldaños por fila, más juntos que en las
 primeras versiones pero menos que en el original. En cada cruce SHALL verse
 pasar los largueros a través de la plataforma.
@@ -76,3 +76,8 @@ pasar los largueros a través de la plataforma.
 #### Scenario: Cruce
 - **WHEN** una escalera atraviesa un piso
 - **THEN** sus largueros se ven pasar por la ranura de la plataforma
+
+#### Scenario: Escalera clara
+- **WHEN** se dibuja el tablero
+- **THEN** las escaleras se ven de un tono de madera claro, que resalta sobre
+  el fondo oscuro

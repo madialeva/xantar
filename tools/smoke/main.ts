@@ -58,7 +58,7 @@ function requestedRuns(args: readonly string[]): { scenario: string; runs: reado
   return { scenario, runs };
 }
 
-const BOARD = { width: 624, height: 630 };
+const BOARD = { width: 702, height: 630 };
 
 interface TouchPoint {
   readonly id: number;

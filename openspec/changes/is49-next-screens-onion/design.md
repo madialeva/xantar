@@ -63,6 +63,9 @@
 - Ritmo por pantalla o vueltas más rápidas (#52): el escalón inicial sigue
   dependiendo del número de nivel.
 - Elegir pantalla desde el menú o mostrar su nombre en el HUD.
+- Recortar las pasarelas de entrada para que el tablero de casillas de 18
+  llene una ventana 4:3 (decisión 14): adelantaría la llegada de los enemigos,
+  medida en el original.
 
 ## Decisions
 
@@ -398,6 +401,49 @@ primer paso del escenario renderizado (#38).
 El giro de media vuelta por paso se veía demasiado deprisa: pasa a media vuelta
 por zancada (dos pasos, 260 ms) al andar y a la mitad al trepar.
 
+### 14. Casillas de 18 de ancho
+
+El original se jugaba en un monitor vertical y Xantar, en pantallas apaisadas:
+con casillas de 16, en 16:9 el tablero ocupaba poco más de la mitad del ancho.
+Tras ver una maqueta de la primera pantalla con casillas de 18 y de 20, el autor
+elige 18: la escalera y cada trozo de ingrediente ganan 2 unidades de ancho y
+los personajes, 2 sobre los 32 del chef. Los altos no cambian.
+
+- **Solo cambia el dibujo.** `CELL_UNITS` pasa a 18 y `ORIGINAL_CELL_UNITS`
+  (16) guarda el carácter del original a ×2: `fromPx` divide por él, así que
+  las velocidades y distancias medidas en el original siguen siendo las mismas
+  en casillas y una casilla se cruza en el mismo tiempo. En pantalla, todo se
+  mueve un 12,5 % más deprisa porque la casilla es más ancha.
+- **La pimienta**, que medía en unidades por eje, pasa a medir de lado a lado
+  en casillas (como en el original) y de arriba abajo en filas (como se
+  dibuja): `CellsAndRows`. Así su alcance en casillas no cambia.
+- **Vista.** El tablero mide 702×630 y el área de juego, entre 894 (dos
+  paneles de 96) y 1512 de ancho; en 16:9 los paneles miden 209. Las piezas SVG
+  del laberinto miden 18 de ancho (los remates conservan su forma y se alargan
+  los tramos rectos) y el fondo, 702×630. Los personajes no se vuelven a
+  renderizar: cada rig lleva `widen` = 34/32 y `CharacterRig` lo estira de lado
+  sobre su escala.
+- **Arte renderizado.** `TILE` de `common.py` pasa a 18: los ingredientes se
+  renderizan de 72 de ancho (sus grosores no cambian) y la escalera, de 18 con
+  los largueros 1 unidad más afuera.
+- **4:3 y 5:4** quedan por debajo del ancho mínimo y se ven con bandas arriba y
+  abajo (el tablero, un 6 % más pequeño en 4:3). Recortar dos casillas de cada
+  pasarela lo evitaría, pero los enemigos llegarían antes a los pisos y los
+  tiempos de entrada están medidos en el original: queda fuera (Non-Goals).
+
+*Alternativas descartadas:* casillas de 20 (los personajes se ven más anchos
+que altos y 4:3 no cabría ni recortando las pasarelas); medir el juego en
+unidades dibujadas (cambiaría el ritmo horizontal y el alcance de la
+pimienta); volver a renderizar los personajes más anchos (el estiramiento del
+6 % no se aprecia y evita tamaños de gráfico no enteros).
+
+### 15. Escalera de abedul
+
+Con las plataformas azules sobre el fondo azul noche, la madera barnizada
+oscura hacía que el tablero se viera muy oscuro. La escalera pasa a madera de
+abedul, clara y cremosa con una veta dorada fina (`birch_material` en
+`maze.py`), con algo menos de barniz.
+
 ## Risks / Trade-offs
 
 - [Pantallas propias desequilibradas o aburridas] → Los borradores ya pasan el
@@ -427,6 +473,11 @@ por zancada (dos pasos, 260 ms) al andar y a la mitad al trepar.
 - [Velocidades verticales en otra unidad] → Las specs las dan en filas por
   segundo con su equivalente en unidades; las pruebas del núcleo, que trabajan
   en filas, no cambian.
+- [Las medidas horizontales de las specs, en unidades del original] → El
+  requisito de las casillas lo dice expresamente: 16 unidades por casilla para
+  las reglas, 18 para el dibujo.
+- [Personajes estirados] → El 6 % no se aprecia; si algún día se nota en el
+  título, donde el chef se ve grande, se renderizan más anchos en Blender.
 
 ## Migration Plan
 

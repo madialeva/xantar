@@ -1,8 +1,15 @@
 import type { EnemyKind } from '../../sim';
 import type { RigDefinition } from './RigDefinition';
 
+/**
+ * How much wider than their art the characters are drawn: two units more over the 32 of the
+ * chef, to go with columns two units wider than a character of the original.
+ */
+export const CHARACTER_WIDEN = 34 / 32;
+
 export const chefRig: RigDefinition = {
   scale: 0.82,
+  widen: CHARACTER_WIDEN,
   parts: [
     { name: 'armLeft', graphic: 'chef.armLeft', x: -4, y: -7.2, originY: 0.18 },
     { name: 'legLeft', graphic: 'chef.legLeft', x: -2, y: 1, originY: 0 },
@@ -19,6 +26,7 @@ export const chefRig: RigDefinition = {
 export const enemyRigs: Readonly<Record<EnemyKind, RigDefinition>> = {
   hotdog: {
     scale: 0.82,
+    widen: CHARACTER_WIDEN,
     parts: [
       { name: 'legLeft', graphic: 'hotdog.leg', x: -2.2, y: 2, originY: 0 },
       { name: 'legRight', graphic: 'hotdog.leg', x: 2.6, y: 2, originY: 0 },
@@ -41,6 +49,7 @@ export const enemyRigs: Readonly<Record<EnemyKind, RigDefinition>> = {
   },
   onion: {
     scale: 0.91,
+    widen: CHARACTER_WIDEN,
     parts: [
       { name: 'legLeft', graphic: 'onion.leg', x: -2.2, y: 2, originY: 0 },
       { name: 'legRight', graphic: 'onion.leg', x: 2.6, y: 2, originY: 0 },
@@ -64,6 +73,7 @@ export const enemyRigs: Readonly<Record<EnemyKind, RigDefinition>> = {
   },
   egg: {
     scale: 0.9,
+    widen: CHARACTER_WIDEN,
     parts: [
       { name: 'legLeft', graphic: 'egg.leg', x: -2.2, y: 2, originY: 0 },
       { name: 'legRight', graphic: 'egg.leg', x: 2.6, y: 2, originY: 0 },

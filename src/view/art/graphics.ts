@@ -1,4 +1,5 @@
-import { type IngredientKind, ROW_UNITS } from '../../sim';
+import { GAME_HEIGHT, GAME_WIDTH, ROW, TILE } from '../../config';
+import type { IngredientKind } from '../../sim';
 
 export interface GraphicSize {
   readonly width: number;
@@ -15,7 +16,7 @@ export const INGREDIENT_HEIGHTS: Readonly<Record<IngredientKind, number>> = {
 };
 
 const ingredient = <K extends IngredientKind>(kind: K) => {
-  const box = size(16, INGREDIENT_HEIGHTS[kind]);
+  const box = size(TILE, INGREDIENT_HEIGHTS[kind]);
   return { [`${kind}.left`]: box, [`${kind}.mid`]: box, [`${kind}.right`]: box } as Record<
     `${K}.${SegmentPart}`,
     GraphicSize
@@ -23,17 +24,17 @@ const ingredient = <K extends IngredientKind>(kind: K) => {
 };
 
 export const GRAPHICS = {
-  'board.backdrop': size(624, 30 * ROW_UNITS),
-  'platform.left': size(16, 8),
-  'platform.mid': size(16, 8),
-  'platform.right': size(16, 8),
-  crossing: size(16, 8),
-  walkway: size(16, 8),
-  ladder: size(16, ROW_UNITS),
-  'ladder.rails': size(16, 8),
-  'plate.left': size(16, 10),
-  'plate.mid': size(16, 10),
-  'plate.right': size(16, 10),
+  'board.backdrop': size(GAME_WIDTH, GAME_HEIGHT),
+  'platform.left': size(TILE, 8),
+  'platform.mid': size(TILE, 8),
+  'platform.right': size(TILE, 8),
+  crossing: size(TILE, 8),
+  walkway: size(TILE, 8),
+  ladder: size(TILE, ROW),
+  'ladder.rails': size(TILE, 8),
+  'plate.left': size(TILE, 10),
+  'plate.mid': size(TILE, 10),
+  'plate.right': size(TILE, 10),
   ...ingredient('bunTop'),
   ...ingredient('lettuce'),
   ...ingredient('patty'),

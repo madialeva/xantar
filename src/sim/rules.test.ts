@@ -19,6 +19,8 @@ import {
   HARD_PACE,
   INGREDIENT_THICKNESS,
   LADDER_GRAB_DISTANCE,
+  ORIGINAL_CELL_UNITS,
+  PEPPER_CLOUD_LIFT,
   PEPPER_CLOUD_OFFSET,
   PEPPER_REACH_ALONG,
   PEPPER_REACH_ACROSS,
@@ -31,11 +33,12 @@ import {
   TICKS_PER_SECOND
 } from './rules';
 
-const PX_PER_TILE = CELL_UNITS;
+const PX_PER_TILE = ORIGINAL_CELL_UNITS;
 
 describe('rules', () => {
-  it('measures a cell as one character of the original at twice its size, half a chef', () => {
-    expect(CELL_UNITS).toBe(16);
+  it('measures the original in characters at twice their size and draws a cell two units wider', () => {
+    expect(ORIGINAL_CELL_UNITS).toBe(16);
+    expect(CELL_UNITS).toBe(18);
   });
 
   it('keeps the speeds measured in the original game, enemies at 5/8 of the chef', () => {
@@ -57,7 +60,12 @@ describe('rules', () => {
     expect(EDGE_MARGIN * PX_PER_TILE).toBe(12);
     expect(CONTACT_X * PX_PER_TILE).toBe(16);
     expect(CONTACT_Y * ROW_UNITS).toBeCloseTo(18, 10);
-    expect([PEPPER_CLOUD_OFFSET, PEPPER_REACH_ALONG, PEPPER_REACH_ACROSS]).toEqual([24, 44, 26]);
+    const pepper = [PEPPER_CLOUD_OFFSET, PEPPER_REACH_ALONG, PEPPER_REACH_ACROSS];
+    expect(pepper.map(({ cells }) => cells * PX_PER_TILE)).toEqual([24, 44, 26]);
+    pepper.forEach(({ rows }, index) => {
+      expect(rows * ROW_UNITS).toBeCloseTo([24, 44, 26][index] ?? 0, 10);
+    });
+    expect(PEPPER_CLOUD_LIFT * ROW_UNITS).toBeCloseTo(2, 10);
     expect(LADDER_GRAB_DISTANCE * PX_PER_TILE).toBeCloseTo(19.2, 10);
     expect(STEP_OFF_DISTANCE * ROW_UNITS).toBeCloseTo(12.8, 10);
     expect(ENEMY_HEIGHT * ROW_UNITS).toBeCloseTo(32, 10);

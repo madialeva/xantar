@@ -9,8 +9,8 @@ Run from the repository root:
     blender -b --factory-startup --python tools/blender/maze.py -- [--samples N]
 
 Writes <graphic>.png at 4x the logical size to the art sources (src/view/art/sources/), and a
-preview of each piece to tmp/blender/maze/. ROW must match ROW_UNITS in src/sim/rules.ts, and the
-sizes, the graphics catalogue (src/view/art/graphics.ts).
+preview of each piece to tmp/blender/maze/. ROW must match ROW_UNITS in src/sim/rules.ts (and
+TILE in common.py, CELL_UNITS), and the sizes, the graphics catalogue (src/view/art/graphics.ts).
 """
 
 import argparse
@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from common import (  # noqa: E402
     PREVIEW_DIR,
+    TILE,
     add,
     board_point,
     bump,
@@ -43,19 +44,19 @@ from common import (  # noqa: E402
 
 MAZE_PREVIEWS = os.path.join(PREVIEW_DIR, "maze")
 ROW = 21
-COLUMN = 16
+COLUMN = TILE
 RUNGS_PER_ROW = 4
-RAIL_X = 5.4
+RAIL_X = 6.4
 RAIL_WIDTH = 2.3
 RAIL_DEPTH = 2.0
 RUNG_RADIUS = 0.85
 PLATFORM_THICKNESS = 8
 
 
-def wood_material():
-    """Varnished light wood: warm, with a fine grain along the rails that repeats once a row,
-    so a ladder drawn row after row has no seams."""
-    material, tree = new_material("wood")
+def birch_material():
+    """Birch: pale and creamy, lightly varnished, with a fine golden grain along the rails that
+    repeats once a row, so a ladder drawn row after row has no seams."""
+    material, tree = new_material("birch")
     bsdf, _ = principled(tree)
     coords = tree.nodes.new("ShaderNodeTexCoord")
     split = tree.nodes.new("ShaderNodeSeparateXYZ")
@@ -70,10 +71,10 @@ def wood_material():
     grain = noise4(tree, folded.outputs[0], w, 0.9, detail=6, roughness=0.55, distortion=0.4)
     mottle = noise4(tree, folded.outputs[0], w, 0.25, detail=3)
     level = add(tree, 0.5, centred(tree, grain, 0.7), centred(tree, mottle, 0.35), clamp=True)
-    stops = [(0.0, "#8A5428"), (0.35, "#A86A33"), (0.65, "#C98B4A"), (1.0, "#DDA866")]
+    stops = [(0.0, "#C9A877"), (0.3, "#E0C69A"), (0.65, "#EEDDBB"), (1.0, "#F8EFD8")]
     feed(tree, bsdf.inputs["Base Color"], ramp(tree, level, stops))
     bsdf.inputs["Roughness"].default_value = 0.42
-    bsdf.inputs["Coat Weight"].default_value = 0.35
+    bsdf.inputs["Coat Weight"].default_value = 0.25
     bsdf.inputs["Coat Roughness"].default_value = 0.2
     feed(tree, bsdf.inputs["Normal"], bump(tree, grain, 0.12, 0.15))
     return material
@@ -115,7 +116,7 @@ def place(scene, name, mesh, material, location):
 def build_ladder(scene, top, bottom, rungs=True):
     """Two rails from `top` to `bottom` (board y) and, if asked, rungs every ROW / RUNGS_PER_ROW
     units starting half a step below each row line, so every row holds the same rungs."""
-    wood = wood_material()
+    wood = birch_material()
     height = bottom - top
     for side in (-1, 1):
         rail = rounded_box("rail", (RAIL_WIDTH, RAIL_DEPTH, height), 0.6)

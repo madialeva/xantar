@@ -321,8 +321,8 @@ Conceptos de Phaser que aparecen en el proyecto:
 - **Coordenadas de mundo**: dónde están las cosas en el juego.
 - **Coordenadas de pantalla**: en qué píxel del monitor se dibujan.
 - **Unidades lógicas**: una unidad de medida propia del juego,
-  independiente del monitor. En Xantar una casilla (*tile*) mide 16 unidades
-  de ancho y 21 de alto, y el tablero mide 624×630 (39×30 casillas). La
+  independiente del monitor. En Xantar una casilla (*tile*) mide 18 unidades
+  de ancho y 21 de alto, y el tablero mide 702×630 (39×30 casillas). La
   simulación va todavía más allá y trabaja directamente en columnas y filas.
 
 La cámara es la que traduce del mundo a la pantalla. Así, el código de juego
@@ -334,7 +334,7 @@ Muchos juegos clásicos se construyen sobre una **rejilla** (*grid*) de
 casillas (*tiles*): el escenario es una matriz de piezas (plataforma,
 escalera, vacío) y los objetos se alinean a ella. Simplifica el diseño de
 niveles, las colisiones y la búsqueda de caminos. Xantar usa una rejilla de
-casillas de 16×21 unidades ([`src/config.ts`](../src/config.ts)) y la regla del
+casillas de 18×21 unidades ([`src/config.ts`](../src/config.ts)) y la regla del
 proyecto es no
 "inventar" posiciones de pantalla a mano, sino calcularlas desde la rejilla.
 
@@ -343,13 +343,15 @@ BurgerTime dibuja su pantalla con **caracteres** de 8×8 píxeles (32×30 en
 total), y todo encaja en ellos: el cocinero ocupa 2×2 caracteres, cada trozo de
 ingrediente uno y los pisos están siempre a un número par de caracteres, así
 que las escaleras miden cocineros enteros. Xantar usa esa misma rejilla al
-doble de tamaño: una casilla de 16 unidades es un carácter y medio cocinero.
+doble de tamaño: un carácter son 16 unidades, medio cocinero.
 Elegir la unidad de la rejilla a partir del personaje hace que las proporciones
 salgan solas: si la casilla y el personaje no encajan, ningún nivel quedará
 bien por mucho que se retoque. Por eso el dibujo del personaje se ajusta a la
 rejilla, y no al revés: en Xantar cada personaje lleva una escala en sus datos
 que lo deja en 32 unidades de alto, aplicada alrededor de los pies para que
-siga pisando el suelo.
+siga pisando el suelo, y un ensanche (`widen`) que lo hace dos unidades más
+ancho para ir con las casillas, que se dibujan más anchas que las del original
+(lo cuenta el párrafo siguiente).
 
 Las casillas no tienen por qué ser cuadradas. En el original las plataformas
 son una raya de 2 píxeles y entre dos pisos unidos por un tramo de escalera
@@ -362,6 +364,14 @@ unidades libres para un chef de 32. Las velocidades verticales se conservan en
 filas por segundo, no en unidades, para que un tramo se suba o se caiga en el
 mismo tiempo que en el original: es la rejilla, y no el dibujo, la que marca el
 ritmo del juego.
+
+Con el ancho pasa lo mismo. El original se jugaba en un monitor vertical y
+Xantar se juega en pantallas apaisadas, así que las casillas se dibujan de 18
+unidades de ancho en vez de 16, y con ellas la escalera, cada trozo de
+ingrediente y, dos unidades más anchos, los personajes. El juego no cambia: las
+velocidades y distancias medidas en el original se siguen contando a 16
+unidades por casilla, así que una casilla se cruza en el mismo tiempo; solo que
+en pantalla todo es algo más ancho y se mueve algo más deprisa.
 
 ### 7.3 Resolución, proporción y escalado
 
@@ -378,12 +388,12 @@ ritmo del juego.
   - **Escalado entero** (×2, ×3…): típico del pixel art para que cada píxel se
     vea nítido.
 
-**En Xantar** el tablero es siempre 624×630 lógico y está centrado. El área de
-juego mide 630 de alto y entre 816 y 1512 de ancho según la proporción de la
+**En Xantar** el tablero es siempre 702×630 lógico y está centrado. El área de
+juego mide 630 de alto y entre 894 y 1512 de ancho según la proporción de la
 ventana ([`computeLayout`](../src/view/layout/computeLayout.ts)); el espacio de
-los lados son los **paneles laterales** del HUD. Así, en 16:9, en 4:3 y en
+los lados son los **paneles laterales** del HUD. Así, en 16:9, en 16:10 y en
 móviles en horizontal no hay bandas negras; en ventanas más cuadradas, como
-5:4, sí aparecen arriba y abajo.
+4:3 o 5:4, sí aparecen arriba y abajo.
 
 ### 7.4 Pantallas de alta densidad y nivel de escala
 

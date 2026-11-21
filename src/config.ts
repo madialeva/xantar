@@ -1,6 +1,6 @@
 import { CELL_UNITS, ROW_UNITS } from './sim/rules';
 
-/** Width of a column of the board in logical units. */
+/** Width of a column of the board in logical units: wider than a character of the original. */
 export const TILE = CELL_UNITS;
 /** Height of a row of the board in logical units: taller than a column is wide. */
 export const ROW = ROW_UNITS;

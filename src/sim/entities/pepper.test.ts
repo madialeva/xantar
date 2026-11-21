@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EventQueue } from '../events';
 import { NavPlace } from '../nav/NavPlace';
-import { CELL_UNITS, ROW_UNITS } from '../rules';
+import { ORIGINAL_CELL_UNITS, ROW_UNITS } from '../rules';
 import { levelFromGrid, tinyGrid } from '../testing/grids';
 import { StubRng } from '../testing/rng';
 import { createEnemy } from './createEnemy';
@@ -33,7 +33,7 @@ const chef = (x: number, y: number, throwDirection: ThrowDirection = 'right'): P
 describe('pepper on a platform', () => {
   it('places the cloud in front of the chef', () => {
     const cloud = pepperCloudFor(chef(4, 5, 'left'));
-    expect(cloud.x).toBeCloseTo(4 - 24 / CELL_UNITS, 10);
+    expect(cloud.x).toBeCloseTo(4 - 24 / ORIGINAL_CELL_UNITS, 10);
     expect(cloud.y).toBeCloseTo(5 - 2 / ROW_UNITS, 10);
     expect(cloud.direction).toBe('left');
   });
@@ -48,6 +48,12 @@ describe('pepper on a platform', () => {
 
   it('misses an enemy that is too far from the cloud', () => {
     expect(isHitByPepper(chef(0.6, 5), enemyAt(5, 7))).toBe(false);
+  });
+
+  it('reaches as many cells to the side as on the original, however wide a cell is drawn', () => {
+    const reach = (24 + 44) / ORIGINAL_CELL_UNITS;
+    expect(isHitByPepper(chef(0.6, 5), enemyAt(5, 0.6 + reach - 0.05))).toBe(true);
+    expect(isHitByPepper(chef(0.6, 5), enemyAt(5, 0.6 + reach + 0.05))).toBe(false);
   });
 
   it('misses an enemy on another row', () => {

@@ -75,8 +75,17 @@ misma línea.
   - **Escalera renderizada** con Blender, de madera, con cuatro peldaños por
     fila en vez de dos.
   - **Cebolla más lenta:** media vuelta por zancada en vez de por paso.
-- **BREAKING (aspecto):** el tablero es más alto y, en la misma ventana, se ve
-  algo más pequeño, con paneles laterales más anchos.
+- **Correcciones tras la segunda revisión del autor:**
+  - **Casillas más anchas.** Para aprovechar las pantallas apaisadas, las
+    casillas se dibujan de 18 de ancho en vez de 16: la escalera y cada trozo
+    de ingrediente ganan 2 unidades y los personajes, 2 sobre los 32 del chef;
+    los altos no cambian. El tablero pasa a 702×630 y el área de juego, a
+    entre 894 y 1512 de ancho. El juego no cambia: lo medido en el original se
+    sigue contando a 16 por casilla. En 4:3 aparecen bandas arriba y abajo.
+  - **Escalera de abedul**, clara, para que el tablero no se vea tan oscuro.
+- **BREAKING (aspecto):** el tablero es más alto y más ancho: en la misma
+  ventana se ve algo más bajo, los paneles laterales cambian de ancho y en 4:3
+  aparecen bandas arriba y abajo.
 
 ## Capabilities
 
@@ -87,8 +96,9 @@ Ninguna.
 ### Modified Capabilities
 
 - `level-data`: nuevo requisito "Pantallas del juego" (las cuatro pantallas,
-  sus enemigos y sus entradas); "Casillas de medio cocinero" (filas de 21 y un
-  tramo algo más alto que el chef).
+  sus enemigos y sus entradas); "Casillas de medio cocinero" (casillas de 18 de
+  ancho y filas de 21, un tramo algo más alto que el chef y las medidas de las
+  reglas a 16 por casilla).
 - `level-pieces`: "Piezas de la versión 1" (`o` cebolla en lugar de `p`
   pepinillo).
 - `gameplay-rules`: "Fin de nivel" (el tablero siguiente es el de la pantalla
@@ -97,19 +107,19 @@ Ninguna.
   "Velocidad de los enemigos según la dificultad" (velocidades verticales en
   filas por segundo).
 - `character-rigs`: "Bailes de los enemigos" (la cebolla gira en lugar del
-  contoneo del pepinillo) y "Personajes por partes" (32 unidades, el ancho de
-  dos casillas).
+  contoneo del pepinillo) y "Personajes por partes" (32 unidades de alto y
+  dibujados 34/32 más anchos que su arte).
 - `rendered-assets`: "Fotogramas de baile" (fotogramas de giro de la cebolla) y
   "Gráficos renderizados reproducibles" (también la escalera); nuevos
-  requisitos "Aspecto de la cebolla" y "Escalera renderizada".
+  requisitos "Aspecto de la cebolla" y "Escalera renderizada" (de abedul).
 - `view-adapter`: "Laberinto a partir del nivel cargado" (se redibuja al
   cambiar de pantalla, con sus enemigos) y "Dibujo interpolado" (columnas y
   filas con su propio tamaño).
 - `level-validation`: nuevo requisito "Escaleras dentro de los pisos y altura
   libre".
-- `screen-layout`: "Tablero central intacto" (624×630) y "Área de juego
-  adaptable" (630 de alto, de 816 a 1512 de ancho).
-- `vector-assets`: "Guía de estilo" (casillas de 16×21) y "Fuentes SVG para
+- `screen-layout`: "Tablero central intacto" (702×630) y "Área de juego
+  adaptable" (630 de alto, de 894 a 1512 de ancho).
+- `vector-assets`: "Guía de estilo" (casillas de 18×21) y "Fuentes SVG para
   todo lo visible" (la escalera pasa a renderizada).
 
 ## Impact
@@ -129,10 +139,12 @@ Ninguna.
   (pantallas y orden, cebolla, `--only onion`, `?screen=N`),
   `docs/STYLE_GUIDE.md` (cebolla) y `docs/GAMEDEV_FUNDAMENTALS.md` (progresión
   de pantallas y curva de aprendizaje).
-- Geometría: `src/sim/rules.ts` (`ROW_UNITS`, alturas dibujadas en filas),
-  `pepper.ts`, `src/config.ts`, `computeLayout`, los menús, las piezas SVG del
-  laberinto, `tools/blender/maze.py` (nuevo) y `common.py`, la prueba de humo
-  (toques táctiles) y las reglas del validador.
+- Geometría: `src/sim/rules.ts` (`ROW_UNITS`, alturas dibujadas en filas,
+  `CELL_UNITS` de 18 y `ORIGINAL_CELL_UNITS`), `pepper.ts`, `src/config.ts`,
+  `computeLayout`, los menús, las piezas SVG del laberinto, los rigs
+  (`widen`), `tools/blender/maze.py` (nuevo), `common.py` e `ingredients.py`
+  (ingredientes de 72 de ancho), la prueba de humo (toques táctiles) y las
+  reglas del validador.
 - Sin dependencias nuevas. El formato de nivel sigue en la versión 1.
 - GitHub: issue #49, que pasa a describir pantallas de diseño propio, el orden
   con Fácil y la cebolla; hito `v1.0.0`.

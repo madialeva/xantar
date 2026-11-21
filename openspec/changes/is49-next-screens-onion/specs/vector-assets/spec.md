@@ -6,7 +6,7 @@ fije el aspecto del arte renderizado (vista, iluminación, materiales y tamaños
 de ingredientes y personajes) y, para el arte que sigue siendo vectorial, la
 paleta como tokens con nombre, el grosor de trazo, los radios de esquina, el
 tratamiento de sombras y brillos, la tipografía del HUD y las reglas de encaje
-en la rejilla de casillas de 16 unidades lógicas de ancho y 21 de alto. Todas las fuentes SVG del juego SHALL
+en la rejilla de casillas de 18 unidades lógicas de ancho y 21 de alto. Todas las fuentes SVG del juego SHALL
 colorearse solo con tokens de esa paleta.
 
 #### Scenario: Revisar un SVG nuevo

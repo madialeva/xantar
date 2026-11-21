@@ -46,13 +46,17 @@ entran por pasarelas, y SHALL validarse sin incidencias.
 ## MODIFIED Requirements
 
 ### Requirement: Casillas de medio cocinero
-Cada casilla de la cuadrícula de un nivel SHALL medir 16 unidades de ancho, la
-mitad que el chef de pie (como un carácter del juego original a escala ×2), y
-21 de alto, y el tablero SHALL conservar las 39 columnas y 30 filas del
-original. Con plataformas de 8 unidades de grueso, dos pisos separados por dos
-filas (un tramo de escalera) SHALL dejar entre ellos algo más que la altura del
-chef, de modo que 2, 3 o 4 tramos midan 2, 3 o 4 cocineros sin contar lo que la
-escalera se solapa con las plataformas.
+Cada casilla de la cuadrícula de un nivel SHALL ser, para las reglas, un
+carácter del juego original a escala ×2: 16 unidades, la mitad que el chef de
+pie. Las medidas horizontales de las reglas de juego (velocidades, márgenes,
+distancias de enganche, contacto y alcance de la pimienta) SHALL contarse a 16
+unidades por casilla. Para aprovechar las pantallas apaisadas, cada casilla
+SHALL dibujarse de 18 unidades de ancho, sin que cambie el juego, y de 21 de
+alto, y el tablero SHALL conservar las 39 columnas y 30 filas del original. Con
+plataformas de 8 unidades de grueso, dos pisos separados por dos filas (un
+tramo de escalera) SHALL dejar entre ellos algo más que la altura del chef, de
+modo que 2, 3 o 4 tramos midan 2, 3 o 4 cocineros sin contar lo que la escalera
+se solapa con las plataformas.
 
 #### Scenario: Escalera de un cocinero
 - **WHEN** un tramo de escalera une dos plataformas separadas por dos filas y el
@@ -62,7 +66,13 @@ escalera se solapa con las plataformas.
 
 #### Scenario: Ingrediente de dos cocineros
 - **WHEN** se dibuja un ingrediente de cuatro segmentos
-- **THEN** mide de ancho lo mismo que dos cocineros de alto
+- **THEN** mide cuatro casillas de ancho, lo mismo que dos cocineros de alto
+  en la rejilla del original, y se dibuja de 72 unidades
+
+#### Scenario: Casillas más anchas, mismo juego
+- **WHEN** el chef anda por una plataforma durante un segundo
+- **THEN** avanza 5,375 casillas, las 86 unidades del original a 16 por
+  casilla, que en el tablero se dibujan como 96,75 unidades
 
 #### Scenario: Dos tramos
 - **WHEN** una escalera une dos pisos separados por cuatro filas

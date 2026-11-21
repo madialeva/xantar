@@ -258,7 +258,7 @@ while the game is in the background.
   own way** as it walks: the hot dog bends one way and the other, the egg's
   white wobbles and the onion slice turns round and round.
 - Finished burgers stack on their plates piece on piece, like real ones.
-- The ladders are rendered too, varnished wood with closely spaced rungs; the
+- The ladders are rendered too, in light birch wood with closely spaced rungs; the
   platforms, plates, effects and panels are crisp **vector art**.
 - The game looks best on a **Full HD** screen or larger; smaller screens show
   it scaled down.

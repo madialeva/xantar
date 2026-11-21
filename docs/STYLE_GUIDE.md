@@ -15,14 +15,17 @@ en español de forma provisional; se traducirá al inglés más adelante.
 
 ## 1. Unidades y rejilla
 
-- Todo se mide en **unidades lógicas**: una casilla del tablero mide 16 de
-  ancho (un carácter de la pantalla del original a escala ×2, medio cocinero) y
-  21 de alto, y el tablero 624×630 (las 39×30 casillas del original). Las filas
+- Todo se mide en **unidades lógicas**: una casilla del tablero mide 18 de
+  ancho (un carácter de la pantalla del original a escala ×2, 16, y dos más
+  para aprovechar las pantallas apaisadas) y 21 de alto, y el tablero 702×630
+  (las 39×30 casillas del original). Las filas
   son algo más altas que medio cocinero para que, con plataformas de 8 de
   grueso, entre dos pisos separados por dos filas (un tramo de escalera) quepa
   el chef de pie con 2 unidades de holgura: 2, 3 o 4 tramos miden 2, 3 o 4
   cocineros sin contar lo que la escalera se solapa con las plataformas. El
-  chef mide 32 de alto y un ingrediente de cuatro trozos, 64 de ancho. El juego
+  chef mide 32 de alto y un ingrediente de cuatro trozos, 72 de ancho. Los
+  personajes se dibujan algo más anchos que su arte (`widen` = 34/32 en los
+  rigs), dos unidades más en los 32 del chef, para ir con las casillas. El juego
   dibuja cada gráfico a su tamaño lógico multiplicado por el nivel de escala (4
   en esta versión): un gráfico de 16×16 acaba siendo una textura de 64×64
   píxeles. El objetivo son pantallas Full HD o mayores.
@@ -34,14 +37,14 @@ en español de forma provisional; se traducirá al inglés más adelante.
 
 | Elemento | Tamaño | Cómo se coloca |
 |---|---|---|
-| Tramo de plataforma (`platform.left/mid/right`), cruce (`crossing`) | 16×8 | centrado en la línea de la plataforma; la cara superior (línea − 4) es el suelo; el cruce es la ranura oscura por la que pasa la escalera |
-| Largueros en un cruce (`ladder.rails`, renderizado) | 16×8 | encima del cruce, para que la escalera se vea atravesar la plataforma |
-| Pasarela de entrada (`walkway`) | 16×8 | una por casilla de pasarela, centrada en la línea del piso; más fina y oscura que la plataforma (`platformEdge`, sin brillo) para que se lea como prolongación del piso por la que entran los enemigos y no como suelo del chef |
-| Escalera (`ladder`, renderizada) | 16×21 | una por fila, desde la línea de un piso hasta la del siguiente, detrás de las plataformas; madera barnizada con cuatro peldaños redondos por fila que se repiten sin costuras |
-| Plato (`plate.left/mid/right`) | 16×10 | centrado en la línea del plato |
-| Segmento de ingrediente (`<tipo>.left/mid/right`) | 16×(12–18) | apoyado sobre el suelo de la plataforma |
+| Tramo de plataforma (`platform.left/mid/right`), cruce (`crossing`) | 18×8 | centrado en la línea de la plataforma; la cara superior (línea − 4) es el suelo; el cruce es la ranura oscura por la que pasa la escalera |
+| Largueros en un cruce (`ladder.rails`, renderizado) | 18×8 | encima del cruce, para que la escalera se vea atravesar la plataforma |
+| Pasarela de entrada (`walkway`) | 18×8 | una por casilla de pasarela, centrada en la línea del piso; más fina y oscura que la plataforma (`platformEdge`, sin brillo) para que se lea como prolongación del piso por la que entran los enemigos y no como suelo del chef |
+| Escalera (`ladder`, renderizada) | 18×21 | una por fila, desde la línea de un piso hasta la del siguiente, detrás de las plataformas; madera de abedul, clara y cremosa con una veta dorada fina, para que el tablero no se vea tan oscuro, con cuatro peldaños redondos por fila que se repiten sin costuras |
+| Plato (`plate.left/mid/right`) | 18×10 | centrado en la línea del plato |
+| Segmento de ingrediente (`<tipo>.left/mid/right`) | 18×(12–18) | apoyado sobre el suelo de la plataforma |
 | Partes de personaje | según el rig | el punto de anclaje está 14 por encima de la línea de la plataforma (`characterY`); los pies tocan el suelo (+10 respecto al anclaje) |
-| Fondo del tablero (`board.backdrop`) | 624×630 | detrás de todo |
+| Fondo del tablero (`board.backdrop`) | 702×630 | detrás de todo |
 
 Un tramo de 2 casillas usa `left` + `right`; de 3, `left` + `mid` + `right`; de
 4 o más, `mid` repetido entre los extremos. Un tramo de una sola casilla usa

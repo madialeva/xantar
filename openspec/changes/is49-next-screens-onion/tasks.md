@@ -40,6 +40,13 @@
 - [x] 7.5 Alargar una casilla los pisos de Pirámide, Mostrador y Torres que terminaban en una escalera, a partir del generador de borradores; verificar con las pruebas de cada pantalla (sin incidencias de validación con los avisos nuevos) y `npm run test`
 - [x] 7.6 Ejecutar las comprobaciones de entrega completas, `npm run smoke` y `openspec validate is49-next-screens-onion --strict`; verificar que todo termina sin errores
 
+## 8. Correcciones tras la segunda revisión del autor
+
+- [x] 8.1 Pasar a casillas de 18 de ancho sin cambiar el juego: `CELL_UNITS` 18 y `ORIGINAL_CELL_UNITS` 16 en `rules.ts` (`fromPx` divide por 16) y la pimienta en casillas de lado a lado y en filas de arriba abajo (`CellsAndRows` en `pepper.ts`); verificar con las pruebas de reglas, pimienta (alcance lateral en casillas del original) y ritmo
+- [x] 8.2 Dibujar a 18 de ancho: catálogo con `TILE`, piezas SVG del laberinto de 18 y fondo de 702×630, `widen` = 34/32 en los rigs (`rigPlacement`, `CharacterRig`), `computeLayout` (894–1512) y toques de la prueba de humo; verificar con las pruebas de arte, rigs y layout y `npm run smoke` (también `touch` y `portrait`)
+- [x] 8.3 Renderizar a 18: `TILE` de `common.py`, ingredientes de 72 de ancho (`ingredients.py`) y escalera de abedul de 18 (`maze.py`); verificar con la prueba de arte, `metrics.json` (grosores sin cambios) y una vista previa de la escalera apilada
+- [x] 8.4 Documentar las casillas de 18 y la escalera de abedul en `AGENTS.md`, `README.md`, `docs/MANUAL.md`, `docs/STYLE_GUIDE.md` y `docs/GAMEDEV_FUNDAMENTALS.md`; ejecutar las comprobaciones de entrega completas, `npm run smoke` y `openspec validate is49-next-screens-onion --strict`
+
 ## Workflow follow-up
 
 - El autor hace el push; PR hacia `develop/v1.0.0` con `Closes #49`.
