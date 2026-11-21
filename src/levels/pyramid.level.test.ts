@@ -16,6 +16,7 @@ import pyramidDocument from './pyramid.level.json';
 const document = parseLevelDocument(pyramidDocument);
 const level = assembleLevel(document);
 const BURGER = ['bunTop', 'lettuce', 'patty', 'bunBottom'];
+const CHEESEBURGER = ['bunTop', 'cheese', 'patty', 'bunBottom'];
 
 describe('pyramid screen', () => {
   it('is a 39×30 board with ingredients of four segments and no issues', () => {
@@ -36,7 +37,7 @@ describe('pyramid screen', () => {
     }
   });
 
-  it('spreads four burgers of four ingredients over its floors', () => {
+  it('spreads four burgers of four ingredients over its floors, cheese in the middle two', () => {
     expect(lane(level, 7)).toEqual([
       ['bunTop', 13],
       ['lettuce', 15],
@@ -45,13 +46,13 @@ describe('pyramid screen', () => {
     ]);
     expect(lane(level, 14)).toEqual([
       ['bunTop', 5],
-      ['lettuce', 9],
+      ['cheese', 9],
       ['patty', 17],
       ['bunBottom', 23]
     ]);
     expect(lane(level, 21)).toEqual([
       ['bunTop', 5],
-      ['lettuce', 13],
+      ['cheese', 13],
       ['patty', 19],
       ['bunBottom', 23]
     ]);
@@ -61,8 +62,11 @@ describe('pyramid screen', () => {
       ['patty', 19],
       ['bunBottom', 23]
     ]);
-    for (const col of [7, 14, 21, 28]) {
+    for (const col of [7, 28]) {
       expect(lane(level, col).map(([kind]) => kind)).toEqual(BURGER);
+    }
+    for (const col of [14, 21]) {
+      expect(lane(level, col).map(([kind]) => kind)).toEqual(CHEESEBURGER);
     }
   });
 

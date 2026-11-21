@@ -55,12 +55,12 @@
 
 ## 4. Ingredientes nuevos en las pantallas
 
-- [ ] 4.1 Cambiar en los documentos las lechugas que indica el diseño (decisión 8):
+- [x] 4.1 Cambiar en los documentos las lechugas que indica el diseño (decisión 8):
   - Pirámide: queso en las dos centrales.
   - Mostrador: tomate en las dos centrales y queso en la de la derecha.
   - Torres: queso entre las dos carnes de todas y tomate arriba en la segunda y la cuarta.
   - Verificar con las pruebas de cada pantalla (composición de cada hamburguesa de arriba abajo según la spec, sin incidencias de validación, se completa soltando sus ingredientes) y `npm run test`.
-- [ ] 4.2 Documentar los ingredientes de cada pantalla en `README.md` ("Goal" o "Screens") y `docs/MANUAL.md` (§8.6); verificar con `npm run format:check` y las comprobaciones de entrega.
+- [x] 4.2 Documentar los ingredientes de cada pantalla en `README.md` ("Goal" o "Screens") y `docs/MANUAL.md` (§8.6); verificar con `npm run format:check` y las comprobaciones de entrega.
 
 ## 5. Integración
 

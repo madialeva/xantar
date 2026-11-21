@@ -50,6 +50,7 @@ comes next.
 |   ✅   | Enemies walk in from the sides one by one, as in the original, and riders come back where they stopped    |   —    |  #46  |
 |   ✅   | Speeds of the original, Easy, Normal and Hard difficulty, and a board won by its last drop                |   —    |  #43  |
 |   ✅   | Three more screens of our own in a loop, every screen twice on Easy, and Mr. Onion instead of Mr. Pickle  |   —    |  #49  |
+|   ✅   | Enemies of our own (a chorizo and a corn cob) and two new ingredients, melting cheese and tomato          |   —    |  #56  |
 |   ✅   | Gamepad and touch controls, music and sound effects, CI and a hardened desktop app                        |   —    |  #6   |
 |   ✅   | Public web version at madialeva.github.io                                                                 |   —    |  #14  |
 |   ⬜   | Replay recording and debug tooling                                                                        | v1.0.0 |  #8   |
@@ -63,8 +64,9 @@ comes next.
 ### Goal
 
 Assemble **every burger** on the screen. Each burger has four pieces: bottom
-bun, patty, lettuce and top bun. They start spread over the platforms and you
-must bring them all the way down to the plate.
+bun, patty, lettuce and top bun; from the second screen on, some burgers have
+**melting cheese** or a **tomato** instead of the lettuce. They start spread
+over the platforms and you must bring them all the way down to the plate.
 
 When a screen is done the next one comes, and after the fourth the first one
 comes back:
@@ -73,13 +75,14 @@ comes back:
    at different heights, linked by ladders one to several chefs tall, and four
    burgers that never stand side by side: there is always a ladder on each side
    of a burger, and another one running under it.
-2. **Pyramid**: the two top floors only cover the middle burgers, and the
-   enemies walk in halfway up.
-3. **Counter**: the two middle burgers end on plates halfway down the screen,
-   on a counter you can walk under.
+2. **Pyramid**: the two top floors only cover the middle burgers, which bring
+   the first cheese, and the enemies walk in halfway up.
+3. **Counter**: the two middle burgers, with tomato, end on plates halfway down
+   the screen, on a counter you can walk under; the one on the right has
+   cheese.
 4. **Towers**: staggered towers of short floors and double burgers of six
-   pieces (two patties and two lettuce leaves) on the last screen before the
-   loop.
+   pieces (cheese between two patties, and lettuce or tomato on top) on the
+   last screen before the loop.
 
 Screens 2 to 4 are Xantar's own: they follow the way the original gets harder
 (more enemies, plates at different heights, taller burgers) without copying its

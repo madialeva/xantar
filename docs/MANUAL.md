@@ -476,7 +476,9 @@ Cada símbolo lo define una `PieceDefinition` (id, símbolo, capa, ancho y qué 
 | 1, clásica | `classic.level.json` | La primera pantalla del original. | mazorca, tres chorizos |
 | 2, Pirámide | `pyramid.level.json` | Los pisos 5 y 9 solo cubren las hamburguesas centrales; el piso 13, ancho, es el «hombro». | mazorca, tres chorizos (por el hombro y por abajo) |
 | 3, Mostrador | `counter.level.json` | Las hamburguesas centrales acaban en platos en la fila 17, cuatro filas por debajo del piso 13; el piso 19 pasa bajo ellos. | cebolla, chorizo, cebolla (por los lados del mostrador), chorizo, mazorca |
-| 4, Torres | `towers.level.json` | Torres escalonadas de pisos cortos (filas 3–21), unidas por un puente en la 13; entre la mitad de arriba y la de abajo solo se pasa por las columnas 12 y 26. Hamburguesas dobles de seis ingredientes, con los platos en la fila 29. | dos chorizos, dos cebollas (a media altura), dos chorizos |
+| 4, Torres | `towers.level.json` | Torres escalonadas de pisos cortos (filas 3–21), unidas por un puente en la 13; entre la mitad de arriba y la de abajo solo se pasa por las columnas 12 y 26. Hamburguesas dobles de seis ingredientes (pan, lechuga o tomate, carne, queso, carne y pan), con los platos en la fila 29. | dos chorizos, dos cebollas (a media altura), dos chorizos |
+
+Desde la segunda pantalla aparecen el queso y el tomate en lugar de algunas lechugas, sin cambiar el número de ingredientes de ninguna hamburguesa: en la Pirámide, las dos centrales llevan queso; en el Mostrador, las dos centrales (las de los platos de la fila 17) llevan tomate y la de la derecha, queso; en las Torres, todas llevan queso entre las dos carnes y la segunda y la cuarta, tomate arriba en lugar de lechuga. La clásica sigue como la primera pantalla del original.
 
 Cada pantalla tiene su prueba (`src/levels/*.level.test.ts`): sin incidencias, campo centrado, escaleras de cocineros enteros, ingredientes y platos, orden de entrada, que se completa soltando los ingredientes de abajo arriba y queda asegurada con la última caída, e ida y vuelta por texto. `screens.test.ts` comprueba el orden y las alineaciones de enemigos.
 

@@ -63,7 +63,7 @@ describe('counter screen', () => {
     expect(under).toBeDefined();
   });
 
-  it('spreads four burgers of four ingredients over its floors', () => {
+  it('spreads four burgers of four ingredients over its floors, tomato in the middle two', () => {
     expect(lane(level, 7)).toEqual([
       ['bunTop', 9],
       ['lettuce', 13],
@@ -72,19 +72,19 @@ describe('counter screen', () => {
     ]);
     expect(lane(level, 14)).toEqual([
       ['bunTop', 5],
-      ['lettuce', 7],
+      ['tomato', 7],
       ['patty', 9],
       ['bunBottom', 13]
     ]);
     expect(lane(level, 21)).toEqual([
       ['bunTop', 5],
-      ['lettuce', 9],
+      ['tomato', 9],
       ['patty', 11],
       ['bunBottom', 13]
     ]);
     expect(lane(level, 28)).toEqual([
       ['bunTop', 5],
-      ['lettuce', 9],
+      ['cheese', 9],
       ['patty', 17],
       ['bunBottom', 23]
     ]);

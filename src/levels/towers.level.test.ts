@@ -15,7 +15,14 @@ import towersDocument from './towers.level.json';
 
 const document = parseLevelDocument(towersDocument);
 const level = assembleLevel(document);
-const DOUBLE = ['bunTop', 'lettuce', 'patty', 'lettuce', 'patty', 'bunBottom'];
+const DOUBLE = (top: 'lettuce' | 'tomato'): string[] => [
+  'bunTop',
+  top,
+  'patty',
+  'cheese',
+  'patty',
+  'bunBottom'
+];
 const rowsOf = (col: number): number[] => lane(level, col).map(([, row]) => row);
 
 describe('towers screen', () => {
@@ -31,8 +38,11 @@ describe('towers screen', () => {
   });
 
   it('builds double burgers of six ingredients on staggered towers', () => {
-    for (const col of [7, 14, 21, 28]) {
-      expect(lane(level, col).map(([kind]) => kind)).toEqual(DOUBLE);
+    for (const col of [7, 21]) {
+      expect(lane(level, col).map(([kind]) => kind)).toEqual(DOUBLE('lettuce'));
+    }
+    for (const col of [14, 28]) {
+      expect(lane(level, col).map(([kind]) => kind)).toEqual(DOUBLE('tomato'));
     }
     expect(rowsOf(7)).toEqual([3, 7, 11, 15, 19, 23]);
     expect(rowsOf(14)).toEqual([5, 9, 13, 17, 21, 23]);
