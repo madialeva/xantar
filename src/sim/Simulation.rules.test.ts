@@ -30,7 +30,7 @@ import { StubRng } from './testing/rng';
 import { skipReady } from './testing/simulation';
 
 const create = (grid: GridSpec): Simulation =>
-  skipReady(new Simulation({ level: levelFromGrid(grid), rng: new StubRng(0.99) }));
+  skipReady(new Simulation({ screens: [levelFromGrid(grid)], rng: new StubRng(0.99) }));
 
 const run = (sim: Simulation, ticks: number, input: Partial<SimInput> = {}): SimEvent[] => {
   const events: SimEvent[] = [];
@@ -201,14 +201,16 @@ describe('Simulation: enemies entering the board', () => {
   const entering = (entries: readonly LevelEntry[]) =>
     skipReady(
       new Simulation({
-        level: assembleLevel({
-          ...documentFromGrid({
-            structure: ['----===+==', '.......H..', '=======+==', '..........', '.____.....'],
-            ingredients: ['..........', '..........', '.TTTT.....', '..........', '..........'],
-            actors: ['h.......C.', '..........', '.........e', '..........', '..........']
-          }),
-          entries
-        }),
+        screens: [
+          assembleLevel({
+            ...documentFromGrid({
+              structure: ['----===+==', '.......H..', '=======+==', '..........', '.____.....'],
+              ingredients: ['..........', '..........', '.TTTT.....', '..........', '..........'],
+              actors: ['h.......C.', '..........', '.........e', '..........', '..........']
+            }),
+            entries
+          })
+        ],
         rng: new StubRng(0.99)
       })
     );
@@ -473,14 +475,16 @@ describe('Simulation: contact and lives', () => {
   it('lets an ingredient that was falling finish its fall after losing a life', () => {
     const sim = skipReady(
       new Simulation({
-        level: assembleLevel({
-          ...documentFromGrid({
-            structure: ['........', '========', '........', '........', '========', '........'],
-            ingredients: ['........', '.TTTT...', '........', '........', '........', '........'],
-            actors: ['........', 'h.....C.', '........', '........', '........', '........']
-          }),
-          entries: [{ row: 1, col: 0, delayMs: 950 }]
-        }),
+        screens: [
+          assembleLevel({
+            ...documentFromGrid({
+              structure: ['........', '========', '........', '........', '========', '........'],
+              ingredients: ['........', '.TTTT...', '........', '........', '........', '........'],
+              actors: ['........', 'h.....C.', '........', '........', '........', '........']
+            }),
+            entries: [{ row: 1, col: 0, delayMs: 950 }]
+          })
+        ],
         rng: new StubRng(0.99)
       })
     );
@@ -813,7 +817,7 @@ describe('Simulation: enemies riding an ingredient', () => {
   });
 
   it('gives no bonus when the chef loses a life during the ride', () => {
-    const sim = create(column('..h...C.......p.....'));
+    const sim = create(column('..h...C.......o.....'));
     dropWithRider(sim);
     const [rider] = sim.enemies;
     expect(rider.riding).toBe(true);
@@ -829,7 +833,7 @@ describe('Simulation: secured board', () => {
   const board = (grid: GridSpec, entries: readonly LevelEntry[] = []): Simulation =>
     skipReady(
       new Simulation({
-        level: assembleLevel({ ...documentFromGrid(grid), entries }),
+        screens: [assembleLevel({ ...documentFromGrid(grid), entries })],
         rng: new StubRng(0.99)
       })
     );
@@ -976,7 +980,8 @@ describe('Simulation: secured board', () => {
     });
     const [enemy] = sim.enemies;
     for (let i = 0; i < 60 && sim.chef.x >= 3.05; i++) run(sim, 1, { left: true });
-    for (let i = 0; i < 600 && !(enemy.isClimbing && enemy.y > 2); i++) run(sim, 1);
+    const near = sim.chef.y - CONTACT_Y + 0.05;
+    for (let i = 0; i < 600 && !(enemy.isClimbing && enemy.y > near); i++) run(sim, 1);
     run(sim, 1, { pepper: true });
     expect(enemy.stunned).toBe(true);
     const step = CHEF_SPEED * TICK_SECONDS;

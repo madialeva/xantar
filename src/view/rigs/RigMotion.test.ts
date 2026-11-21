@@ -1,24 +1,32 @@
 import type Phaser from 'phaser';
 import { describe, expect, it } from 'vitest';
-import type { CharacterRig } from './CharacterRig';
+import type { CharacterRig, PoseOffset } from './CharacterRig';
 import { RigMotion } from './RigMotion';
 
 interface TweenConfig {
   readonly targets: unknown;
   readonly frame?: number;
+  readonly yoyo?: boolean;
+  readonly ease?: string;
   readonly onUpdate?: () => void;
 }
 
-/** A rig with a body of `frames` frames that records which frame it was asked to show. */
-function fakeRig(frames: number): { rig: CharacterRig; shown: number[] } {
+/**
+ * A rig with a body of `frames` frames and some eyes that records which frame it was asked to
+ * show and the poses its eyes were put in.
+ */
+function fakeRig(frames: number): { rig: CharacterRig; shown: number[]; poses: PoseOffset[] } {
   const shown: number[] = [];
+  const poses: PoseOffset[] = [];
   const rig = {
     frameCount: (name: string) => (name === 'body' ? frames : 0),
     showFrame: (_name: string, index: number) => shown.push(index),
+    has: (name: string) => name === 'body' || name === 'eyes',
+    pose: (_name: string, offset: PoseOffset) => poses.push(offset),
     partImages: [],
     resetPose: () => undefined
   } as unknown as CharacterRig;
-  return { rig, shown };
+  return { rig, shown, poses };
 }
 
 function fakeTweens(): {
@@ -65,5 +73,42 @@ describe('RigMotion.cycle', () => {
     const counter = added[0].targets;
     motion.stop();
     expect(killed).toContainEqual([counter]);
+  });
+});
+
+describe('RigMotion.loop', () => {
+  it('steps forward through every frame at a steady pace and starts again after the last', () => {
+    const { rig, shown } = fakeRig(6);
+    const { tweens, added } = fakeTweens();
+    new RigMotion(rig, tweens).loop('body', 130);
+    expect(added).toHaveLength(1);
+    expect([added[0].frame, added[0].yoyo, added[0].ease]).toEqual([6, undefined, 'Linear']);
+    const counter = added[0].targets as { frame: number };
+    for (const frame of [0.4, 1.6, 3, 5.4, 5.6]) {
+      counter.frame = frame;
+      added[0].onUpdate?.();
+    }
+    expect(shown).toEqual([0, 0, 2, 3, 5, 0]);
+  });
+
+  it('puts each follower in its pose for the frame shown, so it never drifts', () => {
+    const { rig, poses } = fakeRig(3);
+    const { tweens, added } = fakeTweens();
+    const drops = [{ dy: 0 }, { dy: 4 }, { dy: 9 }];
+    new RigMotion(rig, tweens).loop('body', 90, [
+      { part: 'eyes', poses: drops },
+      { part: 'hat', poses: drops }
+    ]);
+    const counter = added[0].targets as { frame: number };
+    counter.frame = 2.2;
+    added[0].onUpdate?.();
+    expect(poses).toEqual([{ dy: 0 }, { dy: 9 }]);
+  });
+
+  it('does nothing for a part without frames', () => {
+    const { rig, shown } = fakeRig(1);
+    const { tweens, added } = fakeTweens();
+    new RigMotion(rig, tweens).loop('body', 130);
+    expect([added, shown]).toEqual([[], []]);
   });
 });

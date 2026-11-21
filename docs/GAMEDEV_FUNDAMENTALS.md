@@ -321,9 +321,9 @@ Conceptos de Phaser que aparecen en el proyecto:
 - **Coordenadas de mundo**: dónde están las cosas en el juego.
 - **Coordenadas de pantalla**: en qué píxel del monitor se dibujan.
 - **Unidades lógicas**: una unidad de medida propia del juego,
-  independiente del monitor. En Xantar una casilla (*tile*) mide 16 unidades y
-  el tablero mide 624×480 (39×30 casillas). La simulación va todavía más allá
-  y trabaja directamente en casillas.
+  independiente del monitor. En Xantar una casilla (*tile*) mide 18 unidades
+  de ancho y 21 de alto, y el tablero mide 702×630 (39×30 casillas). La
+  simulación va todavía más allá y trabaja directamente en columnas y filas.
 
 La cámara es la que traduce del mundo a la pantalla. Así, el código de juego
 nunca piensa en píxeles reales.
@@ -333,8 +333,9 @@ nunca piensa en píxeles reales.
 Muchos juegos clásicos se construyen sobre una **rejilla** (*grid*) de
 casillas (*tiles*): el escenario es una matriz de piezas (plataforma,
 escalera, vacío) y los objetos se alinean a ella. Simplifica el diseño de
-niveles, las colisiones y la búsqueda de caminos. Xantar usa una rejilla de 16
-unidades ([`src/config.ts`](../src/config.ts)) y la regla del proyecto es no
+niveles, las colisiones y la búsqueda de caminos. Xantar usa una rejilla de
+casillas de 18×21 unidades ([`src/config.ts`](../src/config.ts)) y la regla del
+proyecto es no
 "inventar" posiciones de pantalla a mano, sino calcularlas desde la rejilla.
 
 El tamaño de la casilla no es arbitrario: copia la rejilla del juego original.
@@ -342,13 +343,35 @@ BurgerTime dibuja su pantalla con **caracteres** de 8×8 píxeles (32×30 en
 total), y todo encaja en ellos: el cocinero ocupa 2×2 caracteres, cada trozo de
 ingrediente uno y los pisos están siempre a un número par de caracteres, así
 que las escaleras miden cocineros enteros. Xantar usa esa misma rejilla al
-doble de tamaño: una casilla de 16 unidades es un carácter y medio cocinero.
+doble de tamaño: un carácter son 16 unidades, medio cocinero.
 Elegir la unidad de la rejilla a partir del personaje hace que las proporciones
 salgan solas: si la casilla y el personaje no encajan, ningún nivel quedará
 bien por mucho que se retoque. Por eso el dibujo del personaje se ajusta a la
 rejilla, y no al revés: en Xantar cada personaje lleva una escala en sus datos
-que lo deja en dos casillas de alto, aplicada alrededor de los pies para que
-siga pisando el suelo.
+que lo deja en 32 unidades de alto, aplicada alrededor de los pies para que
+siga pisando el suelo, y un ensanche (`widen`) que lo hace dos unidades más
+ancho para ir con las casillas, que se dibujan más anchas que las del original
+(lo cuenta el párrafo siguiente).
+
+Las casillas no tienen por qué ser cuadradas. En el original las plataformas
+son una raya de 2 píxeles y entre dos pisos unidos por un tramo de escalera
+cabe el cocinero con algo de holgura. Xantar dibuja las plataformas más
+gruesas (8 unidades) para que se vean bien en pantallas modernas, y con
+casillas cuadradas de 16 la cabeza atravesaba el piso de arriba. En lugar de
+encoger a los personajes, las filas miden 21 unidades: el tablero conserva las
+30 filas del original y crece en alto, y dos filas (un tramo) dejan 34
+unidades libres para un chef de 32. Las velocidades verticales se conservan en
+filas por segundo, no en unidades, para que un tramo se suba o se caiga en el
+mismo tiempo que en el original: es la rejilla, y no el dibujo, la que marca el
+ritmo del juego.
+
+Con el ancho pasa lo mismo. El original se jugaba en un monitor vertical y
+Xantar se juega en pantallas apaisadas, así que las casillas se dibujan de 18
+unidades de ancho en vez de 16, y con ellas la escalera, cada trozo de
+ingrediente y, dos unidades más anchos, los personajes. El juego no cambia: las
+velocidades y distancias medidas en el original se siguen contando a 16
+unidades por casilla, así que una casilla se cruza en el mismo tiempo; solo que
+en pantalla todo es algo más ancho y se mueve algo más deprisa.
 
 ### 7.3 Resolución, proporción y escalado
 
@@ -365,11 +388,12 @@ siga pisando el suelo.
   - **Escalado entero** (×2, ×3…): típico del pixel art para que cada píxel se
     vea nítido.
 
-**En Xantar** el tablero es siempre 624×480 lógico y está centrado. El área de
-juego mide 480 de alto y entre 816 y 1152 de ancho según la proporción de la
+**En Xantar** el tablero es siempre 702×630 lógico y está centrado. El área de
+juego mide 630 de alto y entre 894 y 1512 de ancho según la proporción de la
 ventana ([`computeLayout`](../src/view/layout/computeLayout.ts)); el espacio de
-los lados son los **paneles laterales** del HUD. Así, en 16:9 y en móviles en
-horizontal no hay bandas negras; en 4:3 sí aparecen arriba y abajo.
+los lados son los **paneles laterales** del HUD. Así, en 16:9, en 16:10 y en
+móviles en horizontal no hay bandas negras; en ventanas más cuadradas, como
+4:3 o 5:4, sí aparecen arriba y abajo.
 
 ### 7.4 Pantallas de alta densidad y nivel de escala
 
@@ -476,6 +500,15 @@ Hay varias formas de animar, y cada una pide un tipo de asset distinto.
 La clásica: se dibuja cada postura y se muestran en secuencia, como un dibujo
 animado (*frame-by-frame*, con hojas de sprites). Da control total al artista,
 pero cada animación nueva son muchos dibujos nuevos.
+
+Con arte renderizado, los fotogramas salen del modelo 3D: basta con girarlo o
+deformarlo y volver a renderizar. Así gira la cebolla de Xantar: seis imágenes
+de la rodaja girada media vuelta (de frente, cada vez más de canto y otra vez
+casi de frente) que el juego recorre siempre hacia delante y vuelve a empezar.
+Como una rodaja vista de frente o de espaldas se ve igual, media vuelta basta
+para un giro sin fin. Lo que acompaña a esos fotogramas (los ojos, que bajan con
+el borde de la rodaja) debe moverse con el mismo contador que los cambia: dos
+animaciones con el mismo periodo pero relojes distintos acaban desfasándose.
 
 ### 9.2 Interpolación (tweens) y curvas de suavizado
 
@@ -654,10 +687,23 @@ dónde aparecen los enemigos.
   evolucionar sin romper niveles antiguos.
 - **Validador**: un conjunto de reglas que detecta niveles imposibles
   (ingredientes inalcanzables, escaleras que no llevan a ninguna parte).
+- **Progresión de pantallas**: el orden en que se juegan los niveles. Los
+  arcades clásicos encadenan unas pocas pantallas cada vez más difíciles (más
+  enemigos, recorridos más largos) y, tras la última, vuelven a la primera: el
+  jugador aprende una pantalla, la domina y pasa a la siguiente. Que el orden
+  sea un dato más (una lista de niveles) y no código permite cambiarlo sin
+  tocar las reglas.
+- **Curva de aprendizaje**: cómo de deprisa sube la exigencia. Una forma
+  sencilla de suavizarla para principiantes es **repetir** cada pantalla antes
+  de pasar a la siguiente: la segunda vez el jugador ya conoce el recorrido y
+  puede practicar lo que le costó. En Xantar, Fácil juega cada pantalla dos
+  veces seguidas; el número de nivel sigue contando tableros, para que el
+  jugador vea que avanza.
 
 En Xantar: [`classic.level.json`](../src/levels/classic.level.json),
-[`src/sim/level/`](../src/sim/level/) y la sección 8.6 del
-[manual](MANUAL.md).
+[`src/sim/level/`](../src/sim/level/), el orden de pantallas en
+[`screenOrder.ts`](../src/sim/screenOrder.ts) y las secciones 8.5 (punto 10)
+y 8.6 del [manual](MANUAL.md).
 
 ---
 

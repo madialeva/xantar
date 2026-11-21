@@ -10,9 +10,11 @@ assets.
 
 The game is written in **TypeScript** with **Phaser 4** and bundled with
 **Vite**. The same code runs in the browser and ships as a desktop app through
-**Electron + electron-builder**. It is currently a single-screen game with one
-classic level; the mechanics and the content will be extended over time. The
-roadmap lives in the GitHub issues and in the README.
+**Electron + electron-builder**. It has four screens played in a loop (each
+one twice on Easy): the first follows the first screen of the original and the
+other three are the author's own designs, which follow the original's
+progression without copying its layouts. The mechanics and the content will be
+extended over time. The roadmap lives in the GitHub issues and in the README.
 
 ## Stack and constraints
 
@@ -20,12 +22,17 @@ roadmap lives in the GitHub issues and in the README.
   Oxlint (+ tsgolint) for linting, Prettier for formatting, Electron `^44`,
   electron-builder `^26`. Node `>=22.12` (development on Node 24, see
   `.nvmrc`).
-- The board has a fixed logical size of **624×480**, built on a **16-unit grid**
-  (39×30 cells; a cell is one character of the original screen at ×2, half the
-  height of the chef), centred in a play area 480 high and 816–1152 wide whose
-  sides hold the HUD panels (`computeLayout`). The simulation owns the cell size
-  (`CELL_UNITS` in `src/sim/rules.ts`) and `src/config.ts` derives `TILE` from it. The canvas is that area times the render
-  tier (`RENDER_TIER`) and cameras zoom by it, so code works in logical units.
+- The board has a fixed logical size of **702×630**: the 39×30 cells of the
+  original, each 18 units wide (one character of the original screen at ×2,
+  16, plus two to make better use of landscape screens) and 21 tall, so that
+  two floors one ladder run (two rows) apart leave the chef a little room under
+  8-unit platforms. Only the drawing is wider: the game counts in cells and
+  what was measured on the original still uses 16 units per cell
+  (`ORIGINAL_CELL_UNITS`). It is centred in a play area 630 high and 894–1512
+  wide whose sides hold the HUD panels (`computeLayout`). The simulation owns
+  the cell sizes (`CELL_UNITS` and `ROW_UNITS` in `src/sim/rules.ts`) and
+  `src/config.ts` derives `TILE` and `ROW` from them. The canvas is that area times the render tier
+  (`RENDER_TIER`) and cameras zoom by it, so code works in logical units.
   Keep coordinates tied to `src/config.ts`; do not hardcode screen positions.
 - Movement is **custom** (platform/ladder grid), not Arcade Physics. There is
   no `arcade`/`matter` physics plugin in use.

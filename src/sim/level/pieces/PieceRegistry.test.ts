@@ -30,7 +30,7 @@ describe('PieceRegistry', () => {
         .join('');
     expect(symbols('structure')).toBe('.=H+_-');
     expect(symbols('ingredients')).toBe('.TLPB');
-    expect(symbols('actors')).toBe('.Chpe');
+    expect(symbols('actors')).toBe('.Choe');
   });
 
   it('gives the plate and the ingredients the width of the level unit', () => {

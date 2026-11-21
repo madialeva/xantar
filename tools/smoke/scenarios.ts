@@ -53,16 +53,17 @@ export const SCENARIOS: Readonly<Record<string, readonly SmokeRun[]>> = {
     }
   ],
   touch: [
-    // Left panel 200 wide at 19.5:9 (pad 160, centre -100,382); 96 at 4:3 (pad 72, centre -48,426).
-    { size: SIZES['19.5x9'], label: '19.5x9', pad: { x: -100, y: 382, reach: 50 }, button: 740 },
-    { size: SIZES['4x3'], label: '4x3', pad: { x: -48, y: 426, reach: 24 }, button: 688 }
+    // Left panel 331.5 wide at 19.5:9 (pad 160, centre -166,532); at 4:3 the play area is the
+    // narrowest, with panels of 96 (pad 72, centre -48,576) and bands above and below.
+    { size: SIZES['19.5x9'], label: '19.5x9', pad: { x: -166, y: 532, reach: 50 }, button: 868 },
+    { size: SIZES['4x3'], label: '4x3', pad: { x: -48, y: 576, reach: 20 }, button: 750 }
   ].map(({ size, label, pad, button }) => ({
     name: `touch-${label}`,
     size,
     query: '',
     touch: true,
     steps: [
-      'wait:2500,touch:320:240,wait:1500,shot:menu,touch:320:230,wait:2500',
+      'wait:2500,touch:351:315,wait:1500,shot:menu,touch:351:305,wait:2500',
       `touchDown:1:${pad.x + pad.reach}:${pad.y},wait:900,shot:walking`,
       `touchDown:2:${button}:${pad.y},wait:300,shot:pepper`,
       `touchUp:2,touchDown:1:${pad.x}:${pad.y - pad.reach},wait:400,touchUp:1,wait:300,shot:released`
@@ -71,14 +72,14 @@ export const SCENARIOS: Readonly<Record<string, readonly SmokeRun[]>> = {
   portrait: [
     {
       // An upright phone: the game turns a quarter and keeps its landscape layout (pad at
-      // -100,382 as at 19.5:9); turning the phone sideways keeps playing, without a pause.
+      // -166,532 as at 19.5:9); turning the phone sideways keeps playing, without a pause.
       name: 'portrait',
       size: '540x1170',
       query: '',
       touch: true,
       steps: [
-        'wait:2500,shot:title,touch:320:240,wait:1500,shot:menu,touch:320:230,wait:2500',
-        'touchDown:1:-50:382,wait:900,touchDown:2:740:382,wait:300,shot:walking-and-pepper',
+        'wait:2500,shot:title,touch:351:315,wait:1500,shot:menu,touch:351:305,wait:2500',
+        'touchDown:1:-116:532,wait:900,touchDown:2:868:532,wait:300,shot:walking-and-pepper',
         'touchUp:2,touchUp:1,size:1170x540,wait:800,shot:sideways'
       ].join(',')
     }

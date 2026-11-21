@@ -6,7 +6,7 @@ import { Enemy, type EnemyEntry } from './Enemy';
 
 const brains: Record<EnemyKind, EnemyBrain> = {
   hotdog: new ChaseBrain(),
-  pickle: new ChaseBrain(),
+  onion: new ChaseBrain(),
   egg: new ChaseBrain()
 };
 

@@ -2,7 +2,8 @@ import { GAME_HEIGHT, GAME_WIDTH } from '../../config';
 
 export const MIN_PANEL_WIDTH = 96;
 export const MIN_LAYOUT_WIDTH = GAME_WIDTH + 2 * MIN_PANEL_WIDTH;
-export const MAX_LAYOUT_WIDTH = 1152;
+/** The widest play area, 2.4 times as wide as it is tall; wider windows get bands at the sides. */
+export const MAX_LAYOUT_WIDTH = Math.round(2.4 * GAME_HEIGHT);
 
 export interface Rect {
   readonly x: number;

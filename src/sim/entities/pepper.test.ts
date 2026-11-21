@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EventQueue } from '../events';
 import { NavPlace } from '../nav/NavPlace';
-import { CELL_UNITS } from '../rules';
+import { ORIGINAL_CELL_UNITS, ROW_UNITS } from '../rules';
 import { levelFromGrid, tinyGrid } from '../testing/grids';
 import { StubRng } from '../testing/rng';
 import { createEnemy } from './createEnemy';
@@ -13,7 +13,7 @@ const rng = new StubRng(0.99);
 const [ladder] = level.graph.ladders;
 
 const enemyAtPlace = (place: NavPlace, active = true) => {
-  const enemy = createEnemy(0, 'pickle', new EventQueue(), level.graph, [entryAt(place)]);
+  const enemy = createEnemy(0, 'onion', new EventQueue(), level.graph, [entryAt(place)]);
   enemy.reset(place, rng);
   if (!active) enemy.squash();
   return enemy;
@@ -33,8 +33,8 @@ const chef = (x: number, y: number, throwDirection: ThrowDirection = 'right'): P
 describe('pepper on a platform', () => {
   it('places the cloud in front of the chef', () => {
     const cloud = pepperCloudFor(chef(4, 5, 'left'));
-    expect(cloud.x).toBeCloseTo(4 - 24 / CELL_UNITS, 10);
-    expect(cloud.y).toBeCloseTo(5 - 2 / CELL_UNITS, 10);
+    expect(cloud.x).toBeCloseTo(4 - 24 / ORIGINAL_CELL_UNITS, 10);
+    expect(cloud.y).toBeCloseTo(5 - 2 / ROW_UNITS, 10);
     expect(cloud.direction).toBe('left');
   });
 
@@ -50,6 +50,12 @@ describe('pepper on a platform', () => {
     expect(isHitByPepper(chef(0.6, 5), enemyAt(5, 7))).toBe(false);
   });
 
+  it('reaches as many cells to the side as on the original, however wide a cell is drawn', () => {
+    const reach = (24 + 44) / ORIGINAL_CELL_UNITS;
+    expect(isHitByPepper(chef(0.6, 5), enemyAt(5, 0.6 + reach - 0.05))).toBe(true);
+    expect(isHitByPepper(chef(0.6, 5), enemyAt(5, 0.6 + reach + 0.05))).toBe(false);
+  });
+
   it('misses an enemy on another row', () => {
     expect(isHitByPepper(chef(2, 5), enemyAt(2, 3.5))).toBe(false);
   });
@@ -63,14 +69,14 @@ describe('pepper on a ladder', () => {
   it('places the cloud above the chef when thrown up', () => {
     const cloud = pepperCloudFor(chef(3.5, 4, 'up'));
     expect(cloud.x).toBe(3.5);
-    expect(cloud.y).toBeCloseTo(4 - 24 / CELL_UNITS - 2 / CELL_UNITS, 10);
+    expect(cloud.y).toBeCloseTo(4 - 24 / ROW_UNITS - 2 / ROW_UNITS, 10);
     expect(cloud.direction).toBe('up');
   });
 
   it('places the cloud below the chef when thrown down', () => {
     const cloud = pepperCloudFor(chef(3.5, 3, 'down'));
     expect(cloud.x).toBe(3.5);
-    expect(cloud.y).toBeCloseTo(3 + 24 / CELL_UNITS - 2 / CELL_UNITS, 10);
+    expect(cloud.y).toBeCloseTo(3 + 24 / ROW_UNITS - 2 / ROW_UNITS, 10);
   });
 
   it('hits an enemy climbing the same ladder above', () => {
@@ -99,7 +105,7 @@ describe('pepper on a ladder', () => {
       structure: ['===+====', ...Array.from({ length: 8 }, () => '...H....'), '===+===='],
       actors: [...Array.from({ length: 9 }, () => '........'), 'C.......']
     });
-    const far = createEnemy(0, 'pickle', new EventQueue(), tall.graph, [
+    const far = createEnemy(0, 'onion', new EventQueue(), tall.graph, [
       entryAt(tall.graph.placeAt(0, 3.5))
     ]);
     far.reset(tall.graph.placeAt(0, 3.5), rng);

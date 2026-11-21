@@ -15,13 +15,20 @@ en español de forma provisional; se traducirá al inglés más adelante.
 
 ## 1. Unidades y rejilla
 
-- Todo se mide en **unidades lógicas**: una casilla del tablero mide 16×16 (un
-  carácter de la pantalla del original a escala ×2, medio cocinero) y el
-  tablero 624×480 (39×30 casillas). El chef mide 2×2 casillas y un ingrediente
-  de cuatro trozos, 64 de ancho. El juego dibuja cada gráfico a su tamaño
-  lógico multiplicado por el nivel de escala (4 en esta versión): un gráfico de
-  16×16 acaba siendo una textura de 64×64 píxeles. El objetivo son pantallas
-  Full HD o mayores.
+- Todo se mide en **unidades lógicas**: una casilla del tablero mide 18 de
+  ancho (un carácter de la pantalla del original a escala ×2, 16, y dos más
+  para aprovechar las pantallas apaisadas) y 21 de alto, y el tablero 702×630
+  (las 39×30 casillas del original). Las filas
+  son algo más altas que medio cocinero para que, con plataformas de 8 de
+  grueso, entre dos pisos separados por dos filas (un tramo de escalera) quepa
+  el chef de pie con 2 unidades de holgura: 2, 3 o 4 tramos miden 2, 3 o 4
+  cocineros sin contar lo que la escalera se solapa con las plataformas. El
+  chef mide 32 de alto y un ingrediente de cuatro trozos, 72 de ancho. Los
+  personajes se dibujan algo más anchos que su arte (`widen` = 34/32 en los
+  rigs), dos unidades más en los 32 del chef, para ir con las casillas. El juego
+  dibuja cada gráfico a su tamaño lógico multiplicado por el nivel de escala (4
+  en esta versión): un gráfico de 16×16 acaba siendo una textura de 64×64
+  píxeles. El objetivo son pantallas Full HD o mayores.
 - El tamaño lógico de cada gráfico lo fija el catálogo; los SVG lo repiten en
   su `viewBox` y los PNG miden exactamente ese tamaño × 4. La prueba de arte
   (`src/view/art/art.test.ts`) lo comprueba.
@@ -30,13 +37,14 @@ en español de forma provisional; se traducirá al inglés más adelante.
 
 | Elemento | Tamaño | Cómo se coloca |
 |---|---|---|
-| Tramo de plataforma (`platform.left/mid/right`), cruce (`crossing`) | 16×12 | centrado en la línea de la plataforma; la cara superior (línea − 6) es el suelo |
-| Pasarela de entrada (`walkway`) | 16×12 | una por casilla de pasarela, centrada en la línea del piso; más fina y oscura que la plataforma (`platformEdge`, sin brillo) para que se lea como prolongación del piso por la que entran los enemigos y no como suelo del chef |
-| Escalera (`ladder`) | 16×16 | una por fila, desde la línea de un piso hasta la del siguiente, detrás de las plataformas; dos peldaños por fila |
-| Plato (`plate.left/mid/right`) | 16×10 | centrado en la línea del plato |
-| Segmento de ingrediente (`<tipo>.left/mid/right`) | 16×(12–18) | apoyado sobre el suelo de la plataforma |
-| Partes de personaje | según el rig | el punto de anclaje está 16 por encima de la línea de la plataforma (`characterY`); los pies tocan el suelo (+10 respecto al anclaje) |
-| Fondo del tablero (`board.backdrop`) | 624×480 | detrás de todo |
+| Tramo de plataforma (`platform.left/mid/right`), cruce (`crossing`) | 18×8 | centrado en la línea de la plataforma; la cara superior (línea − 4) es el suelo; el cruce es la ranura oscura por la que pasa la escalera |
+| Largueros en un cruce (`ladder.rails`, renderizado) | 18×8 | encima del cruce, para que la escalera se vea atravesar la plataforma |
+| Pasarela de entrada (`walkway`) | 18×8 | una por casilla de pasarela, centrada en la línea del piso; más fina y oscura que la plataforma (`platformEdge`, sin brillo) para que se lea como prolongación del piso por la que entran los enemigos y no como suelo del chef |
+| Escalera (`ladder`, renderizada) | 18×21 | una por fila, desde la línea de un piso hasta la del siguiente, detrás de las plataformas; madera de abedul, clara y cremosa con una veta dorada fina, para que el tablero no se vea tan oscuro, con cuatro peldaños redondos por fila que se repiten sin costuras |
+| Plato (`plate.left/mid/right`) | 18×10 | centrado en la línea del plato |
+| Segmento de ingrediente (`<tipo>.left/mid/right`) | 18×(12–18) | apoyado sobre el suelo de la plataforma |
+| Partes de personaje | según el rig | el punto de anclaje está 14 por encima de la línea de la plataforma (`characterY`); los pies tocan el suelo (+10 respecto al anclaje) |
+| Fondo del tablero (`board.backdrop`) | 702×630 | detrás de todo |
 
 Un tramo de 2 casillas usa `left` + `right`; de 3, `left` + `mid` + `right`; de
 4 o más, `mid` repetido entre los extremos. Un tramo de una sola casilla usa
@@ -60,8 +68,9 @@ Lo generan los scripts de `tools/blender/` (ver el manual del desarrollador,
 - **Materiales** realistas pero apetecibles: corteza dorada y brillante en el
   pan, miga pálida y porosa, carne a la brasa con tonos claros y oscuros y
   marcas de parrilla, lechuga verde translúcida con nervios, salchicha roja y
-  muy brillante, clara de huevo con el borde tostado y crujiente, pepinillo
-  verde oscuro con verrugas, tela mate con brillo suave en la ropa del chef.
+  muy brillante, clara de huevo con el borde tostado y crujiente, cebolla
+  morada jugosa y algo translúcida, con la piel brillante, y tela mate con
+  brillo suave en la ropa del chef.
 - Sin contorno dibujado: la silueta la marcan la luz y el contraluz.
 
 ### 2.2 Ingredientes
@@ -109,17 +118,27 @@ Lo generan los scripts de `tools/blender/` (ver el manual del desarrollador,
 - **Tamaño en el juego**: las partes se renderizan para un personaje de unas 38
   unidades de los pies a la cabeza, y cada rig lleva una escala (`scale` en
   `src/view/rigs/rigs.ts`) que lo deja en **32 unidades**, dos casillas: el chef
-  a 0,82 y los enemigos entre 30 y 33 (salchicha y pepinillo a 0,82; el huevo,
-  más bajo, a 0,9). La escala se aplica alrededor de los pies, que siguen en el
+  a 0,82 y los enemigos entre 30 y 33 (la salchicha a 0,82, el huevo a 0,9 y
+  la cebolla a 0,91). La escala se aplica alrededor de los pies, que siguen en el
   suelo. `rigHeights.test.ts` mide la altura con los píxeles opacos.
 - **Enemigos**: de la altura del chef, con piernas de su color y zapatillas blancas, ojos grandes con cejas
   de enfadado. Partes: `body`, `eyes` y `leg` (una imagen para las dos piernas).
-- **Bailes**: cada enemigo tiene cinco imágenes de su cuerpo, del mismo tamaño,
-  de un extremo a otro de su baile con `body` en el centro:
+- **Bailes**: la salchicha y el huevo tienen cinco imágenes de su cuerpo, del
+  mismo tamaño, de un extremo a otro de su baile con `body` en el centro:
   `<enemigo>.<baile>Back2`, `Back1`, `body`, `Front1`, `Front2`. La salchicha
-  se dobla (`bend`), el pepinillo se contonea en S (`wiggle`) y la clara del
-  huevo ondula (`ripple`). Los ojos son una parte aparte que el juego desplaza
-  para seguir el baile.
+  se dobla (`bend`) y la clara del huevo ondula (`ripple`). Los ojos son una
+  parte aparte que el juego desplaza para seguir el baile.
+- **Cebolla**: una rodaja gruesa de cebolla morada (24 unidades de diámetro y 5
+  de grueso, con los bordes redondeados) de pie sobre dos piernas moradas. De
+  frente se ven anillos concéntricos blancos con el borde violeta, más morados
+  hacia fuera, dentro de una piel morada oscura y brillante; de canto, una
+  barra morada. Los ojos asoman por encima del borde de arriba. En lugar de
+  bailar, **gira como una moneda** alrededor del eje horizontal, como el
+  pepinillo del original: seis imágenes de media vuelta en pasos de 30°,
+  `onion.body` (de frente, la postura base) y `onion.turn1` a `onion.turn5`
+  (`turn3`, de canto). Al andar da media vuelta por zancada y al trepar, la mitad
+  de deprisa; los ojos bajan con el borde de arriba de la rodaja en cada
+  fotograma.
 - El resto de la animación (rebote, balanceo, *squash & stretch*) se hace
   moviendo y escalando partes.
 

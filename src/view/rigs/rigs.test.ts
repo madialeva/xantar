@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GRAPHICS, isGraphicId } from '../art/graphics';
-import { chefRig, enemyRigs } from './rigs';
+import { CHARACTER_WIDEN, chefRig, enemyRigs } from './rigs';
 
 const rigs = { chef: chefRig, ...enemyRigs };
 
@@ -29,6 +29,13 @@ describe('rigs', () => {
     }
   });
 
+  it('draws every character two units wider than its art over the 32 of the chef', () => {
+    for (const rig of [chefRig, ...Object.values(enemyRigs)]) {
+      expect(rig.widen).toBe(CHARACTER_WIDEN);
+    }
+    expect(32 * CHARACTER_WIDEN).toBe(34);
+  });
+
   it('gives every enemy two legs', () => {
     for (const rig of Object.values(enemyRigs)) {
       expect(rig.parts.map((part) => part.name)).toEqual(
@@ -37,10 +44,18 @@ describe('rigs', () => {
     }
   });
 
-  it('gives every enemy a dancing body', () => {
-    for (const rig of Object.values(enemyRigs)) {
-      expect(rig.parts.find((part) => part.name === 'body')?.frames?.length).toBe(5);
-    }
+  it('gives every enemy a dancing body: five frames to dance, six for half a turn', () => {
+    const frames = (kind: keyof typeof enemyRigs): readonly string[] =>
+      enemyRigs[kind].parts.find((part) => part.name === 'body')?.frames ?? [];
+    expect([frames('hotdog').length, frames('egg').length, frames('onion').length]).toEqual([
+      5, 5, 6
+    ]);
+  });
+
+  it('turns the onion from face-on, its base pose, to edge-on on the fourth frame', () => {
+    const body = enemyRigs.onion.parts.find((part) => part.name === 'body');
+    expect(body?.frames?.[0]).toBe(body?.graphic);
+    expect(body?.frames?.[3]).toBe('onion.turn3');
   });
 
   it('gives the chef a head, a hat, arms and legs', () => {

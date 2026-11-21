@@ -5,6 +5,7 @@ import { GameStats } from '../sim/GameStats';
 import { assembleLevel } from '../sim/level/assembleLevel';
 import { EDGE_MARGIN } from '../sim/rules';
 import { chefAt } from '../sim/testing/chef';
+import { dropFromBelow } from '../sim/testing/drops';
 import { parseLevelDocument, parseLevelJson, serializeLevel } from '../sim/level/levelJson';
 import classicDocument from './classic.level.json';
 
@@ -126,41 +127,11 @@ describe('classic level', () => {
   });
 
   it('can be finished by dropping its ingredients floor by floor', () => {
-    const events = new EventQueue();
-    const noEnemies: EnemyRoster = { board: () => 0, crushUnder: () => {}, release: () => {} };
-    const field = new IngredientField(level, events, new GameStats(events), noEnemies);
-    const away = chefAt(0, 0.5);
-    let drops = 0;
-    while (!field.isComplete && drops < 100) {
-      const next = field.ingredients
-        .filter((ingredient) => ingredient.phase === 'idle')
-        .sort((a, b) => b.row - a.row)[0];
-      for (let segment = 0; segment < next.width; segment++) {
-        field.step(chefAt(next.row, next.left + segment + 0.5));
-      }
-      for (let tick = 0; tick < 600; tick++) field.step(away);
-      drops++;
-    }
-    expect(field.isComplete).toBe(true);
-    expect(field.plates.every((plate) => plate.isComplete)).toBe(true);
+    expect(dropFromBelow(level).complete).toBe(true);
   });
 
   it('is secured by the drop that finishes it, before the last ingredient lands', () => {
-    const events = new EventQueue();
-    const noEnemies: EnemyRoster = { board: () => 0, crushUnder: () => {}, release: () => {} };
-    const field = new IngredientField(level, events, new GameStats(events), noEnemies);
-    const away = chefAt(0, 0.5);
-    const securedAtDrop: boolean[] = [];
-    while (!field.isComplete && securedAtDrop.length < 100) {
-      const next = field.ingredients
-        .filter((ingredient) => ingredient.phase === 'idle')
-        .sort((a, b) => b.row - a.row)[0];
-      for (let segment = 0; segment < next.width; segment++) {
-        field.step(chefAt(next.row, next.left + segment + 0.5));
-      }
-      securedAtDrop.push(field.isSecured && !field.isComplete);
-      for (let tick = 0; tick < 600; tick++) field.step(away);
-    }
+    const { securedAtDrop } = dropFromBelow(level, 600);
     expect(securedAtDrop.at(-1)).toBe(true);
     expect(securedAtDrop.slice(0, -1).every((secured) => !secured)).toBe(true);
   });

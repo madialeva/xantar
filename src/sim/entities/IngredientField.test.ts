@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EventQueue, type SimEvent } from '../events';
 import { GameStats } from '../GameStats';
-import { CELL_UNITS, INGREDIENT_THICKNESS, START_PEPPERS } from '../rules';
+import { INGREDIENT_THICKNESS, ROW_UNITS, START_PEPPERS } from '../rules';
 import { chefAt } from '../testing/chef';
 import { type GridSpec, levelFromGrid } from '../testing/grids';
 import { type EnemyRoster, IngredientField } from './IngredientField';
@@ -433,7 +433,7 @@ describe('IngredientField plates', () => {
     const context = build();
     const [, lettuce, patty, bottom] = context.field.ingredients;
     expect([bottom.y, patty.y]).toEqual([10, 10 - INGREDIENT_THICKNESS.bunBottom]);
-    expect(lettuce.y).toBeCloseTo(10 - (11 + 12) / CELL_UNITS, 10);
+    expect(lettuce.y).toBeCloseTo(10 - (11 + 12) / ROW_UNITS, 10);
   });
 
   it('completes the burger with points and a pepper when the last piece comes to rest', () => {

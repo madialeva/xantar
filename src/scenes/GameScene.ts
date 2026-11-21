@@ -1,16 +1,20 @@
 import Phaser from 'phaser';
 import { type RenderTier, TILE, characterY } from '../config';
-import classicDocument from '../levels/classic.level.json';
+import { SCREEN_DOCUMENTS } from '../levels/screens';
 import ChefView from '../objects/ChefView';
 import EnemyView from '../objects/EnemyView';
 import IngredientView from '../objects/IngredientView';
 import type { ActionReader } from '../input/actions';
 import { toSimInput } from '../input/toSimInput';
 import {
+  type EnemySnapshot,
   FixedStepper,
+  type Level,
   SeededRng,
   type SimEvent,
   Simulation,
+  boardsPerScreen,
+  firstLevelOfScreen,
   loadLevel,
   parseLevelDocument
 } from '../sim';
@@ -35,6 +39,8 @@ export interface GameSceneDependencies {
   readonly sounds: CuePlayer;
   /** Events that pause the game (a gamepad lost); each returns a way to stop listening. */
   readonly interruptions: readonly ((listener: () => void) => () => void)[];
+  /** Development aid: the screen, from 1, a game starts on; the first when it is not a screen. */
+  readonly startScreen?: number;
 }
 
 /**
@@ -53,7 +59,10 @@ export default class GameScene extends Phaser.Scene {
   #leaving = false;
 
   #chefView!: ChefView;
+  #maze: MazeView | undefined;
+  #mazeLevel: Level | undefined;
   #enemyViews: EnemyView[] = [];
+  #viewedEnemies: readonly EnemySnapshot[] = [];
   #ingredientViews = new Map<number, IngredientView>();
   #effects!: EventEffects;
   #sounds!: EventSounds;
@@ -67,18 +76,26 @@ export default class GameScene extends Phaser.Scene {
     const { session, settings, tier } = this.#deps;
     this.#art = new ArtFactory(this, tier);
     this.cameras.main.setBackgroundColor(PALETTE.background);
+    const screens = SCREEN_DOCUMENTS.map((document) => loadLevel(parseLevelDocument(document)));
+    const difficulty = settings.difficulty;
+    const firstScreen = this.#startScreen(screens.length);
     this.#sim = new Simulation({
-      level: loadLevel(parseLevelDocument(classicDocument)),
+      screens,
       rng: new SeededRng(Date.now()),
-      difficulty: settings.difficulty
+      difficulty,
+      startLevel: firstLevelOfScreen(firstScreen, boardsPerScreen(difficulty))
     });
     this.#stepper.reset();
     this.#pepperPending = false;
     this.#confirmPending = false;
     this.#paused = false;
     this.#leaving = false;
-    new MazeView(this, this.#art, this.#sim.level).setDepth(DEPTH.maze);
-    this.#createViews();
+    this.#maze = undefined;
+    this.#mazeLevel = undefined;
+    this.#enemyViews = [];
+    this.#viewedEnemies = [];
+    this.#chefView = new ChefView(this, this.#art).setDepth(DEPTH.chef);
+    this.#followScreen();
     this.#effects = new EventEffects(this, this.#art, DEPTH.effects);
     this.#sounds = new EventSounds(this.#deps.sounds);
     followBoardCamera(this, tier);
@@ -172,11 +189,28 @@ export default class GameScene extends Phaser.Scene {
     this.scene.start('MenuScene');
   }
 
-  #createViews(): void {
-    this.#chefView = new ChefView(this, this.#art).setDepth(DEPTH.chef);
-    this.#enemyViews = this.#sim.enemies.map((enemy) =>
-      new EnemyView(this, this.#art, enemy.kind).setDepth(DEPTH.enemies)
-    );
+  #startScreen(screenCount: number): number {
+    const screen = this.#deps.startScreen ?? 1;
+    return Number.isInteger(screen) && screen >= 1 && screen <= screenCount ? screen : 1;
+  }
+
+  /**
+   * Draws the maze of the screen being played and one view per enemy when the simulation has
+   * moved to another screen (it only replaces its list of enemies then).
+   */
+  #followScreen(): void {
+    if (this.#sim.level !== this.#mazeLevel) {
+      this.#maze?.destroy();
+      this.#mazeLevel = this.#sim.level;
+      this.#maze = new MazeView(this, this.#art, this.#sim.level).setDepth(DEPTH.maze);
+    }
+    if (this.#sim.enemies !== this.#viewedEnemies) {
+      for (const view of this.#enemyViews) view.destroy();
+      this.#viewedEnemies = this.#sim.enemies;
+      this.#enemyViews = this.#sim.enemies.map((enemy) =>
+        new EnemyView(this, this.#art, enemy.kind).setDepth(DEPTH.enemies)
+      );
+    }
   }
 
   #rebuildIngredients(): void {
@@ -189,6 +223,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   #syncViews(alpha: number): void {
+    this.#followScreen();
     this.#chefView.sync(this.#sim.chef, alpha, this.#sim.phase === 'dying');
     this.#sim.enemies.forEach((enemy, index) => this.#enemyViews[index].sync(enemy, alpha));
     for (const ingredient of this.#sim.ingredients) {

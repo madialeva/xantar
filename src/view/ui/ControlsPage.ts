@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH, type RenderTier } from '../../config';
+import { GAME_HEIGHT, GAME_WIDTH, MENU_TOP, type RenderTier } from '../../config';
 import type { Localization } from '../../i18n/Localization';
 import { type ActionReader, REMAPPABLE_ACTIONS, type RemappableAction } from '../../input/actions';
 import {
@@ -47,8 +47,8 @@ const ROWS: readonly Row[] = [
 ];
 
 const LAYOUT = {
-  titleY: 62,
-  top: 122,
+  titleY: MENU_TOP + 62,
+  top: MENU_TOP + 122,
   spacing: 30,
   size: 18,
   labelX: GAME_WIDTH / 2 - 40,

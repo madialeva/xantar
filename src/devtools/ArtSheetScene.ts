@@ -16,7 +16,7 @@ import { GRAPHIC_IDS, type GraphicId, segmentParts } from '../view/art/graphics'
 import { PALETTE } from '../view/art/palette';
 
 export const SHEET_WIDTH = 1000;
-export const SHEET_HEIGHT = 940;
+export const SHEET_HEIGHT = 1000;
 
 const MARGIN = 20;
 const GRID_COLUMNS = 10;
@@ -177,6 +177,7 @@ export default class ArtSheetScene extends Phaser.Scene {
     for (const row of [0, 4]) {
       segmentParts(8).forEach((part, col) => tile(`platform.${part}`, col, platformY(row)));
       tile('crossing', 1, platformY(row));
+      tile('ladder.rails', 1, platformY(row));
     }
     segmentParts(4).forEach((part, index) => tile(`plate.${part}`, index + 3, platformY(6)));
     maze.add(

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Difficulty } from './difficulty';
 import { assembleLevel } from './level/assembleLevel';
 import type { LevelEntry } from './level/LevelDocument';
-import { CELL_UNITS, READY_TICKS, START_LIVES } from './rules';
+import { ORIGINAL_CELL_UNITS, READY_TICKS, START_LIVES } from './rules';
 import { NO_INPUT, type SimInput } from './SimInput';
 import { Simulation } from './Simulation';
 import { type GridSpec, documentFromGrid } from './testing/grids';
@@ -15,7 +15,7 @@ const simulate = (
   entries?: readonly LevelEntry[]
 ): Simulation =>
   new Simulation({
-    level: assembleLevel({ ...documentFromGrid(grid), ...(entries ? { entries } : {}) }),
+    screens: [assembleLevel({ ...documentFromGrid(grid), ...(entries ? { entries } : {}) })],
     rng: new StubRng(0.99),
     ...(difficulty ? { difficulty } : {})
   });
@@ -24,7 +24,8 @@ const run = (sim: Simulation, ticks: number, input: Partial<SimInput> = {}): voi
   for (let i = 0; i < ticks; i++) sim.step({ ...NO_INPUT, ...input });
 };
 
-const units = (cells: number): number => cells * CELL_UNITS;
+/** A distance in cells or rows as measured on the original at ×2, where the speeds come from. */
+const units = (cells: number): number => cells * ORIGINAL_CELL_UNITS;
 
 /** An enemy on a floor of its own: it walks towards the chef's column but cannot reach him. */
 const apart: GridSpec = {

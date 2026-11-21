@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH, type RenderTier } from '../config';
+import { GAME_HEIGHT, GAME_WIDTH, MENU_TOP, type RenderTier } from '../config';
 import type { Localization } from '../i18n/Localization';
 import type { ActionReader } from '../input/actions';
 import { type GameAudio, TITLE_MUSIC } from '../view/audio/GameAudio';
@@ -44,10 +44,15 @@ export default class TitleScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(PALETTE.background);
     followBoardCamera(this, tier);
     this.add
-      .text(GAME_WIDTH / 2, 110, localization.t('game.title'), hudText(64, PALETTE.hudAccent, tier))
+      .text(
+        GAME_WIDTH / 2,
+        MENU_TOP + 110,
+        localization.t('game.title'),
+        hudText(64, PALETTE.hudAccent, tier)
+      )
       .setOrigin(0.5);
     const rig = new CharacterRig(this, new ArtFactory(this, tier), chefRig);
-    this.add.existing(rig.setPosition(GAME_WIDTH / 2, 250).setScale(CHEF_ZOOM));
+    this.add.existing(rig.setPosition(GAME_WIDTH / 2, MENU_TOP + 250).setScale(CHEF_ZOOM));
     new RigAnimator(new RigMotion(rig, this.tweens), chefStates).show('walk');
     const isMobile = this.sys.game.device.os.android || this.sys.game.device.os.iOS;
     const prompt = this.add

@@ -1,4 +1,10 @@
-import { DEFAULT_DIFFICULTY, type Difficulty, type EnemyPace, paceFor } from './difficulty';
+import {
+  DEFAULT_DIFFICULTY,
+  type Difficulty,
+  type EnemyPace,
+  boardsPerScreen,
+  paceFor
+} from './difficulty';
 import { Chef, type ChefSnapshot } from './entities/Chef';
 import { createEnemy } from './entities/createEnemy';
 import { type Enemy, type EnemyEntry, type EnemySnapshot, enemyGait } from './entities/Enemy';
@@ -22,63 +28,68 @@ import type {
 import { ReadyPhase } from './phases/phases';
 import type { Rng } from './rng';
 import { CONTACT_X, CONTACT_Y, SCORE } from './rules';
+import { screenIndexFor } from './screenOrder';
 import type { SimInput } from './SimInput';
 
 export interface SimulationOptions {
-  readonly level: Level;
+  /** The screens of the game, in the order they are played; at least one. */
+  readonly screens: readonly Level[];
   readonly rng: Rng;
-  /** Sets how fast the enemies go; Normal when left out. */
+  /** Sets how fast the enemies go and how many boards each screen lasts; Normal when left out. */
   readonly difficulty?: Difficulty;
+  /** The level a game starts on, and goes back to on a new game; the first when left out. */
+  readonly startLevel?: number;
 }
 
 /**
- * Root of the game rules. Owns the level, the chef, the enemies, the ingredient field and
- * the stats, advances one fixed tick at a time from an input and returns the events it caused.
- * What a tick does depends on the current game phase (State pattern).
+ * Root of the game rules. Owns the screens, the chef, the enemies of the screen being played,
+ * the ingredient field and the stats, advances one fixed tick at a time from an input and
+ * returns the events it caused. What a tick does depends on the current game phase (State
+ * pattern); each board is played on the screen its level number gives.
  */
 export class Simulation {
-  readonly #level: Level;
+  readonly #screens: readonly Level[];
   readonly #rng: Rng;
   readonly #difficulty: Difficulty;
   readonly #pace: EnemyPace;
+  readonly #boardsPerScreen: number;
   readonly #events = new EventQueue();
-  readonly #stats = new GameStats(this.#events);
+  readonly #stats: GameStats;
   readonly #chef: Chef;
-  readonly #enemies: readonly Enemy[];
-  readonly #enemyEntries: readonly EnemyEntry[];
-  readonly #chefPlace: NavPlace;
   readonly #roster: EnemyRoster = {
     board: (ingredient) => this.#board(ingredient),
     crushUnder: (ingredient) => this.#crushUnder(ingredient),
     release: (ingredient) => this.#release(ingredient)
   };
-  readonly #phaseHost: PhaseHost = this.#createPhaseHost();
+  readonly #phaseHost: PhaseHost;
+  #level: Level;
+  #chefPlace: NavPlace;
+  #enemies: readonly Enemy[] = [];
+  #enemyEntries: readonly EnemyEntry[] = [];
   #field: IngredientField;
   #phase: GamePhase = new ReadyPhase();
   /** Ticks of play on the board since it started or since the chef last came back. */
   #playTicks = 0;
 
   constructor(options: SimulationOptions) {
-    const { level, rng, difficulty = DEFAULT_DIFFICULTY } = options;
-    this.#level = level;
+    const { screens, rng, difficulty = DEFAULT_DIFFICULTY, startLevel = 1 } = options;
+    if (screens.length === 0) throw new Error('A game needs at least one screen');
+    this.#screens = screens;
     this.#rng = rng;
     this.#difficulty = difficulty;
     this.#pace = paceFor(difficulty);
-    const graph = level.graph;
-    this.#chefPlace = graph.placeAt(level.chefStart.row, level.chefStart.x);
+    this.#boardsPerScreen = boardsPerScreen(difficulty);
+    this.#stats = new GameStats(this.#events, startLevel);
+    this.#phaseHost = this.#createPhaseHost();
+    this.#level = this.#screenFor(this.#stats.level);
+    this.#chefPlace = this.#chefStartOn(this.#level);
     this.#chef = new Chef(this.#chefPlace);
-    this.#enemyEntries = level.enemySpawns.map((spawn): EnemyEntry => ({
-      place: graph.placeAt(spawn.row, spawn.joinX ?? spawn.x),
-      delayTicks: spawn.delayTicks,
-      ...(spawn.joinX === undefined ? {} : { fromX: spawn.x })
-    }));
-    this.#enemies = level.enemySpawns.map((spawn, id) =>
-      createEnemy(id, spawn.kind, this.#events, graph, this.#enemyEntries)
-    );
+    this.#mountEnemies();
     this.#field = this.#newField();
     this.startBoard();
   }
 
+  /** The screen being played. */
   get level(): Level {
     return this.#level;
   }
@@ -132,7 +143,9 @@ export class Simulation {
     return this.#events.drain();
   }
 
+  /** Sets up a board on the screen of the current level, with its ingredients whole again. */
   startBoard(): void {
+    this.#showScreen(this.#screenFor(this.#stats.level));
     this.#field = this.#newField();
     this.#playTicks = 0;
     this.#resetPositions();
@@ -199,6 +212,35 @@ export class Simulation {
     this.#playTicks = 0;
     this.#resetPositions();
     this.#field.liftStomps();
+  }
+
+  #screenFor(level: number): Level {
+    return this.#screens[screenIndexFor(level, this.#screens.length, this.#boardsPerScreen)];
+  }
+
+  /** Moves the game to another screen: its chef start, its entries and its own enemies. */
+  #showScreen(level: Level): void {
+    if (level === this.#level) return;
+    this.#level = level;
+    this.#chefPlace = this.#chefStartOn(level);
+    this.#mountEnemies();
+  }
+
+  #chefStartOn(level: Level): NavPlace {
+    return level.graph.placeAt(level.chefStart.row, level.chefStart.x);
+  }
+
+  #mountEnemies(): void {
+    const level = this.#level;
+    const graph = level.graph;
+    this.#enemyEntries = level.enemySpawns.map((spawn): EnemyEntry => ({
+      place: graph.placeAt(spawn.row, spawn.joinX ?? spawn.x),
+      delayTicks: spawn.delayTicks,
+      ...(spawn.joinX === undefined ? {} : { fromX: spawn.x })
+    }));
+    this.#enemies = level.enemySpawns.map((spawn, id) =>
+      createEnemy(id, spawn.kind, this.#events, graph, this.#enemyEntries)
+    );
   }
 
   #newField(): IngredientField {

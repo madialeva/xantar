@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import './styles.css';
 import { RENDER_TIER } from './config';
+import { requestedScreen } from './devtools/startScreen';
 import { detectLanguage } from './i18n/language';
 import { Localization } from './i18n/Localization';
 import BootScene from './scenes/BootScene';
@@ -95,7 +96,8 @@ const config: Phaser.Types.Core.GameConfig = {
       settings,
       input,
       sounds: audio,
-      interruptions: [(pause) => gamepad.onDisconnect(pause)]
+      interruptions: [(pause) => gamepad.onDisconnect(pause)],
+      startScreen: import.meta.env.DEV ? requestedScreen(window.location.search) : 1
     }),
     new HudScene({
       tier,

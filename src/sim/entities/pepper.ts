@@ -32,25 +32,31 @@ export interface PepperCloud {
   readonly direction: ThrowDirection;
 }
 
+/** Where the cloud of a pepper thrown by the chef appears, in cells and rows. */
 export const pepperCloudFor = (chef: PepperSource): PepperCloud => {
   const { dx, dy } = THROW_VECTORS[chef.throwDirection];
   return {
-    x: chef.x + dx * PEPPER_CLOUD_OFFSET,
-    y: chef.y + dy * PEPPER_CLOUD_OFFSET - PEPPER_CLOUD_LIFT,
+    x: chef.x + dx * PEPPER_CLOUD_OFFSET.cells,
+    y: chef.y + dy * PEPPER_CLOUD_OFFSET.rows - PEPPER_CLOUD_LIFT,
     direction: chef.throwDirection
   };
 };
 
+/**
+ * Whether the pepper the chef throws reaches an enemy: along a throw to the side in cells and
+ * across it in rows, along a throw up or down in rows and across it in cells.
+ */
 export const isHitByPepper = (chef: PepperSource, enemy: EnemySnapshot): boolean => {
   const { dx, dy } = THROW_VECTORS[chef.throwDirection];
-  const offsetX = enemy.x - chef.x;
-  const offsetY = enemy.y - chef.y;
-  const ahead = offsetX * dx + offsetY * dy;
-  const aside = Math.abs(offsetX * dy) + Math.abs(offsetY * dx);
+  const sideways = dx !== 0;
+  const ahead = sideways ? (enemy.x - chef.x) * dx : (enemy.y - chef.y) * dy;
+  const aside = sideways ? Math.abs(enemy.y - chef.y) : Math.abs(enemy.x - chef.x);
+  const along = sideways ? 'cells' : 'rows';
+  const across = sideways ? 'rows' : 'cells';
   return (
     enemy.active &&
     ahead > 0 &&
-    Math.abs(ahead - PEPPER_CLOUD_OFFSET) < PEPPER_REACH_ALONG &&
-    aside < PEPPER_REACH_ACROSS
+    Math.abs(ahead - PEPPER_CLOUD_OFFSET[along]) < PEPPER_REACH_ALONG[along] &&
+    aside < PEPPER_REACH_ACROSS[across]
   );
 };

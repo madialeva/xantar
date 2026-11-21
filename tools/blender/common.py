@@ -11,7 +11,7 @@ from mathutils import Vector
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 ART_DIR = os.path.join(ROOT, "src", "view", "art", "sources")
 PREVIEW_DIR = os.path.join(ROOT, "tmp", "blender")
-TILE = 16
+TILE = 18  # The width of a column: CELL_UNITS in src/sim/rules.ts.
 TIER = 4
 SUPERSAMPLE = 2
 LIFT = 0.02
@@ -236,6 +236,45 @@ def save_rgba(pixels, path):
     image.file_format = "PNG"
     image.save()
     bpy.data.images.remove(image)
+
+
+def board_point(x, y, depth=0.0):
+    """A point given in board coordinates (x right, y down, in logical units) as a Blender
+    location: Blender x is x, Blender z is -y and Blender y is the depth, away from the camera."""
+    return Vector((x, depth, -y))
+
+
+def frame_camera(scene, rect):
+    """Orthographic front camera framing a rectangle (left, top, width, height) in board
+    coordinates, rendering it at the game's scale times the supersampling."""
+    left, top, width, height = rect
+    camera = scene.camera
+    if camera is None:
+        data = bpy.data.cameras.new("camera")
+        data.type = "ORTHO"
+        data.clip_start = 1
+        data.clip_end = 2000
+        camera = bpy.data.objects.new("camera", data)
+        camera.rotation_euler = (math.pi / 2, 0, 0)
+        scene.collection.objects.link(camera)
+        scene.camera = camera
+    camera.data.ortho_scale = max(width, height)
+    camera.location = board_point(left + width / 2, top + height / 2, -500)
+    scale = TIER * SUPERSAMPLE
+    scene.render.resolution_x = round(width * scale)
+    scene.render.resolution_y = round(height * scale)
+
+
+def render_framed(scene, graphic, rect, previews):
+    """Renders the rectangle as the art source of `graphic`, with an enlarged preview."""
+    frame_camera(scene, rect)
+    raw = os.path.join(previews, f"{graphic}.raw.png")
+    scene.render.filepath = raw
+    bpy.ops.render.render(write_still=True)
+    pixels = downsample(load_rgba(raw), SUPERSAMPLE)
+    save_rgba(pixels, os.path.join(ART_DIR, f"{graphic}.png"))
+    save_rgba(enlarge(over(pixels, BACKDROP), 2), os.path.join(previews, f"{graphic}.preview.png"))
+    print(f"rendered {graphic}")
 
 
 def to_linear(c):

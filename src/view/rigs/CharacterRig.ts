@@ -28,9 +28,9 @@ export class CharacterRig extends Phaser.GameObjects.Container {
   readonly #frames = new Map<string, readonly string[]>();
 
   constructor(scene: Phaser.Scene, art: ArtFactory, definition: RigDefinition) {
-    const { scale, y } = rigPlacement(definition);
+    const { scaleX, scale, y } = rigPlacement(definition);
     super(scene, 0, y);
-    this.setScale(scale);
+    this.setScale(scaleX, scale);
     for (const part of definition.parts) {
       const image = art
         .image(part.graphic, part.x, part.y)
