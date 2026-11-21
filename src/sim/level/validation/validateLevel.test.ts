@@ -113,7 +113,7 @@ describe('validateLevel', () => {
     const structure = [...tinyGrid.structure];
     structure[0] = '=====...';
     const actors = [...(tinyGrid.actors ?? [])];
-    actors[0] = '..h.....';
+    actors[0] = '..z.....';
     const issues = validateLevel(levelFromGrid(withGrid({ structure, actors })));
     expect(issues).toContainEqual(
       expect.objectContaining({ severity: 'warning', code: 'spawn-unreachable', row: 0, col: 2 })
@@ -200,7 +200,7 @@ describe('validateLevel', () => {
         ...documentFromGrid({
           structure,
           ingredients: ['........', '........', '........', '..TTTT..', '........'],
-          actors: ['........', 'h.......', '........', '..C.....', '........']
+          actors: ['........', 'z.......', '........', '..C.....', '........']
         }),
         entries
       });

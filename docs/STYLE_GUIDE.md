@@ -67,8 +67,9 @@ Lo generan los scripts de `tools/blender/` (ver el manual del desarrollador,
   de frente, sin inclinación, mirando a la **derecha** (el juego los voltea).
 - **Materiales** realistas pero apetecibles: corteza dorada y brillante en el
   pan, miga pálida y porosa, carne a la brasa con tonos claros y oscuros y
-  marcas de parrilla, lechuga verde translúcida con nervios, salchicha roja y
-  muy brillante, clara de huevo con el borde tostado y crujiente, cebolla
+  marcas de parrilla, lechuga verde translúcida con nervios, queso céreo y
+  brillante, tomate jugoso, chorizo fresco de tripa lisa y brillante, granos de
+  maíz brillantes y algo translúcidos, hojas de la vaina con nervios, cebolla
   morada jugosa y algo translúcida, con la piel brillante, y tela mate con
   brillo suave en la ropa del chef.
 - Sin contorno dibujado: la silueta la marcan la luz y el contraluz.
@@ -77,20 +78,27 @@ Lo generan los scripts de `tools/blender/` (ver el manual del desarrollador,
 
 - Se renderizan los cuatro tramos de una vez y se cortan en `left`, `mid` y
   `right`. El **tramo central se repite sin costuras**: la luz no cambia a lo
-  largo del ingrediente, y las texturas, las semillas, los desplazamientos y
-  las ondas de la lechuga se repiten exactamente una vez por casilla.
+  largo del ingrediente, y las texturas, las semillas, los desplazamientos, las
+  ondas de la lechuga, las lágrimas del queso y las rodajas del tomate se
+  repiten exactamente una vez por casilla.
 - Cada ingrediente se apoya en la base de su imagen, con un margen de 1 unidad
-  para su sombra de contacto.
+  para su sombra de contacto. El **queso** es la excepción: cuelga por debajo de
+  su base, así que se renderiza sin el suelo de la sombra (taparía las
+  lágrimas) y el juego lo dibuja 5 unidades más abajo (`INGREDIENT_HANGS`, en
+  `src/view/art/graphics.ts`), para que la loncha se apoye donde se apoyan los
+  demás y las lágrimas caigan sobre la carne o por el borde de la plataforma.
 - **Grosor visible** para el apilado en el plato (`INGREDIENT_THICKNESS`, en
   `src/sim/rules.ts`, porque la simulación lo usa para apilar y para saber
-  cuándo un ingrediente golpea a otro): pan de abajo 11, carne 12, lechuga 8 y
-  pan de arriba 13, cerca de las proporciones del original (unos 7 px cada uno;
-  la lechuga, 5–6). En los sólidos es su altura (`support` en
+  cuándo un ingrediente golpea a otro): pan de abajo 11, carne 12, lechuga 8,
+  pan de arriba 13, queso 2 (el grueso de la loncha) y tomate 6 (algo más que el
+  frente de las rodajas, para que lo de encima tape su borde de atrás), cerca de
+  las proporciones del original (unos 7 px cada uno; la lechuga, 5–6). En los sólidos es su altura (`support` en
   `tmp/blender/metrics.json`) menos la unidad del margen de la sombra; si cambia
   la forma de un ingrediente, se recalcula así y se comprueba apilando una
   hamburguesa.
-- Un ingrediente mide 64 de ancho (cuatro casillas, dos cocineros, como en el
-  original) y sus extremos redondeados caben en el primer y el último tramo.
+- Un ingrediente mide 72 de ancho (cuatro casillas de 18, unos dos cocineros,
+  como en el original) y sus extremos redondeados caben en el primer y el
+  último tramo.
 - La **carne** es de un marrón a la brasa claro y cálido (luminancia media de
   la imagen entre 80 y 100), para que se reconozca sobre el fondo del tablero
   sin confundirse con los panes; las marcas de parrilla siguen oscuras.
@@ -101,10 +109,12 @@ Lo generan los scripts de `tools/blender/` (ver el manual del desarrollador,
 
 | Ingrediente | Imagen | Forma |
 |---|---|---|
-| `bunTop` | 16×18 | cúpula de 13,5 de alto con semillas de sésamo que, también vista de frente, baja en el primer y el último tramo hasta un 25 % de su altura en la punta |
-| `lettuce` | 16×14 | dos hojas posadas con el borde rizado colgando, la de arriba a 10,5 |
-| `patty` | 16×17 | disco de 13 de alto con borde irregular y marcas de parrilla |
-| `bunBottom` | 16×16 | base de 12 de alto, más ancha en el corte, con la miga a la vista |
+| `bunTop` | 18×18 | cúpula de 13,5 de alto con semillas de sésamo que, también vista de frente, baja en el primer y el último tramo hasta un 25 % de su altura en la punta |
+| `lettuce` | 18×14 | dos hojas posadas con el borde rizado colgando, la de arriba a 10,5 |
+| `patty` | 18×17 | disco de 13 de alto con borde irregular y marcas de parrilla |
+| `bunBottom` | 18×16 | base de 12 de alto, más ancha en el corte, con la miga a la vista |
+| `cheese` | 18×11 | loncha de cheddar de 2 de grueso, amarilla anaranjada, cérea y brillante, que se derrite por el borde de delante en dos lágrimas de punta redonda por casilla (de 3,4 y 1,8 de largo) y cae en las esquinas de los extremos |
+| `tomato` | 18×9 | una rodaja por casilla, de 9,8 de radio y 4,2 de grueso, inclinada 8° hacia la cámara para que se vea el corte: piel roja brillante, carne roja, cuatro cámaras con semillas claras y el centro más claro; las de los extremos, 0,8 hacia dentro |
 
 ### 2.3 Personajes
 
@@ -118,16 +128,38 @@ Lo generan los scripts de `tools/blender/` (ver el manual del desarrollador,
 - **Tamaño en el juego**: las partes se renderizan para un personaje de unas 38
   unidades de los pies a la cabeza, y cada rig lleva una escala (`scale` en
   `src/view/rigs/rigs.ts`) que lo deja en **32 unidades**, dos casillas: el chef
-  a 0,82 y los enemigos entre 30 y 33 (la salchicha a 0,82, el huevo a 0,9 y
+  a 0,82 y los enemigos entre 30 y 33 (el chorizo a 0,85, la mazorca a 0,9 y
   la cebolla a 0,91). La escala se aplica alrededor de los pies, que siguen en el
   suelo. `rigHeights.test.ts` mide la altura con los píxeles opacos.
 - **Enemigos**: de la altura del chef, con piernas de su color y zapatillas blancas, ojos grandes con cejas
-  de enfadado. Partes: `body`, `eyes` y `leg` (una imagen para las dos piernas).
-- **Bailes**: la salchicha y el huevo tienen cinco imágenes de su cuerpo, del
-  mismo tamaño, de un extremo a otro de su baile con `body` en el centro:
-  `<enemigo>.<baile>Back2`, `Back1`, `body`, `Front1`, `Front2`. La salchicha
-  se dobla (`bend`) y la clara del huevo ondula (`ripple`). Los ojos son una
-  parte aparte que el juego desplaza para seguir el baile.
+  de enfadado. Partes: `body`, `eyes` y `leg` (una imagen para las dos piernas);
+  además, el chorizo tiene `knot` y la mazorca `huskBack`, `huskFront` y `silk`.
+- **Boca sonriente** (chorizo y mazorca; la cebolla no, porque gira de canto):
+  bajo los ojos, abierta, con las comisuras hacia arriba, una sola fila de
+  dientes continua a lo largo del borde de arriba (nunca dientes sueltos) y una
+  lengua rosa al fondo. Va dentro de la imagen del cuerpo, para que se doble o
+  se incline con él.
+- **Chorizo**: un chorizo fresco gallego de pie, gordo y de tripa lisa y
+  brillante (5,6 de radio y 27,5 de alto), rojo pimentón con vetas de grasa
+  naranjas y amarillas que se transparentan, los extremos redondeados y atados
+  con tres vueltas de cordel rojo. Arriba, por encima del atado, la punta
+  retorcida de la tripa con un cabo de cordel suelto hacia atrás y otro corto
+  hacia delante (`chorizo.knot`). Piernas rojo oscuro. **Baila doblándose**:
+  cinco imágenes de su cuerpo, del mismo tamaño, de un extremo a otro de la
+  doblez con el cuerpo recto en el centro (`chorizo.bendBack2`, `bendBack1`,
+  `body`, `bendFront1`, `bendFront2`); los ojos son una parte aparte que el juego
+  desplaza para seguir la doblez y la punta atada se inclina a un lado y a otro
+  un poco por detrás.
+- **Mazorca**: una mazorca de maíz amarillo de pie (5,4 de radio y 23 de alto),
+  con 16 filas de granos brillantes, cada uno de un amarillo algo distinto,
+  sobre un núcleo más oscuro; las hojas de la vaina, verdes con nervios y más
+  claras en la punta, peladas hacia abajo alrededor de su base como una falda
+  (las de delante, `corn.huskFront`, y las de detrás, `corn.huskBack`); y un
+  mechón de pelo de maíz rubio que oscurece hacia las puntas (`corn.silk`).
+  Piernas verde hoja. **Baila el hula** sin imágenes extra: el cuerpo se inclina
+  a un lado en un paso y al otro en el siguiente, los ojos y el pelo siguen lo
+  alto del cuerpo, y la falda y el pelo se inclinan a la contra, un poco por
+  detrás.
 - **Cebolla**: una rodaja gruesa de cebolla morada (24 unidades de diámetro y 5
   de grueso, con los bordes redondeados) de pie sobre dos piernas moradas. De
   frente se ven anillos concéntricos blancos con el borde violeta, más morados

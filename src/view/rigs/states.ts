@@ -60,6 +60,21 @@ export const chefStates: Readonly<Record<ChefAnimation, AnimationState>> = {
 
 /** How far the eyes follow a dancing body between its first and last frames. */
 const BEND_EYES_DX = 3;
+/** How far the chorizo's tied tip leans each way, and how far behind the bend it lags. */
+const KNOT_DEGREES = 14;
+const KNOT_LAG_MS = STEP_MS / 4;
+/**
+ * The corn's hula: how far its body sways about its base each step, how far its eyes and its
+ * silk, 16 and 22 above the base, move with the top of the body, how far the husk and the silk
+ * swing the other way, and how far behind the body they lag.
+ */
+const HULA_DEGREES = 7;
+const HULA_EYES_DX = 2;
+const HULA_SILK_DX = 2.7;
+const HULA_SILK_DEGREES = 9;
+const HULA_HUSK_FRONT_DEGREES = 11;
+const HULA_HUSK_BACK_DEGREES = 8;
+const HULA_LAG_MS = STEP_MS / 4;
 /**
  * How far the onion's eyes drop on each frame of its half turn (0°, 30°… 150°), riding the top
  * edge of the slice: its radius (12) less the height of the turned edge, 12·|cos a| + 2.5·|sin a|.
@@ -124,38 +139,29 @@ const commonEnemyStates: Readonly<Record<EnemyAnimation, AnimationState>> = {
 };
 
 /**
- * The animations of each enemy kind. Each one dances its own way as it walks, stepping its
- * body through its frames in time with its legs: the hot dog bends one way and the other, the
- * egg's white wobbles like jelly as it bounces and the onion's slice turns like a coin, half a
- * turn a stride, as the pickle of the original does; the onion keeps turning, half as fast, on a
- * ladder.
+ * The animations of each enemy kind. Each one dances its own way as it walks, in time with its
+ * legs: the chorizo bends one way and the other through its frames, its tied tip swinging behind;
+ * the onion's slice turns like a coin, half a turn a stride, and keeps turning, half as fast, on a
+ * ladder; and the corn sways its hips, its husk and its silk swinging the other way.
  */
 export const enemyStates: Readonly<
   Record<EnemyKind, Readonly<Record<EnemyAnimation, AnimationState>>>
 > = {
-  hotdog: {
+  chorizo: {
     ...commonEnemyStates,
     walk: {
       enter(motion) {
         enemyWalk.enter(motion);
         motion.cycle('body', STEP_MS);
         motion.swing('eyes', { dx: -BEND_EYES_DX }, { dx: BEND_EYES_DX }, STEP_MS);
-      }
-    }
-  },
-  egg: {
-    ...commonEnemyStates,
-    walk: {
-      enter(motion) {
-        stepLegs(motion);
-        motion.cycle('body', STEP_MS);
+        motion.swing('knot', { dy: 0 }, { dy: -1.2 }, STEP_MS / 2);
         motion.swing(
-          'body',
-          { scaleY: 0.93, scaleX: 1.05 },
-          { scaleY: 1.06, scaleX: 0.96 },
-          STEP_MS / 2
+          'knot',
+          { angle: KNOT_DEGREES },
+          { angle: -KNOT_DEGREES },
+          STEP_MS,
+          KNOT_LAG_MS
         );
-        motion.swing('eyes', { dy: 1.2 }, { dy: -1 }, STEP_MS / 2);
       }
     }
   },
@@ -171,6 +177,43 @@ export const enemyStates: Readonly<
       enter(motion) {
         climbLegs(motion);
         turnSlice(motion, 2 * ONION_TURN_MS);
+      }
+    }
+  },
+  corn: {
+    ...commonEnemyStates,
+    walk: {
+      enter(motion) {
+        stepLegs(motion);
+        motion.swing('body', { angle: -HULA_DEGREES }, { angle: HULA_DEGREES }, STEP_MS);
+        motion.swing(
+          'eyes',
+          { dx: -HULA_EYES_DX, angle: -HULA_DEGREES },
+          { dx: HULA_EYES_DX, angle: HULA_DEGREES },
+          STEP_MS
+        );
+        motion.swing('silk', { dx: -HULA_SILK_DX }, { dx: HULA_SILK_DX }, STEP_MS);
+        motion.swing(
+          'silk',
+          { angle: HULA_SILK_DEGREES },
+          { angle: -HULA_SILK_DEGREES },
+          STEP_MS,
+          HULA_LAG_MS
+        );
+        motion.swing(
+          'huskFront',
+          { angle: HULA_HUSK_FRONT_DEGREES },
+          { angle: -HULA_HUSK_FRONT_DEGREES },
+          STEP_MS,
+          HULA_LAG_MS
+        );
+        motion.swing(
+          'huskBack',
+          { angle: HULA_HUSK_BACK_DEGREES },
+          { angle: -HULA_HUSK_BACK_DEGREES },
+          STEP_MS,
+          HULA_LAG_MS
+        );
       }
     }
   }

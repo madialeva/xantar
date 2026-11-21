@@ -48,8 +48,6 @@ from common import (  # noqa: E402
 )
 
 CHARACTER_PREVIEWS = os.path.join(PREVIEW_DIR, "characters")
-SAUSAGE_RADIUS = 4.3
-SAUSAGE_BOW = 4.2
 
 
 def dance_frames(kind, name):
@@ -156,26 +154,6 @@ def object_coords(tree):
     return coords.outputs["Object"], split
 
 
-def sausage_material():
-    """Frankfurter skin: red-brown, darker and wrinkled towards the ends, very glossy."""
-    material, tree = new_material("sausage")
-    bsdf, _ = principled(tree)
-    vector, split = object_coords(tree)
-    mottle = noise4(tree, vector, 0.0, 0.25, detail=4)
-    fine = noise4(tree, vector, 0.0, 2.0, detail=6)
-    level = add(tree, 0.45, centred(tree, mottle, 0.5), centred(tree, fine, 0.15), clamp=True)
-    stops = [(0.0, "#D9774B"), (0.4, "#C2583A"), (0.7, "#A8432A"), (1.0, "#7E2E1C")]
-    feed(tree, bsdf.inputs["Base Color"], ramp(tree, level, stops))
-    bsdf.inputs["Roughness"].default_value = 0.35
-    bsdf.inputs["Coat Weight"].default_value = 0.55
-    bsdf.inputs["Coat Roughness"].default_value = 0.12
-    bsdf.inputs["Subsurface Weight"].default_value = 0.12
-    bsdf.inputs["Subsurface Radius"].default_value = (1.0, 0.3, 0.2)
-    bsdf.inputs["Subsurface Scale"].default_value = 0.8
-    feed(tree, bsdf.inputs["Normal"], bump(tree, fine, 0.12, 0.2))
-    return material
-
-
 def onion_material():
     """Red onion: concentric layers of juicy white flesh, each edged with violet, inside a glossy
     purple skin. Built for a slice whose faces lie across y, with the centre at the origin."""
@@ -205,29 +183,6 @@ def onion_material():
     bsdf.inputs["Subsurface Radius"].default_value = (1.0, 0.8, 0.95)
     bsdf.inputs["Subsurface Scale"].default_value = 0.6
     feed(tree, bsdf.inputs["Normal"], bump(tree, add(tree, edge, scaled(tree, fine, 0.3)), 0.18, 0.25))
-    return material
-
-
-def egg_white_material():
-    """Fried egg white: glossy and a little translucent, browned and lacy at the crisp rim."""
-    material, tree = new_material("eggWhite")
-    bsdf, _ = principled(tree)
-    rim = tree.nodes.new("ShaderNodeAttribute")
-    rim.attribute_name = "rim"
-    vector, split = object_coords(tree)
-    lace = noise4(tree, vector, 0.0, 0.5, detail=6, roughness=0.6)
-    bubbles = voronoi4(tree, vector, 0.0, 0.7)
-    level = add(tree, scaled(tree, rim.outputs["Fac"], 1.15), centred(tree, lace, 0.6), clamp=True)
-    stops = [(0.0, "#FBFAF5"), (0.62, "#F6F0E2"), (0.8, "#E6C894"), (0.92, "#C98F4E"), (1.0, "#8F5A2A")]
-    feed(tree, bsdf.inputs["Base Color"], ramp(tree, level, stops))
-    bsdf.inputs["Roughness"].default_value = 0.3
-    bsdf.inputs["Coat Weight"].default_value = 0.5
-    bsdf.inputs["Coat Roughness"].default_value = 0.1
-    bsdf.inputs["Subsurface Weight"].default_value = 0.35
-    bsdf.inputs["Subsurface Radius"].default_value = (1.0, 0.9, 0.7)
-    bsdf.inputs["Subsurface Scale"].default_value = 0.8
-    relief = add(tree, scaled(tree, bubbles, 0.6), scaled(tree, lace, 0.5))
-    feed(tree, bsdf.inputs["Normal"], bump(tree, relief, 0.25, 0.3))
     return material
 
 
@@ -284,72 +239,6 @@ def add_leg(scene, group, colour):
 # --- Enemies (body built at rig position, legs at the rig origin) ---
 
 
-def build_sausage(scene, group, bow):
-    """Mr Hot Dog: an upright sausage from y = 3 to y = -28, bowed sideways by `bow` (-1..1)."""
-    stations, radii = capsule_radii(SAUSAGE_RADIUS, 64)
-    bottom, top = 3.0, -28.0
-    centres = [rig_point(SAUSAGE_BOW * bow * math.sin(math.pi * t), bottom + (top - bottom) * t) for t in stations]
-    place(scene, "sausage", tube("sausage", centres, radii, ring=64), sausage_material(), Matrix.Identity(4), group)
-
-
-def sausage_eyes(scene, group):
-    radius = SAUSAGE_RADIUS
-    eyes = []
-    for angle in (0.1, 0.68):
-        surface = Vector((radius * math.sin(angle), -radius * math.cos(angle), 20.0))
-        eyes.append((surface + Vector((math.sin(angle), -math.cos(angle), 0.0)) * 0.2, angle))
-    add_eyes(scene, group, eyes, 0.0, size=0.88)
-
-
-def build_egg(scene, group, ripple=0.0):
-    """Mr Egg: a fried egg standing on edge, its yolk facing the camera. `ripple` (-1..1) turns
-    the waves of its outline, so stepping through it makes the white wobble like jelly."""
-    rng = random.Random(5)
-    phases = [rng.uniform(0, 2 * math.pi) + ripple * (0.9 + 0.5 * k) for k in range(4)]
-    centre_z = 11.0
-    rings, spokes = 36, 128
-    verts, faces, rim = [], [], []
-    for face, sign in (("front", -1.0), ("back", 1.0)):
-        for i in range(rings + 1):
-            rho = i / rings
-            for j in range(spokes):
-                phi = 2 * math.pi * j / spokes
-                outline = 12.0 + 1.2 * math.sin(3 * phi + phases[0]) + 0.8 * math.sin(5 * phi + phases[1])
-                outline += 0.45 * math.sin(9 * phi + phases[2]) + 0.25 * math.sin(14 * phi + phases[3])
-                thick = (1.6 if sign < 0 else 0.6) * (1 - rho**4) ** 0.5
-                verts.append(Vector((rho * outline * math.cos(phi), sign * thick, centre_z + rho * outline * math.sin(phi))))
-                rim.append(rho)
-    half = (rings + 1) * spokes
-    for offset in (0, half):
-        for i in range(rings):
-            for j in range(spokes):
-                n = (j + 1) % spokes
-                a, b = offset + i * spokes + j, offset + i * spokes + n
-                c, d = offset + (i + 1) * spokes + n, offset + (i + 1) * spokes + j
-                faces.append((a, b, c, d) if offset == 0 else (a, d, c, b))
-    mesh = bpy.data.meshes.new("eggWhite")
-    mesh.from_pydata([tuple(v) for v in verts], [], faces)
-    mesh.attributes.new(name="rim", type="FLOAT", domain="POINT").data.foreach_set("value", rim)
-    bm = bmesh.new()
-    bm.from_mesh(mesh)
-    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-4)
-    bmesh.ops.dissolve_degenerate(bm, edges=bm.edges, dist=1e-5)
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    bm.to_mesh(mesh)
-    bm.free()
-    mesh.shade_smooth()
-    place(scene, "eggWhite", mesh, egg_white_material(), Matrix.Identity(4), group)
-    yolk = glossy("yolk", "#F2A01A", roughness=0.15, coat=0.9, coat_roughness=0.04, sss=0.5, sss_radius=(1.0, 0.6, 0.1))
-    place(scene, "yolk", ellipsoid("yolk", (5.8, 3.4, 5.5), 48), yolk, Matrix.Translation(Vector((1.0, -1.2, centre_z + 1.0))), group)
-
-
-def egg_eyes(scene, group):
-    eyes = []
-    for x, angle in ((-1.0, -0.15), (3.4, 0.45)):
-        eyes.append((Vector((x, -4.0, 13.0)), angle))
-    add_eyes(scene, group, eyes, 0.0, size=0.95)
-
-
 ONION_RADIUS = 12.0
 ONION_THICKNESS = 5.0
 ONION_CORE = 1.4
@@ -392,6 +281,402 @@ def turn_frames(kind):
     return {name: step * ONION_TURN_DEGREES for step, name in enumerate(names)}
 
 
+# --- Shared: a smiling mouth ---
+
+
+def mouth_edges(s, z0, smile, height):
+    """Top and bottom of a grin at `s` (-1..1 across): a top edge curling up at the corners and
+    a bottom edge dropping deepest in the middle, meeting at the corners."""
+    top = z0 + smile * s * s
+    return top, top - height * max(0.0, 1 - s * s) ** 0.8
+
+
+def add_mouth(scene, group, axis, radius, a0, z0, half_width, smile, height, lift):
+    """A smiling mouth on the surface of an upright body: dark inside, one continuous row of
+    teeth along the top and a little tongue at the bottom. `axis(z)` and `radius(z)` describe
+    the surface; the mouth is centred `a0` radians round from the camera to the facing side."""
+    inside = glossy("mouth", "#2A0906", roughness=0.35, coat=0.6, coat_roughness=0.1)
+    teeth = glossy("teeth", "#FBF7EC", roughness=0.25, coat=0.6, coat_roughness=0.08, sss=0.2)
+    tongue = glossy("tongue", "#C4424E", roughness=0.35, coat=0.5, coat_roughness=0.12, sss=0.3)
+
+    def at(a, z, extra):
+        r = radius(z) + lift + extra
+        return Vector((axis(z) + r * math.sin(a), -r * math.cos(a), z))
+
+    def patch(name, material, extra, span, edges, columns=48, rows=8):
+        verts, faces = [], []
+        for i in range(columns + 1):
+            s = span * (2 * i / columns - 1)
+            upper, lower = edges(s)
+            for j in range(rows + 1):
+                verts.append(at(a0 + s * half_width, upper + (lower - upper) * j / rows, extra))
+        for i in range(columns):
+            for j in range(rows):
+                a = i * (rows + 1) + j
+                faces.append((a, a + rows + 1, a + rows + 2, a + 1))
+        obj = place(scene, name, weld(name, verts, faces), material, Matrix.Identity(4), group)
+        obj.modifiers.new("thickness", "SOLIDIFY").thickness = 0.2
+
+    edges = lambda s: mouth_edges(s, z0, smile, height)  # noqa: E731
+    patch("mouth", inside, 0.0, 1.0, edges)
+
+    def row_of_teeth(s):
+        top, _ = edges(s)
+        return top + 0.02, top - 0.36 * height * max(0.0, 1 - s * s) ** 0.5
+
+    patch("teeth", teeth, 0.06, 1.0, row_of_teeth, rows=4)
+
+    def tip_of_tongue(s):
+        _, bottom = edges(s)
+        u = s / 0.45
+        return bottom + 0.34 * height * max(0.0, 1 - u * u) ** 0.5, bottom - 0.02
+
+    patch("tongue", tongue, 0.04, 0.45, tip_of_tongue, columns=24, rows=4)
+
+
+def in_mouth(a, z, a0, z0, half_width, smile, height, margin):
+    """Whether a point of the surface (angle, height) falls in a mouth, give or take `margin`."""
+    s = (a - a0) / half_width
+    if abs(s) > 1 + margin / max(half_width * 5.0, 1e-6):
+        return False
+    top, bottom = mouth_edges(max(-1.0, min(1.0, s)), z0, smile, height)
+    return bottom - margin < z < top + margin
+
+
+# --- Mr Chorizo: a link of fresh Galician chorizo ---
+
+CHORIZO_RADIUS = 5.6
+CHORIZO_BOTTOM = -3.0
+CHORIZO_TOP = 24.5
+CHORIZO_BOW = 3.4
+CHORIZO_EYES_Z = 15.8
+CHORIZO_MOUTH = {"a0": 0.42, "z0": 11.2, "half_width": 0.58, "smile": 0.75, "height": 2.2}
+
+
+def vector_scaled(tree, vector, factors):
+    node = tree.nodes.new("ShaderNodeVectorMath")
+    node.operation = "MULTIPLY"
+    tree.links.new(vector, node.inputs[0])
+    node.inputs[1].default_value = factors
+    return node.outputs[0]
+
+
+def vector_added(tree, vector, other):
+    node = tree.nodes.new("ShaderNodeVectorMath")
+    node.operation = "ADD"
+    tree.links.new(vector, node.inputs[0])
+    tree.links.new(other, node.inputs[1])
+    return node.outputs[0]
+
+
+def chorizo_material():
+    """Fresh Galician chorizo, as in the author's photo: a smooth, glossy casing, paprika red
+    turning orange in the light, with streaks of fat showing through in orange and yellow."""
+    material, tree = new_material("chorizo")
+    bsdf, _ = principled(tree)
+    vector, split = object_coords(tree)
+    mottle = noise4(tree, vector, 3.0, 0.2, detail=3)
+    warp = tree.nodes.new("ShaderNodeTexNoise")
+    warp.noise_dimensions = "3D"
+    tree.links.new(vector, warp.inputs["Vector"])
+    warp.inputs["Scale"].default_value = 0.5
+    warp.inputs["Detail"].default_value = 3
+    offset = vector_scaled(tree, warp.outputs["Color"], (1.6, 1.6, 1.6))
+    cells = tree.nodes.new("ShaderNodeTexVoronoi")
+    cells.voronoi_dimensions = "4D"
+    tree.links.new(vector_scaled(tree, vector_added(tree, vector, offset), (1.0, 1.0, 0.5)), cells.inputs["Vector"])
+    cells.inputs["Scale"].default_value = 0.75
+    cells.inputs["W"].default_value = 4.1
+    pick = tree.nodes.new("ShaderNodeSeparateColor")
+    tree.links.new(cells.outputs["Color"], pick.inputs[0])
+    blob = map_range(tree, cells.outputs["Distance"], 0.5, 0.28, 0.0, 1.0)
+    fat = math_op(tree, "MULTIPLY", blob, map_range(tree, pick.outputs[0], 0.3, 0.42, 0.0, 1.0))
+    level = add(tree, 0.55, centred(tree, mottle, 0.5), clamp=True)
+    meat = ramp(tree, level, [(0.0, "#6E1A0C"), (0.3, "#9C2C16"), (0.6, "#BA401E"), (0.85, "#CE5428"), (1.0, "#DC6A34")])
+    fat_colour = ramp(tree, add(tree, scaled(tree, blob, 0.6), centred(tree, mottle, 0.4), clamp=True), [(0.0, "#D9782E"), (0.5, "#EE9F45"), (1.0, "#F6C064")])
+    mix = tree.nodes.new("ShaderNodeMix")
+    mix.data_type = "RGBA"
+    feed(tree, mix.inputs["Factor"], scaled(tree, fat, 0.7))
+    tree.links.new(meat, mix.inputs["A"])
+    tree.links.new(fat_colour, mix.inputs["B"])
+    tree.links.new(mix.outputs["Result"], bsdf.inputs["Base Color"])
+    bsdf.inputs["Roughness"].default_value = 0.32
+    bsdf.inputs["Coat Weight"].default_value = 0.55
+    bsdf.inputs["Coat Roughness"].default_value = 0.12
+    bsdf.inputs["Subsurface Weight"].default_value = 0.2
+    bsdf.inputs["Subsurface Radius"].default_value = (1.0, 0.4, 0.2)
+    bsdf.inputs["Subsurface Scale"].default_value = 0.6
+    fine = noise4(tree, vector, 0.0, 1.8, detail=4)
+    feed(tree, bsdf.inputs["Normal"], bump(tree, add(tree, fine, scaled(tree, fat, 0.3)), 0.06, 0.1))
+    return material
+
+
+def string_material():
+    """The thin red string the links are tied with."""
+    material, tree = new_material("string")
+    bsdf, _ = principled(tree)
+    vector, split = object_coords(tree)
+    fibres = noise4(tree, vector, 0.0, 6.0, detail=4)
+    feed(tree, bsdf.inputs["Base Color"], ramp(tree, fibres, [(0.0, "#7E0A12"), (0.5, "#B3141E"), (1.0, "#D0303A")]))
+    bsdf.inputs["Roughness"].default_value = 0.7
+    feed(tree, bsdf.inputs["Normal"], bump(tree, fibres, 0.3, 0.1))
+    return material
+
+
+def chorizo_radius(z):
+    """Plump and smooth, rounded at the ends and pinched into the tie like a stuffed casing."""
+    t = (z - CHORIZO_BOTTOM) / (CHORIZO_TOP - CHORIZO_BOTTOM)
+    body = max(0.0, 1 - abs(2 * t - 1) ** 2.4) ** (1 / 2.4)
+    return max(1.15, CHORIZO_RADIUS * body)
+
+
+def chorizo_axis(bend):
+    """The centre line of the link bowed sideways by `bend` (-1..1)."""
+    return lambda z: CHORIZO_BOW * bend * math.sin(math.pi * (z - CHORIZO_BOTTOM) / (CHORIZO_TOP - CHORIZO_BOTTOM))
+
+
+def string_turns(scene, group, centre, radius, count, material):
+    for k in range(count):
+        ring = [centre + Vector((radius * math.cos(a), radius * math.sin(a), 0.3 * k + 0.08 * math.sin(a))) for a in np.linspace(0, 2 * math.pi, 33)]
+        place(scene, "turn", tube("turn", ring, [0.18] * len(ring), ring=10), material, Matrix.Identity(4), group)
+
+
+def build_chorizo(scene, group, bend=0.0):
+    """Mr Chorizo: a plump, smooth link of fresh Galician chorizo standing up like a sausage,
+    bowed sideways by `bend` (-1..1), tied with red string at both ends and grinning."""
+    meat = chorizo_material()
+    string = string_material()
+    axis = chorizo_axis(bend)
+    stations = [(1 - math.cos(math.pi * i / 119)) / 2 for i in range(120)]
+    zs = [CHORIZO_BOTTOM + (CHORIZO_TOP - CHORIZO_BOTTOM) * t for t in stations]
+    place(scene, "chorizo", tube("chorizo", [Vector((axis(z), 0, z)) for z in zs], [chorizo_radius(z) for z in zs], ring=96), meat, Matrix.Identity(4), group)
+    for z, sign in ((CHORIZO_TOP - 0.2, 1), (CHORIZO_BOTTOM + 0.2, -1)):
+        string_turns(scene, group, Vector((axis(z), 0.0, z - (0.45 if sign > 0 else 0.2))), 1.3, 3, string)
+    place(scene, "nub", ellipsoid("nub", (1.5, 1.5, 1.2)), meat, Matrix.Translation(Vector((0.0, 0.0, CHORIZO_BOTTOM - 0.9))), group)
+    add_mouth(scene, group, axis, chorizo_radius, lift=0.05, **CHORIZO_MOUTH)
+
+
+def build_chorizo_knot(scene, group):
+    """The twisted end of the casing above the tie, with a loose end of red string trailing
+    behind: it bobs and swings as the chorizo walks."""
+    meat = chorizo_material()
+    string = string_material()
+    base = Vector((0.0, 0.0, CHORIZO_TOP + 0.6))
+    neck = tube("neck", [base + Vector((0, 0, h)) for h in (-0.8, 0.0, 0.5, 1.4, 2.3, 2.8, 3.0)], [1.2, 1.1, 1.25, 1.6, 1.45, 0.8, 0.0], ring=48)
+    place(scene, "nub", neck, meat, Matrix.Identity(4), group)
+    tails = (
+        [(0.0, 0.0), (-1.2, 0.4), (-2.6, 0.2), (-3.8, -0.8), (-4.6, -2.2), (-5.0, -3.6)],
+        [(0.0, 0.0), (0.9, 0.5), (1.7, 0.9), (2.3, 0.8)],
+    )
+    for points in tails:
+        path = [base + Vector((x, -0.9, z - 0.3)) for x, z in points]
+        radii = [0.18] * (len(path) - 1) + [0.0]
+        place(scene, "tail", tube("tail", path, radii, ring=10), string, Matrix.Identity(4), group)
+
+
+def chorizo_eyes(scene, group):
+    z = CHORIZO_EYES_Z
+    radius = chorizo_radius(z)
+    eyes = []
+    for angle in (0.12, 0.72):
+        surface = Vector((radius * math.sin(angle), -radius * math.cos(angle), z))
+        eyes.append((surface + Vector((math.sin(angle), -math.cos(angle), 0.0)) * 0.2, angle))
+    add_eyes(scene, group, eyes, 0.0, size=1.0)
+
+
+# --- Mr Corn: a corn cob ---
+
+COB_BOTTOM = -2.5
+COB_TOP = 20.5
+COB_RADIUS = 5.4
+COB_ROWS = 16
+COB_MOUTH = {"a0": 0.4, "z0": 9.0, "half_width": 0.52, "smile": 0.75, "height": 2.1}
+
+
+def cob_radius(z):
+    u = (z - COB_BOTTOM) / (COB_TOP - COB_BOTTOM)
+    taper = 1 - 0.38 * u**1.6
+    ends = max(0.0, 1 - abs(2 * u - 1) ** 3.2) ** (1 / 3.2)
+    return COB_RADIUS * taper * ends
+
+
+def kernel_material():
+    """Sweet corn kernels: plump, glossy and a little translucent, each its own shade of yellow."""
+    material, tree = new_material("kernel")
+    bsdf, _ = principled(tree)
+    shade = tree.nodes.new("ShaderNodeAttribute")
+    shade.attribute_name = "shade"
+    vector, split = object_coords(tree)
+    fine = noise4(tree, vector, 0.0, 2.5, detail=3)
+    level = add(tree, scaled(tree, shade.outputs["Fac"], 0.8), centred(tree, fine, 0.2), clamp=True)
+    feed(tree, bsdf.inputs["Base Color"], ramp(tree, level, [(0.0, "#E8A512"), (0.4, "#F4BE24"), (0.75, "#FBD043"), (1.0, "#FFE27A")]))
+    bsdf.inputs["Roughness"].default_value = 0.22
+    bsdf.inputs["Coat Weight"].default_value = 0.6
+    bsdf.inputs["Coat Roughness"].default_value = 0.08
+    bsdf.inputs["Subsurface Weight"].default_value = 0.35
+    bsdf.inputs["Subsurface Radius"].default_value = (1.0, 0.8, 0.25)
+    bsdf.inputs["Subsurface Scale"].default_value = 0.5
+    return material
+
+
+def husk_material():
+    """Fresh husk: green leaves with fine veins along them, paler and yellowish at the tips."""
+    material, tree = new_material("husk")
+    bsdf, _ = principled(tree)
+    along = tree.nodes.new("ShaderNodeAttribute")
+    along.attribute_name = "along"
+    across = tree.nodes.new("ShaderNodeAttribute")
+    across.attribute_name = "across"
+    veins = math_op(tree, "ABSOLUTE", math_op(tree, "SINE", scaled(tree, across.outputs["Fac"], 26.0)))
+    vector, split = object_coords(tree)
+    mottle = noise4(tree, vector, 0.0, 0.6, detail=3)
+    level = add(tree, scaled(tree, along.outputs["Fac"], 0.55), scaled(tree, veins, 0.18), centred(tree, mottle, 0.2), clamp=True)
+    feed(tree, bsdf.inputs["Base Color"], ramp(tree, level, [(0.0, "#4D7F27"), (0.35, "#6FA23A"), (0.7, "#97C25A"), (1.0, "#D2DC8C")]))
+    bsdf.inputs["Roughness"].default_value = 0.5
+    bsdf.inputs["Coat Weight"].default_value = 0.2
+    bsdf.inputs["Subsurface Weight"].default_value = 0.25
+    bsdf.inputs["Subsurface Radius"].default_value = (0.5, 1.0, 0.3)
+    bsdf.inputs["Subsurface Scale"].default_value = 0.3
+    feed(tree, bsdf.inputs["Normal"], bump(tree, veins, 0.15, 0.1))
+    return material
+
+
+def silk_material():
+    material, tree = new_material("silk")
+    bsdf, _ = principled(tree)
+    along = tree.nodes.new("ShaderNodeAttribute")
+    along.attribute_name = "along"
+    feed(tree, bsdf.inputs["Base Color"], ramp(tree, along.outputs["Fac"], [(0.0, "#F6E7B0"), (0.5, "#E6C27A"), (1.0, "#B07A3E")]))
+    bsdf.inputs["Roughness"].default_value = 0.35
+    bsdf.inputs["Coat Weight"].default_value = 0.4
+    bsdf.inputs["Subsurface Weight"].default_value = 0.3
+    return material
+
+
+def build_cob(scene, group):
+    """Mr Corn: an upright cob of sweet corn, rows of plump yellow kernels on a pale core."""
+    core = glossy("core", "#D9A21E", roughness=0.5, coat=0.0)
+    stations = [(1 - math.cos(math.pi * i / 63)) / 2 for i in range(64)]
+    zs = [COB_BOTTOM + (COB_TOP - COB_BOTTOM) * t for t in stations]
+    place(scene, "core", tube("core", [Vector((0, 0, z)) for z in zs], [max(0.0, cob_radius(z) - 0.75) for z in zs], ring=48), core, Matrix.Identity(4), group)
+    rng = random.Random(3)
+    bm = bmesh.new()
+    shades = []
+    pitch = 1.5
+    count = int((COB_TOP - COB_BOTTOM) / pitch)
+    for row in range(COB_ROWS):
+        phase = 2 * math.pi * row / COB_ROWS + rng.uniform(-0.03, 0.03)
+        for k in range(count):
+            z = COB_BOTTOM + pitch * (k + 0.5) + (pitch / 2 if row % 2 else 0.0) * 0.3
+            r = cob_radius(z)
+            if r < 1.6:
+                continue
+            around = (phase + math.pi / 2 + math.pi) % (2 * math.pi) - math.pi
+            if in_mouth(around, z, margin=0.35, **COB_MOUTH):
+                continue
+            width = math.pi * r / COB_ROWS * 1.0
+            size = (width, 0.75, pitch * 0.54)
+            normal = Vector((math.cos(phase), math.sin(phase), 0.0))
+            matrix = Matrix.Translation(normal * (r - 0.35) + Vector((0, 0, z))) @ Matrix.Rotation(phase + math.pi / 2, 4, "Z") @ Matrix.Diagonal((size[0], size[1], size[2], 1.0))
+            before = len(bm.verts)
+            bmesh.ops.create_uvsphere(bm, u_segments=12, v_segments=8, radius=1.0, matrix=matrix)
+            shades += [rng.random()] * (len(bm.verts) - before)
+    mesh = bpy.data.meshes.new("kernels")
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.attributes.new(name="shade", type="FLOAT", domain="POINT").data.foreach_set("value", shades)
+    mesh.shade_smooth()
+    place(scene, "kernels", mesh, kernel_material(), Matrix.Identity(4), group)
+    add_mouth(scene, group, lambda z: 0.0, cob_radius, lift=0.05, **COB_MOUTH)
+
+
+def leaf_mesh(azimuth, length, width, droop):
+    """A husk leaf peeled down from the bottom of the cob, flaring out like a skirt."""
+    out = Vector((math.cos(azimuth), math.sin(azimuth), 0.0))
+    side = Vector((-math.sin(azimuth), math.cos(azimuth), 0.0))
+    verts, faces, alongs, acrosses = [], [], [], []
+    rows, cols = 24, 9
+    for i in range(rows + 1):
+        s = i / rows
+        spine = out * (3.6 + length * 0.62 * s**1.15) + Vector((0, 0, 0.8 - length * droop * s + 2.0 * s * s))
+        half = width * math.sin(math.pi * min(1.0, 0.12 + s) ** 0.75) * (1 - s) ** 0.35
+        for j in range(cols):
+            v = 2 * j / (cols - 1) - 1
+            cup = 0.6 * v * v * (1 - s)
+            p = spine + side * (half * v) - out * cup + Vector((0, 0, 0.15 * math.sin(7 * s + v) * s))
+            verts.append(p)
+            alongs.append(s)
+            acrosses.append(v)
+    for i in range(rows):
+        for j in range(cols - 1):
+            a = i * cols + j
+            faces.append((a, a + 1, a + cols + 1, a + cols))
+    mesh = bpy.data.meshes.new("leaf")
+    mesh.from_pydata([tuple(v) for v in verts], [], faces)
+    mesh.attributes.new(name="along", type="FLOAT", domain="POINT").data.foreach_set("value", alongs)
+    mesh.attributes.new(name="across", type="FLOAT", domain="POINT").data.foreach_set("value", acrosses)
+    mesh.shade_smooth()
+    return mesh
+
+
+HUSK_LEAVES = [(-0.35, 11.0, 3.4, 0.62), (math.pi + 0.35, 11.0, 3.4, 0.62), (0.75, 10.0, 3.2, 0.55), (math.pi - 0.75, 10.0, 3.2, 0.55), (-math.pi / 2 + 0.25, 8.5, 3.6, 0.7)]
+
+
+def build_husk(scene, group, front):
+    """The husk leaves on one side of the cob: those in front of it or those behind."""
+    material = husk_material()
+    for azimuth, length, width, droop in HUSK_LEAVES:
+        if (math.sin(azimuth) < 0) != front:
+            continue
+        obj = place(scene, "leaf", leaf_mesh(azimuth, length, width, droop), material, Matrix.Translation(Vector((0, 0, COB_BOTTOM + 1.2))), group)
+        solid = obj.modifiers.new("thickness", "SOLIDIFY")
+        solid.thickness = 0.25
+
+
+def build_husk_front(scene, group):
+    build_husk(scene, group, True)
+
+
+def build_husk_back(scene, group):
+    build_husk(scene, group, False)
+
+
+def build_silk(scene, group):
+    """The tassel of silk at the tip of the cob, like a tuft of hair."""
+    material = silk_material()
+    rng = random.Random(4)
+    tip = Vector((0, 0, COB_TOP - 0.6))
+    for k in range(40):
+        azimuth = rng.uniform(0, 2 * math.pi)
+        lean = rng.uniform(0.2, 1.25)
+        length = rng.uniform(3.0, 5.8)
+        curl = rng.uniform(-1.2, 1.2)
+        direction = Vector((math.cos(azimuth) * math.sin(lean), math.sin(azimuth) * math.sin(lean) * 0.6, math.cos(lean)))
+        points, radii, alongs = [], [], []
+        for i in range(13):
+            s = i / 12
+            bend = Vector((curl * s * s, 0, -1.6 * s * s * lean))
+            points.append(tip + direction * (length * s) + bend)
+            radii.append(0.13 * (1 - 0.6 * s) if i < 12 else 0.0)
+            alongs.append(s)
+        mesh = tube("thread", points, radii, ring=8)
+        values = []
+        for s in alongs:
+            values += [s] * 8
+        mesh.attributes.new(name="along", type="FLOAT", domain="POINT").data.foreach_set("value", values[: len(mesh.vertices)] + [1.0] * max(0, len(mesh.vertices) - len(values)))
+        place(scene, "thread", mesh, material, Matrix.Identity(4), group)
+
+
+def cob_eyes(scene, group):
+    z = 13.0
+    radius = cob_radius(z) + 0.45
+    eyes = []
+    for angle in (0.1, 0.7):
+        surface = Vector((radius * math.sin(angle), -radius * math.cos(angle), z))
+        eyes.append((surface + Vector((math.sin(angle), -math.cos(angle), 0.0)) * 0.3, angle))
+    add_eyes(scene, group, eyes, 0.0, size=0.95)
+
+
 # --- Rendering ---
 
 
@@ -416,21 +701,14 @@ def rect_from(x, y, width, height, origin_x=0.5, origin_y=0.5):
 LEG_RECT = rect_from(0, 0, 6, 8, 0.5, 0.0)
 
 ENEMIES = {
-    "hotdog": {
-        "leg": "#C2583A",
-        "body": rect_from(0, 4, 18, 34, 0.5, 1.0),
-        "eyes": rect_from(2.6, -20, 12, 7),
-        "build": build_sausage,
-        "frames": dance_frames("hotdog", "bend"),
-        "add_eyes": sausage_eyes,
-    },
-    "egg": {
-        "leg": "#E9A928",
-        "body": rect_from(0, 4, 30, 30, 0.5, 1.0),
-        "eyes": rect_from(1.2, -13, 12, 7),
-        "build": build_egg,
-        "frames": dance_frames("egg", "ripple"),
-        "add_eyes": egg_eyes,
+    "chorizo": {
+        "leg": "#8E2412",
+        "body": rect_from(0, 5, 20, 30, 0.5, 1.0),
+        "eyes": rect_from(2.6, -15.8, 12, 7),
+        "build": build_chorizo,
+        "frames": dance_frames("chorizo", "bend"),
+        "add_eyes": chorizo_eyes,
+        "parts": {"chorizo.knot": (rect_from(-0.5, -24.6, 14, 10, 0.5, 0.6), build_chorizo_knot)},
     },
     "onion": {
         "leg": "#7B2D6E",
@@ -440,10 +718,24 @@ ENEMIES = {
         "frames": turn_frames("onion"),
         "add_eyes": onion_eyes,
     },
+    "corn": {
+        "leg": "#5F8F2E",
+        "body": rect_from(0, 3, 14, 24, 0.5, 1.0),
+        "eyes": rect_from(2.0, -13, 12, 7),
+        "build": build_cob,
+        "add_eyes": cob_eyes,
+        "parts": {
+            "corn.huskBack": (rect_from(0, -2.2, 28, 10, 0.5, 0.0), build_husk_back),
+            "corn.huskFront": (rect_from(0, -2.2, 28, 10, 0.5, 0.0), build_husk_front),
+            "corn.silk": (rect_from(0, -19, 14, 8, 0.5, 1.0), build_silk),
+        },
+    },
 }
 
 
 def render_enemy(kind, samples):
+    """Renders an enemy's leg, eyes and extra parts, and its body: once, or once a frame for a
+    body that dances by changing shape."""
     spec = ENEMIES[kind]
     scene = new_scene(samples)
     group = []
@@ -453,7 +745,17 @@ def render_enemy(kind, samples):
     spec["add_eyes"](scene, group)
     render_part(scene, f"{kind}.eyes", spec["eyes"])
     clear_group(group)
-    for graphic, amount in spec["frames"].items():
+    for graphic, (rect, build) in spec.get("parts", {}).items():
+        build(scene, group)
+        render_part(scene, graphic, rect)
+        clear_group(group)
+    frames = spec.get("frames")
+    if frames is None:
+        spec["build"](scene, group)
+        render_part(scene, f"{kind}.body", spec["body"])
+        clear_group(group)
+        return
+    for graphic, amount in frames.items():
         spec["build"](scene, group, amount)
         render_part(scene, graphic, spec["body"])
         clear_group(group)

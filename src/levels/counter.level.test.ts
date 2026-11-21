@@ -63,7 +63,7 @@ describe('counter screen', () => {
     expect(under).toBeDefined();
   });
 
-  it('spreads four burgers of four ingredients over its floors', () => {
+  it('spreads four burgers of four ingredients over its floors, tomato in the middle two', () => {
     expect(lane(level, 7)).toEqual([
       ['bunTop', 9],
       ['lettuce', 13],
@@ -72,19 +72,19 @@ describe('counter screen', () => {
     ]);
     expect(lane(level, 14)).toEqual([
       ['bunTop', 5],
-      ['lettuce', 7],
+      ['tomato', 7],
       ['patty', 9],
       ['bunBottom', 13]
     ]);
     expect(lane(level, 21)).toEqual([
       ['bunTop', 5],
-      ['lettuce', 9],
+      ['tomato', 9],
       ['patty', 11],
       ['bunBottom', 13]
     ]);
     expect(lane(level, 28)).toEqual([
       ['bunTop', 5],
-      ['lettuce', 9],
+      ['cheese', 9],
       ['patty', 17],
       ['bunBottom', 23]
     ]);
@@ -94,13 +94,13 @@ describe('counter screen', () => {
     expect(level.chefStart).toEqual({ row: 23, x: 19.5 });
   });
 
-  it('brings in two hot dogs, two onions and an egg, the onions by the sides of the counter', () => {
+  it('brings in two chorizos, two onions and an corn, the onions by the sides of the counter', () => {
     expect(entryOrder(level)).toEqual([
       ['onion', 17, 'right'],
-      ['hotdog', 23, 'left'],
+      ['chorizo', 23, 'left'],
       ['onion', 17, 'left'],
-      ['hotdog', 5, 'right'],
-      ['egg', 5, 'left']
+      ['chorizo', 5, 'right'],
+      ['corn', 5, 'left']
     ]);
     expect(walkwaySides(level)).toEqual([
       [5, 'left', 'right'],

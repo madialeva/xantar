@@ -37,9 +37,11 @@ export const defaultPieces: readonly PieceDefinition[] = [
   ingredient('lettuce', 'L'),
   ingredient('patty', 'P'),
   ingredient('bunBottom', 'B'),
+  ingredient('cheese', 'Q'),
+  ingredient('tomato', 'O'),
   piece('actors', 'empty', '.', 1, nothing),
   piece('actors', 'chef', 'C', 1, (placement, builder) => builder.setChefStart(placement)),
-  enemy('hotdog', 'h'),
+  enemy('chorizo', 'z'),
   enemy('onion', 'o'),
-  enemy('egg', 'e')
+  enemy('corn', 'm')
 ];

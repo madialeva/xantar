@@ -15,7 +15,14 @@ import towersDocument from './towers.level.json';
 
 const document = parseLevelDocument(towersDocument);
 const level = assembleLevel(document);
-const DOUBLE = ['bunTop', 'lettuce', 'patty', 'lettuce', 'patty', 'bunBottom'];
+const DOUBLE = (top: 'lettuce' | 'tomato'): string[] => [
+  'bunTop',
+  top,
+  'patty',
+  'cheese',
+  'patty',
+  'bunBottom'
+];
 const rowsOf = (col: number): number[] => lane(level, col).map(([, row]) => row);
 
 describe('towers screen', () => {
@@ -31,8 +38,11 @@ describe('towers screen', () => {
   });
 
   it('builds double burgers of six ingredients on staggered towers', () => {
-    for (const col of [7, 14, 21, 28]) {
-      expect(lane(level, col).map(([kind]) => kind)).toEqual(DOUBLE);
+    for (const col of [7, 21]) {
+      expect(lane(level, col).map(([kind]) => kind)).toEqual(DOUBLE('lettuce'));
+    }
+    for (const col of [14, 28]) {
+      expect(lane(level, col).map(([kind]) => kind)).toEqual(DOUBLE('tomato'));
     }
     expect(rowsOf(7)).toEqual([3, 7, 11, 15, 19, 23]);
     expect(rowsOf(14)).toEqual([5, 9, 13, 17, 21, 23]);
@@ -62,14 +72,14 @@ describe('towers screen', () => {
     expect(level.chefStart).toEqual({ row: 23, x: 19.5 });
   });
 
-  it('brings in four hot dogs and two onions, the onions halfway up the towers', () => {
+  it('brings in four chorizos and two onions, the onions halfway up the towers', () => {
     expect(entryOrder(level)).toEqual([
-      ['hotdog', 23, 'right'],
-      ['hotdog', 23, 'left'],
+      ['chorizo', 23, 'right'],
+      ['chorizo', 23, 'left'],
       ['onion', 11, 'left'],
       ['onion', 13, 'right'],
-      ['hotdog', 3, 'left'],
-      ['hotdog', 5, 'right']
+      ['chorizo', 3, 'left'],
+      ['chorizo', 5, 'right']
     ]);
     expect(walkwaySides(level)).toEqual([
       [3, 'left'],

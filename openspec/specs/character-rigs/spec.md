@@ -12,9 +12,11 @@ ella.
 El chef y cada tipo de enemigo SHALL dibujarse como un conjunto de partes
 independientes, cada una con su gráfico renderizado, su punto de giro y su
 posición relativa: el chef con cuerpo, cabeza, ojos, gorro, coleta, dos brazos
-y dos piernas, y cada enemigo con cuerpo, ojos y dos piernas. Los brazos del
-chef SHALL girar alrededor del hombro sin que se vea separación entre el brazo
-y el cuerpo. El chef SHALL medir de pie 32 unidades (dos caracteres del
+y dos piernas, y cada enemigo con cuerpo, ojos y dos piernas; además, el
+chorizo con la punta atada de su tripa y la mazorca con su falda de hojas, una
+parte por delante del cuerpo y otra por detrás, y su mechón de pelo. Los brazos
+del chef SHALL girar alrededor del hombro sin que se vea separación entre el
+brazo y el cuerpo. El chef SHALL medir de pie 32 unidades (dos caracteres del
 original a escala ×2) de los pies a lo alto del gorro, y los enemigos SHALL
 tener aproximadamente la misma altura, con los pies en el suelo de su
 plataforma. Para ir con las casillas, más anchas que las del original, cada
@@ -46,6 +48,12 @@ su ensanche, SHALL describirse como datos.
 - **WHEN** el chef y un enemigo están de pie en la misma plataforma
 - **THEN** la parte más alta de ambos queda a una altura parecida, ninguno pasa
   de 34 unidades de alto y los dos apoyan los pies en la plataforma
+
+#### Scenario: Partes propias del chorizo y de la mazorca
+- **WHEN** se dibujan un chorizo y una mazorca en su postura base
+- **THEN** la punta atada del chorizo asoma por encima de su cuerpo, la falda de
+  hojas de la mazorca rodea la base de la mazorca por delante y por detrás, con
+  las piernas saliendo por debajo, y su mechón de pelo sale de la punta
 
 ### Requirement: Estados de animación
 La animación de cada personaje SHALL derivarse del estado de la simulación en
@@ -109,19 +117,33 @@ SHALL NOT quedar pendientes al reiniciar el tablero.
   y sin las animaciones nuevas
 - **THEN** la simulación produce los mismos eventos y el mismo estado final
 
-### Requirement: Bailes de los enemigos
-Al andar, cada enemigo SHALL bailar a su manera, al ritmo de sus piernas: la
-salchicha alterna su cuerpo de cóncavo a convexo, la cebolla gira como una
-moneda, de frente a de canto y otra vez de frente, y el huevo ondula la clara
-mientras rebota. La cebolla SHALL girar también mientras sube o baja una
-escalera, como el pepinillo del original. Los ojos SHALL acompañar el
-movimiento del cuerpo. Al dejar de andar, el cuerpo SHALL volver a su
-fotograma base.
+### Requirement: Coleta del chef
+La coleta del chef SHALL ser una parte propia que se balancea al andar, se mece
+en reposo y sale despedida al ser golpeado.
 
-#### Scenario: La salchicha baila
-- **WHEN** la salchicha anda por una plataforma
+#### Scenario: La chef anda
+- **WHEN** el chef anda
+- **THEN** la coleta se balancea a un lado y a otro al ritmo de los pasos
+
+### Requirement: Baile de cada enemigo
+Al andar, cada enemigo SHALL bailar a su manera, al ritmo de sus piernas: el
+chorizo se dobla de cóncavo a convexo mientras su punta atada se bambolea, la
+cebolla gira como una moneda y la mazorca balancea la cadera mientras su falda
+de hojas y su pelo van a la contra. La cebolla SHALL girar también en la
+escalera. Los ojos SHALL acompañar al cuerpo. Al dejar de andar, el cuerpo
+SHALL volver a su postura base.
+
+#### Scenario: El chorizo baila
+- **WHEN** el chorizo anda por una plataforma
 - **THEN** su cuerpo pasa de doblado hacia un lado a doblado hacia el otro en
-  cada paso y sus ojos se desplazan con la doblez
+  cada paso, sus ojos se desplazan con la doblez y su punta atada se inclina a
+  un lado y a otro
+
+#### Scenario: La mazorca baila el hula
+- **WHEN** la mazorca anda por una plataforma
+- **THEN** su cuerpo se inclina hacia un lado en un paso y hacia el otro en el
+  siguiente, sus ojos y su pelo siguen lo alto del cuerpo, y su falda de hojas y
+  su pelo se inclinan hacia el lado contrario
 
 #### Scenario: La cebolla gira al andar
 - **WHEN** la cebolla anda por una plataforma
@@ -139,12 +161,5 @@ fotograma base.
 
 #### Scenario: Deja de andar
 - **WHEN** un enemigo pasa de andar a trepar
-- **THEN** su cuerpo vuelve a su fotograma base antes de empezar a trepar
-
-### Requirement: Coleta del chef
-La coleta del chef SHALL ser una parte propia que se balancea al andar, se mece
-en reposo y sale despedida al ser golpeado.
-
-#### Scenario: La chef anda
-- **WHEN** el chef anda
-- **THEN** la coleta se balancea a un lado y a otro al ritmo de los pasos
+- **THEN** su cuerpo vuelve a su postura base antes de empezar a trepar, y la
+  falda, el pelo o la punta atada vuelven a la suya

@@ -18,8 +18,8 @@
 **Xantar** is an arcade game where you control a chef running over
 giant burger ingredients. Walking across an ingredient from side to side makes
 it fall down the platforms and stack on the plates, eventually building whole
-burgers. Meanwhile, anthropomorphic food (hot dogs, onions and eggs) chases
-you across walkways and ladders.
+burgers. Meanwhile, anthropomorphic food (chorizos, onions and corn cobs)
+chases you across walkways and ladders.
 
 It is written in **TypeScript** with the **Phaser** engine and bundled with
 **Vite**. The same code runs in the browser and ships as a desktop application
@@ -50,6 +50,7 @@ comes next.
 |   ✅   | Enemies walk in from the sides one by one, as in the original, and riders come back where they stopped    |   —    |  #46  |
 |   ✅   | Speeds of the original, Easy, Normal and Hard difficulty, and a board won by its last drop                |   —    |  #43  |
 |   ✅   | Three more screens of our own in a loop, every screen twice on Easy, and Mr. Onion instead of Mr. Pickle  |   —    |  #49  |
+|   ✅   | Enemies of our own (a chorizo and a corn cob) and two new ingredients, melting cheese and tomato          |   —    |  #56  |
 |   ✅   | Gamepad and touch controls, music and sound effects, CI and a hardened desktop app                        |   —    |  #6   |
 |   ✅   | Public web version at madialeva.github.io                                                                 |   —    |  #14  |
 |   ⬜   | Replay recording and debug tooling                                                                        | v1.0.0 |  #8   |
@@ -63,8 +64,9 @@ comes next.
 ### Goal
 
 Assemble **every burger** on the screen. Each burger has four pieces: bottom
-bun, patty, lettuce and top bun. They start spread over the platforms and you
-must bring them all the way down to the plate.
+bun, patty, lettuce and top bun; from the second screen on, some burgers have
+**melting cheese** or a **tomato** instead of the lettuce. They start spread
+over the platforms and you must bring them all the way down to the plate.
 
 When a screen is done the next one comes, and after the fourth the first one
 comes back:
@@ -73,13 +75,14 @@ comes back:
    at different heights, linked by ladders one to several chefs tall, and four
    burgers that never stand side by side: there is always a ladder on each side
    of a burger, and another one running under it.
-2. **Pyramid**: the two top floors only cover the middle burgers, and the
-   enemies walk in halfway up.
-3. **Counter**: the two middle burgers end on plates halfway down the screen,
-   on a counter you can walk under.
+2. **Pyramid**: the two top floors only cover the middle burgers, which bring
+   the first cheese, and the enemies walk in halfway up.
+3. **Counter**: the two middle burgers, with tomato, end on plates halfway down
+   the screen, on a counter you can walk under; the one on the right has
+   cheese.
 4. **Towers**: staggered towers of short floors and double burgers of six
-   pieces (two patties and two lettuce leaves) on the last screen before the
-   loop.
+   pieces (cheese between two patties, and lettuce or tomato on top) on the
+   last screen before the loop.
 
 Screens 2 to 4 are Xantar's own: they follow the way the original gets harder
 (more enemies, plates at different heights, taller burgers) without copying its
@@ -163,11 +166,15 @@ disconnected. The pause menu lets you resume or quit to the main menu.
 
 ### Enemies
 
-- **Mr. Hot Dogs** and **Mr. Eggs** roam the maze and chase you using the
+- **Mr. Chorizos** and **Mr. Corns** roam the maze and chase you using the
   ladders, always taking the shortest way to you. Each screen has its own
-  line-up, as in the original: three hot dogs and an egg on the first two
-  screens, two hot dogs, two onions and an egg on the third, and four hot dogs
-  and two onions on the fourth.
+  line-up, as in the original: three chorizos and a corn cob on the first two
+  screens, two chorizos, two onions and a corn cob on the third, and four
+  chorizos and two onions on the fourth.
+- **Mr. Chorizo** is a plump link of fresh Galician chorizo tied with red
+  string, that **bends one way and the other** as it walks. **Mr. Corn** is a
+  corn cob with its husk peeled down like a skirt and a tuft of silk on top,
+  that walks **swaying its hips like a hula dancer**. Both grin at you.
 - **Mr. Onion**, a thick slice of red onion, white and violet, joins them on
   later screens. It chases you just like the others and keeps **turning like a
   coin** as it walks and climbs.
@@ -251,12 +258,14 @@ while the game is in the background.
   above, so no one ever puts their head through it, and two, three or four runs
   are two, three or four chefs tall.
 - The burger ingredients and the characters are **rendered 3D art**: a sesame
-  bun, a barbecued patty with grill marks, lettuce and a bottom bun that look
-  like real food, a blond chef with a ponytail, and a hot dog, a fried egg and
-  a slice of red onion as tall as the chef. The characters are made of separate
-  parts that bounce, swing and squash as they move, and each enemy **dances its
-  own way** as it walks: the hot dog bends one way and the other, the egg's
-  white wobbles and the onion slice turns round and round.
+  bun, a barbecued patty with grill marks, lettuce, a bottom bun, a slice of
+  cheddar melting over the edge and slices of tomato that look like real food,
+  a blond chef with a ponytail, and a chorizo, a corn cob and a slice of red
+  onion as tall as the chef. The characters are made of separate parts that
+  bounce, swing and squash as they move, and each enemy **dances its own way**
+  as it walks: the chorizo bends one way and the other, the corn cob sways its
+  hips while its husk and its silk swing the other way, and the onion slice
+  turns round and round.
 - Finished burgers stack on their plates piece on piece, like real ones.
 - The ladders are rendered too, in light birch wood with closely spaced rungs; the
   platforms, plates, effects and panels are crisp **vector art**.

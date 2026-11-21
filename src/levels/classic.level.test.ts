@@ -98,21 +98,21 @@ describe('classic level', () => {
     expect(level.chefStart).toEqual({ row: 23, x: 19.5 });
   });
 
-  it('brings in three hot dogs and an egg from the corners, in the order of the original', () => {
+  it('brings in three chorizos and an corn from the corners, in the order of the original', () => {
     const left = 4 + EDGE_MARGIN;
     const right = 35 - EDGE_MARGIN;
     expect(level.enemySpawns).toEqual([
-      { kind: 'hotdog', row: 5, x: 0.5, delayTicks: 270, joinX: left },
-      { kind: 'hotdog', row: 5, x: 38.5, delayTicks: 165, joinX: right },
-      { kind: 'hotdog', row: 23, x: 0.5, delayTicks: 60, joinX: left },
-      { kind: 'egg', row: 23, x: 38.5, delayTicks: 30, joinX: right }
+      { kind: 'chorizo', row: 5, x: 0.5, delayTicks: 270, joinX: left },
+      { kind: 'chorizo', row: 5, x: 38.5, delayTicks: 165, joinX: right },
+      { kind: 'chorizo', row: 23, x: 0.5, delayTicks: 60, joinX: left },
+      { kind: 'corn', row: 23, x: 38.5, delayTicks: 30, joinX: right }
     ]);
     const order = [...level.enemySpawns].sort((a, b) => a.delayTicks - b.delayTicks);
     expect(order.map((spawn) => [spawn.kind, spawn.row, spawn.x])).toEqual([
-      ['egg', 23, 38.5],
-      ['hotdog', 23, 0.5],
-      ['hotdog', 5, 38.5],
-      ['hotdog', 5, 0.5]
+      ['corn', 23, 38.5],
+      ['chorizo', 23, 0.5],
+      ['chorizo', 5, 38.5],
+      ['chorizo', 5, 0.5]
     ]);
   });
 

@@ -12,7 +12,23 @@ export const INGREDIENT_HEIGHTS: Readonly<Record<IngredientKind, number>> = {
   bunTop: 18,
   lettuce: 14,
   patty: 17,
-  bunBottom: 16
+  bunBottom: 16,
+  cheese: 11,
+  tomato: 9
+};
+
+/**
+ * How much lower than its base an ingredient's image is drawn, in logical units: the art of the
+ * melting cheese reaches below its base, so its tongues hang over what is under it instead of
+ * lifting the slice.
+ */
+export const INGREDIENT_HANGS: Readonly<Record<IngredientKind, number>> = {
+  bunTop: 0,
+  lettuce: 0,
+  patty: 0,
+  bunBottom: 0,
+  cheese: 5,
+  tomato: 0
 };
 
 const ingredient = <K extends IngredientKind>(kind: K) => {
@@ -39,6 +55,8 @@ export const GRAPHICS = {
   ...ingredient('lettuce'),
   ...ingredient('patty'),
   ...ingredient('bunBottom'),
+  ...ingredient('cheese'),
+  ...ingredient('tomato'),
   'chef.body': size(18, 14),
   'chef.head': size(16, 14),
   'chef.hat': size(20, 13),
@@ -48,13 +66,14 @@ export const GRAPHICS = {
   'chef.armRight': size(6, 11),
   'chef.legLeft': size(8, 9),
   'chef.legRight': size(8, 9),
-  'hotdog.body': size(18, 34),
-  'hotdog.bendBack2': size(18, 34),
-  'hotdog.bendBack1': size(18, 34),
-  'hotdog.bendFront1': size(18, 34),
-  'hotdog.bendFront2': size(18, 34),
-  'hotdog.eyes': size(12, 7),
-  'hotdog.leg': size(6, 8),
+  'chorizo.body': size(20, 30),
+  'chorizo.bendBack2': size(20, 30),
+  'chorizo.bendBack1': size(20, 30),
+  'chorizo.bendFront1': size(20, 30),
+  'chorizo.bendFront2': size(20, 30),
+  'chorizo.knot': size(14, 10),
+  'chorizo.eyes': size(12, 7),
+  'chorizo.leg': size(6, 8),
   'onion.body': size(30, 30),
   'onion.turn1': size(30, 30),
   'onion.turn2': size(30, 30),
@@ -63,13 +82,12 @@ export const GRAPHICS = {
   'onion.turn5': size(30, 30),
   'onion.eyes': size(12, 7),
   'onion.leg': size(6, 8),
-  'egg.body': size(30, 30),
-  'egg.rippleBack2': size(30, 30),
-  'egg.rippleBack1': size(30, 30),
-  'egg.rippleFront1': size(30, 30),
-  'egg.rippleFront2': size(30, 30),
-  'egg.eyes': size(12, 7),
-  'egg.leg': size(6, 8),
+  'corn.body': size(14, 24),
+  'corn.huskBack': size(28, 10),
+  'corn.huskFront': size(28, 10),
+  'corn.silk': size(14, 8),
+  'corn.eyes': size(12, 7),
+  'corn.leg': size(6, 8),
   'fx.pepper': size(32, 32),
   'fx.squash': size(32, 16),
   'fx.sparkle': size(24, 24),

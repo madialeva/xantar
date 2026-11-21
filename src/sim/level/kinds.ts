@@ -1,3 +1,3 @@
-export type IngredientKind = 'bunTop' | 'lettuce' | 'patty' | 'bunBottom';
+export type IngredientKind = 'bunTop' | 'lettuce' | 'patty' | 'bunBottom' | 'cheese' | 'tomato';
 
-export type EnemyKind = 'hotdog' | 'onion' | 'egg';
+export type EnemyKind = 'chorizo' | 'onion' | 'corn';

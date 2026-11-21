@@ -16,7 +16,7 @@ import { GRAPHIC_IDS, type GraphicId, segmentParts } from '../view/art/graphics'
 import { PALETTE } from '../view/art/palette';
 
 export const SHEET_WIDTH = 1000;
-export const SHEET_HEIGHT = 1000;
+export const SHEET_HEIGHT = 1060;
 
 const MARGIN = 20;
 const GRID_COLUMNS = 10;
@@ -26,7 +26,14 @@ const GRID_CELL = { width: 96, height: 66 };
 const HIT_REPLAY_MS = 1600;
 const SPECIMEN_ZOOM = 1.6;
 const SPECIMEN_SPACING = 104;
-const KINDS: readonly IngredientKind[] = ['bunTop', 'lettuce', 'patty', 'bunBottom'];
+const KINDS: readonly IngredientKind[] = [
+  'bunTop',
+  'lettuce',
+  'patty',
+  'bunBottom',
+  'cheese',
+  'tomato'
+];
 const RUN_WIDTHS = [4, 3, 2] as const;
 
 export interface ArtSheetDependencies {

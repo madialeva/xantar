@@ -5,7 +5,9 @@ One Blender unit is one logical unit of the board, and x runs along the four til
 ingredient (a tile is one 18-unit cell, so an ingredient is 72 wide: about two chefs, as in
 the original). The game draws the middle segment twice in a row, so nothing may change along x
 from one tile to the next: directional light does not, and every texture, displacement and
-pattern repeats exactly once per tile. The rounded ends must fit in the first and last tile.
+pattern repeats exactly once per tile. The rounded ends must fit in the first and last tile. The
+cheese hangs below its base, so it is rendered without the shadow catcher that hides what is
+under the ground.
 
 Run from the repository root:
     blender -b --factory-startup --python tools/blender/ingredients.py -- [--only patty] [--samples N] [--no-hero]
@@ -677,11 +679,180 @@ def build_lettuce(scene):
     return evaluated_points(scene, objects), 1.6
 
 
+# --- Cheese: a slice of cheddar melting over the edges ---
+
+CHEESE_HALF_DEPTH = 13.0
+CHEESE_THICK = 2.0
+
+
+def cheese_drop(x, y):
+    """How far the slice hangs below its flat part at (x, y): tongues of melted cheese along the
+    front and back edges, one big and one small to a tile, and drooping corners at the ends."""
+    edge = max(0.0, (abs(y) - (CHEESE_HALF_DEPTH - 2.6)) / 2.6)
+    u = (x % TILE) / TILE
+
+    def tongue(centre, half_width, length):
+        d = abs(u - centre) / half_width
+        return length * math.sqrt(max(0.0, 1 - d**2.5)) if d < 1 else 0.0
+
+    tongues = 0.4 + tongue(0.3, 0.12, 3.4) + tongue(0.76, 0.08, 1.8)
+    front = 1.0 if y < 0 else 0.35
+    corner = max(0.0, 1 - min(x, WIDTH - x) / (TILE * 0.7))
+    return edge**2.2 * tongues * front + corner**2 * 1.4 * (0.3 + edge)
+
+
+def cheese_mesh():
+    """The slice as a closed sheet of even thickness, its corners rounded and drooping."""
+    x0, x1 = 0.7, WIDTH - 0.7
+    cols, rows = int((x1 - x0) / 0.2), 56
+
+    def half_depth(x):
+        d, r = min(x - x0, x1 - x), 3.2
+        return CHEESE_HALF_DEPTH * (math.sqrt(max(0.0, 1 - (1 - d / r) ** 2)) if d < r else 1.0)
+
+    grid = []
+    for i in range(cols + 1):
+        x = x0 + (x1 - x0) * i / cols
+        hd = half_depth(x)
+        for j in range(rows + 1):
+            y = hd * (2 * j / rows - 1)
+            grid.append((x, y, cheese_drop(x, y)))
+    count = len(grid)
+    verts = [(x, y, CHEESE_THICK - d + LIFT) for x, y, d in grid] + [(x, y, -d + LIFT) for x, y, d in grid]
+    faces = []
+    at = lambda i, j: i * (rows + 1) + j  # noqa: E731
+    for i in range(cols):
+        for j in range(rows):
+            a, b, c, d = at(i, j), at(i + 1, j), at(i + 1, j + 1), at(i, j + 1)
+            faces.append((a, b, c, d))
+            faces.append((count + d, count + c, count + b, count + a))
+    for i in range(cols):
+        for j in (0, rows):
+            a, b = at(i, j), at(i + 1, j)
+            faces.append((a, count + a, count + b, b) if j == 0 else (b, count + b, count + a, a))
+    for i in (0, cols):
+        for j in range(rows):
+            a, b = at(i, j), at(i, j + 1)
+            faces.append((b, count + b, count + a, a) if i == 0 else (a, count + a, count + b, b))
+    return finish_mesh("cheese", verts, faces)
+
+
+def cheese_material():
+    """Cheddar: deep yellow-orange, waxy and translucent, glossier and more orange where it
+    melts down the edges."""
+    material, tree = new_material("cheese")
+    bsdf, _ = principled(tree)
+    vector, height = periodic_coords(tree)
+    mottle = noise4(tree, vector, 0.0, 0.35, detail=3)
+    fine = noise4(tree, vector, 2.0, 2.2, detail=4)
+    melt = map_range(tree, height, CHEESE_THICK - 0.2, -4.0, 0.0, 1.0)
+    level = add(tree, 0.62, centred(tree, mottle, 0.25), scaled(tree, melt, -0.35), clamp=True)
+    feed(tree, bsdf.inputs["Base Color"], ramp(tree, level, [(0.0, "#E58A0B"), (0.35, "#F0A314"), (0.65, "#F8BF2C"), (1.0, "#FFD75A")]))
+    bsdf.inputs["Roughness"].default_value = 0.32
+    bsdf.inputs["Coat Weight"].default_value = 0.45
+    bsdf.inputs["Coat Roughness"].default_value = 0.12
+    bsdf.inputs["Subsurface Weight"].default_value = 0.45
+    bsdf.inputs["Subsurface Radius"].default_value = (1.0, 0.7, 0.2)
+    bsdf.inputs["Subsurface Scale"].default_value = 0.6
+    feed(tree, bsdf.inputs["Normal"], bump(tree, fine, 0.06, 0.1))
+    return material
+
+
+def build_cheese(scene):
+    """A slice of cheddar melting over its front edge. Rendered without the shadow catcher: the
+    ground sits at the base and would hide the tongues that hang below it."""
+    ground = scene.objects.get("ground")
+    if ground is not None:
+        bpy.data.objects.remove(ground)
+    mesh = cheese_mesh()
+    add_object(scene, "cheese", mesh, cheese_material())
+    return [v.co.copy() for v in mesh.vertices], CHEESE_THICK
+
+
+# --- Tomato: four slices, one to a tile, tipped a little towards the camera ---
+
+TOMATO_RADIUS = 9.8
+TOMATO_THICK = 4.2
+TOMATO_TILT = math.radians(8)
+
+
+def tomato_slab():
+    """A slice turned from a rounded profile, centred on the origin with its faces across z."""
+    profile = resample(slab_profile(TOMATO_RADIUS, TOMATO_THICK, m=5.0), 0.2)
+    steps = 256
+    verts = [(r * math.cos(2 * math.pi * k / steps), r * math.sin(2 * math.pi * k / steps), z - TOMATO_THICK / 2) for k in range(steps) for r, z in profile]
+    return finish_mesh("tomato", verts, grid_faces(steps, len(profile)))
+
+
+def mix_colour(tree, factor, a, b):
+    """Mixes two colours, each a hex string or a node output, by `factor`."""
+    node = tree.nodes.new("ShaderNodeMix")
+    node.data_type = "RGBA"
+    feed(tree, node.inputs["Factor"], factor)
+    for socket, value in (("A", a), ("B", b)):
+        if isinstance(value, str):
+            node.inputs[socket].default_value = srgb(value)
+        else:
+            tree.links.new(value, node.inputs[socket])
+    return node.outputs["Result"]
+
+
+def tomato_material():
+    """A slice of ripe tomato: glossy red skin round the edge and, on the cut faces, the red wall,
+    four chambers of orange jelly with pale seeds and a lighter core."""
+    material, tree = new_material("tomato")
+    bsdf, _ = principled(tree)
+    coords = tree.nodes.new("ShaderNodeTexCoord")
+    split = tree.nodes.new("ShaderNodeSeparateXYZ")
+    tree.links.new(coords.outputs["Object"], split.inputs[0])
+    x, y, z = split.outputs["X"], split.outputs["Y"], split.outputs["Z"]
+    rho = math_op(tree, "SQRT", add(tree, math_op(tree, "MULTIPLY", x, x), math_op(tree, "MULTIPLY", y, y)))
+    theta = math_op(tree, "ARCTAN2", y, x)
+    wobble = noise4(tree, coords.outputs["Object"], 0.0, 0.4, detail=2)
+    r = add(tree, rho, centred(tree, wobble, 0.8))
+    septa = map_range(tree, math_op(tree, "ABSOLUTE", math_op(tree, "SINE", scaled(tree, theta, 2.0))), 0.18, 0.3, 0.0, 1.0)
+    chamber = math_op(tree, "MULTIPLY", math_op(tree, "MULTIPLY", map_range(tree, r, 2.0, 2.6, 0.0, 1.0), map_range(tree, r, TOMATO_RADIUS - 2.4, TOMATO_RADIUS - 3.0, 0.0, 1.0)), septa)
+    cells = tree.nodes.new("ShaderNodeTexVoronoi")
+    tree.links.new(coords.outputs["Object"], cells.inputs["Vector"])
+    cells.inputs["Scale"].default_value = 1.4
+    seeds = math_op(tree, "MULTIPLY", map_range(tree, cells.outputs["Distance"], 0.16, 0.1, 0.0, 1.0), chamber)
+    core = map_range(tree, r, 2.4, 1.6, 0.0, 1.0)
+    skin = map_range(tree, rho, TOMATO_RADIUS - 1.3, TOMATO_RADIUS - 0.8, 0.0, 1.0)
+    colour = mix_colour(tree, core, "#D93422", "#EE6650")
+    colour = mix_colour(tree, chamber, colour, "#EC5F36")
+    colour = mix_colour(tree, scaled(tree, seeds, 0.85), colour, "#F2D88E")
+    colour = mix_colour(tree, skin, colour, "#B8150C")
+    tree.links.new(colour, bsdf.inputs["Base Color"])
+    bsdf.inputs["Roughness"].default_value = 0.2
+    bsdf.inputs["Coat Weight"].default_value = 0.6
+    bsdf.inputs["Coat Roughness"].default_value = 0.06
+    bsdf.inputs["Subsurface Weight"].default_value = 0.3
+    bsdf.inputs["Subsurface Radius"].default_value = (1.0, 0.35, 0.25)
+    bsdf.inputs["Subsurface Scale"].default_value = 0.5
+    feed(tree, bsdf.inputs["Normal"], bump(tree, add(tree, seeds, scaled(tree, chamber, 0.5)), 0.15, 0.1))
+    return material
+
+
+def build_tomato(scene):
+    """Four slices of tomato, one to a tile, the end ones pulled in to stay in the frame."""
+    material = tomato_material()
+    lift = TOMATO_THICK / 2 * math.cos(TOMATO_TILT) + TOMATO_RADIUS * math.sin(TOMATO_TILT)
+    points = []
+    for k in range(TILES):
+        x = TILE * (k + 0.5) + (0.8 if k == 0 else -0.8 if k == TILES - 1 else 0.0)
+        obj = add_object(scene, "tomato", tomato_slab(), material)
+        obj.matrix_world = Matrix.Translation(Vector((x, 0.0, lift + LIFT))) @ Matrix.Rotation(TOMATO_TILT, 4, "X")
+        points += [obj.matrix_world @ v.co for v in obj.data.vertices]
+    return points, TOMATO_THICK + 2 * TOMATO_RADIUS * math.sin(TOMATO_TILT)
+
+
 INGREDIENTS = {
     "bunTop": {"frame": 18, "build": build_bun_top},
     "lettuce": {"frame": 14, "build": build_lettuce},
     "patty": {"frame": 17, "build": build_patty},
     "bunBottom": {"frame": 16, "build": build_bun_bottom},
+    "cheese": {"frame": 11, "build": build_cheese},
+    "tomato": {"frame": 9, "build": build_tomato},
 }
 
 

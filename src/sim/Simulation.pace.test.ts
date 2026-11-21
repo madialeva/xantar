@@ -43,21 +43,21 @@ const apart: GridSpec = {
     '...........................C..',
     '..............................',
     '..............................',
-    '..h...........................'
+    '..z...........................'
   ]
 };
 
 /** An enemy at the foot of a ladder that leads up to the chef. */
 const ladder: GridSpec = {
   structure: ['........', '===+====', '...H....', '...H....', '...H....', '===+===='],
-  actors: ['........', '.......C', '........', '........', '........', '...h....']
+  actors: ['........', '.......C', '........', '........', '........', '...z....']
 };
 
 /** A one-ingredient board the chef clears by walking left; its enemy comes much later. */
 const quickBoard: GridSpec = {
   structure: ['........', '========', '........', '.____...'],
   ingredients: ['........', '.TTTT...', '........', '........'],
-  actors: ['........', '......Ch', '........', '........']
+  actors: ['........', '......Cz', '........', '........']
 };
 const lateEnemy: readonly LevelEntry[] = [{ row: 1, col: 7, delayMs: 600_000 }];
 
@@ -126,7 +126,7 @@ describe('Simulation: pace on normal', () => {
   it('moves the enemies at the pace of the moment, also when they walk in', () => {
     const sim = skipReady(
       simulate(
-        { structure: ['----======', '..........'], actors: ['h........C', '..........'] },
+        { structure: ['----======', '..........'], actors: ['z........C', '..........'] },
         'normal',
         [{ row: 0, col: 0, delayMs: 22_000 }]
       )
@@ -150,7 +150,7 @@ describe('Simulation: pace on normal', () => {
       simulate(
         {
           structure: ['----======', '..........'],
-          actors: ['h....C....', '..........']
+          actors: ['z....C....', '..........']
         },
         'normal',
         [{ row: 0, col: 0, delayMs: 70_000 }]

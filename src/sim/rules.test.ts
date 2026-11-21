@@ -94,6 +94,8 @@ describe('rules', () => {
     expect(thickness.lettuce).toBeCloseTo(8, 10);
     expect(thickness.patty).toBeCloseTo(12, 10);
     expect(thickness.bunBottom).toBeCloseTo(11, 10);
+    expect(thickness.cheese).toBeCloseTo(2, 10);
+    expect(thickness.tomato).toBeCloseTo(6, 10);
   });
 
   it('advances less per tick than the alignment window, so ladders cannot be skipped', () => {
