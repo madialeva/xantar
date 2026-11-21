@@ -203,7 +203,7 @@ enemigos, sin restos de la anterior.
   tablero de la tercera
 - **THEN** la vista muestra los pisos, las escaleras, los platos y los
   ingredientes de la tercera pantalla, ninguno de la segunda, y cinco enemigos
-  con el aspecto de su tipo: dos perritos, dos cebollas y un huevo
+  con el aspecto de su tipo: dos chorizos, dos cebollas y una mazorca
 
 #### Scenario: Misma pantalla otra vez
 - **WHEN** en Fácil empieza el segundo tablero de una pantalla
@@ -226,3 +226,20 @@ cada ingrediente SHALL dibujarse por encima de los que tiene debajo.
 - **WHEN** un ingrediente cae en un plato vacío mientras otro plato tiene ya
   tres ingredientes
 - **THEN** el ingrediente se dibuja apoyado directamente sobre su plato
+
+### Requirement: Ingredientes que cuelgan de su base
+La vista SHALL dibujar cada ingrediente con su base a la altura que le da la
+simulación. Un ingrediente cuyo arte llega por debajo de su base, como las
+lágrimas del queso, SHALL dibujarse con esa parte colgando sobre lo que tenga
+debajo, la carne de su hamburguesa o el borde de su piso, y no levantado para
+que quepa encima.
+
+#### Scenario: Queso sobre la carne
+- **WHEN** en un plato hay un queso apilado sobre una carne
+- **THEN** la loncha del queso se apoya en lo alto de la carne y sus lágrimas
+  cuelgan por delante de la carne
+
+#### Scenario: Queso en un piso
+- **WHEN** un queso está quieto en un piso
+- **THEN** su loncha queda sobre el suelo del piso y sus lágrimas cuelgan por
+  delante del borde de la plataforma

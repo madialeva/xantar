@@ -65,7 +65,7 @@
 ## 5. Integración
 
 - [x] 5.1 Ejecutar las comprobaciones de entrega completas (`npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build`), `npm run smoke` (también `touch` y `portrait`) y `openspec validate is56-own-enemies-ingredients --strict`; verificar que todo termina sin errores y revisar las capturas de cada pantalla con `?screen=N`.
-- [ ] 5.2 Jugar en `npm run dev` y en `npm run dev:desktop` las cuatro pantallas:
+- [x] 5.2 Jugar en `npm run dev` y en `npm run dev:desktop` las cuatro pantallas:
   - el chorizo y la mazorca bailando, trepando, aturdidos y montados;
   - el queso y el tomate en los pisos, pisados, cayendo y en el plato;
   - las lágrimas del queso sobre la carne y sobre el borde del piso.
