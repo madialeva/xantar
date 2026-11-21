@@ -14,7 +14,7 @@ fije el aspecto del arte renderizado (vista, iluminación, materiales y tamaños
 de ingredientes y personajes) y, para el arte que sigue siendo vectorial, la
 paleta como tokens con nombre, el grosor de trazo, los radios de esquina, el
 tratamiento de sombras y brillos, la tipografía del HUD y las reglas de encaje
-en la rejilla de 16 unidades lógicas. Todas las fuentes SVG del juego SHALL
+en la rejilla de casillas de 18 unidades lógicas de ancho y 21 de alto. Todas las fuentes SVG del juego SHALL
 colorearse solo con tokens de esa paleta.
 
 #### Scenario: Revisar un SVG nuevo
@@ -24,10 +24,11 @@ colorearse solo con tokens de esa paleta.
   y el color
 
 ### Requirement: Fuentes SVG para todo lo visible
-Las piezas del laberinto (plataforma, escalera, cruce, plato y pasarela de
-entrada), la nube de pimienta y demás efectos, y los iconos del HUD SHALL
-dibujarse a partir de fuentes SVG coloreadas con la paleta única del juego. Los ingredientes y los
-personajes SHALL dibujarse con su arte renderizado. Cada gráfico del catálogo
+Las piezas del laberinto (plataforma, cruce, plato y pasarela de entrada), la
+nube de pimienta y demás efectos, y los iconos del HUD SHALL dibujarse a partir
+de fuentes SVG coloreadas con la paleta única del juego. Los ingredientes, los
+personajes y la escalera, con sus largueros en los cruces, SHALL dibujarse con
+su arte renderizado. Cada gráfico del catálogo
 SHALL tener exactamente una fuente, SVG o renderizada, y la vista SHALL NOT
 dibujar ninguno de esos elementos con primitivas geométricas.
 

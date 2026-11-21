@@ -37,8 +37,9 @@ El chef SHALL poder engancharse a una escalera cuando hay entrada arriba o
 abajo y existe, en esa dirección, un cruce de escalera con su plataforma a una
 distancia horizontal no superior a 19,2 unidades de su posición; al engancharse
 SHALL centrarse en la columna de la escalera. Sobre una escalera, el chef SHALL
-moverse a 43 unidades por segundo únicamente mientras haya entrada arriba o
-abajo, SHALL poder detenerse al soltar la entrada y SHALL poder invertir el
+moverse a 2,6875 filas por segundo (56,4 unidades por segundo; un tramo de
+dos filas en 0,74 s, como en el original) únicamente mientras haya entrada
+arriba o abajo, SHALL poder detenerse al soltar la entrada y SHALL poder invertir el
 sentido en cualquier punto de la escalera. Cuando el chef está a 12,8 unidades
 o menos de uno de los extremos de la escalera (la altura de una plataforma), la
 entrada lateral SHALL hacerle pasar a la plataforma de ese extremo y caminar en
@@ -94,8 +95,8 @@ camina y no se engancha a una escalera.
 #### Scenario: Escaleras consecutivas
 - **WHEN** el chef llega a una plataforma que tiene otra escalera en la misma
   columna y mantiene la misma dirección
-- **THEN** pasa a la escalera siguiente en ese mismo tick y sigue a 43
-  unidades por segundo, sin detenerse en el cruce
+- **THEN** pasa a la escalera siguiente en ese mismo tick y sigue a 2,6875
+  filas por segundo, sin detenerse en el cruce
 
 #### Scenario: Cruce bajo un ingrediente
 - **WHEN** el chef sube sin parar por escaleras consecutivas cuya columna pasa
@@ -305,7 +306,8 @@ en un ingrediente SHALL moverse solo con el ingrediente.
 
 #### Scenario: Subir más despacio que andar
 - **WHEN** en Normal, al empezar el tablero, un enemigo recorre una escalera
-- **THEN** avanza por ella a 27 unidades por segundo, la mitad de lo que anda
+- **THEN** avanza por ella a 1,6875 filas por segundo (35,4 unidades): la
+  mitad de filas por segundo que casillas por segundo anda
 
 #### Scenario: Camino más corto en un nivel irregular
 - **WHEN** el chef solo es alcanzable por una escalera que no es la más cercana
@@ -431,7 +433,8 @@ partida SHALL pasar a `ready`. Si era la última vida, SHALL pasar a `gameOver`.
 Cuando todas las hamburguesas del nivel estén completadas, la partida SHALL
 pasar a `levelClear` y el número de nivel SHALL incrementarse en uno. Al
 terminar `levelClear`, o antes si llega la acción de confirmar, el tablero SHALL
-reconstruirse desde la descripción del nivel conservando puntuación, vidas y
+reconstruirse desde la descripción de la pantalla que corresponde al nuevo
+nivel (requisito «Orden de las pantallas») conservando puntuación, vidas y
 pimientas, y la partida SHALL pasar a `ready`.
 
 #### Scenario: Última hamburguesa
@@ -447,18 +450,24 @@ pimientas, y la partida SHALL pasar a `ready`.
 - **WHEN** llega la acción de confirmar durante `levelClear`
 - **THEN** el tablero se reconstruye en ese mismo tick y la fase pasa a `ready`
 
+#### Scenario: Tablero de otra pantalla
+- **WHEN** en Normal termina `levelClear` tras completar la primera pantalla
+- **THEN** el tablero nuevo tiene los pisos, los ingredientes, los platos, el
+  inicio del chef y los enemigos de la segunda pantalla, fuera del tablero
+  hasta que pasan sus retrasos de entrada
+
 ### Requirement: Velocidad y rebote de la caída
-Un ingrediente que cae SHALL bajar a velocidad constante, 113 unidades por
-segundo, la del original a la escala del tablero (un píxel del original son 2
-unidades). Al golpear a otro ingrediente SHALL subir 13 unidades en 5 ticks,
+Un ingrediente que cae SHALL bajar a velocidad constante, 7,0625 filas por
+segundo (148,3 unidades por segundo), la del original a la escala del tablero
+(un píxel del original es 1/8 de fila). Al golpear a otro ingrediente SHALL subir 13 unidades en 5 ticks,
 quedarse quieto 13 ticks y seguir bajando a la misma velocidad hacia el mismo
 soporte. Si su base alcanza a un ingrediente que ya está cayendo o rebotando,
 SHALL rebotar igual sin cambiar la caída del otro. Al llegar a un piso SHALL
 quedar quieto en él sin rebotar.
 
 #### Scenario: Velocidad constante
-- **WHEN** un ingrediente cae 64 unidades (cuatro filas, dos alturas del chef)
-  hasta un piso vacío
+- **WHEN** un ingrediente cae cuatro filas (84 unidades, dos tramos de
+  escalera) hasta un piso vacío
 - **THEN** baja lo mismo en cada tick y llega a ese piso al cabo de 34 ticks
 
 #### Scenario: Rebote al golpear
@@ -466,7 +475,7 @@ quedar quieto en él sin rebotar.
   quieto
 - **THEN** el golpeado empieza a caer en ese tick, y el que golpea sube 13
   unidades en los 5 ticks siguientes, se queda quieto 13 ticks y vuelve a bajar
-  a 113 unidades por segundo hasta su soporte
+  a 7,0625 filas por segundo hasta su soporte
 
 #### Scenario: Alcanzar a uno que ya cae
 - **WHEN** la base de un ingrediente alcanza a otro que está rebotando
@@ -606,7 +615,8 @@ entra SHALL comportarse como un enemigo activo.
 
 ### Requirement: Velocidad de los enemigos según la dificultad
 Los enemigos SHALL andar a 54 unidades por segundo y subir o bajar escaleras a
-27, multiplicadas por el factor de ritmo de la dificultad de la partida. En
+1,6875 filas por segundo (35,4 unidades), multiplicadas por el factor de ritmo
+de la dificultad de la partida. En
 Fácil el factor SHALL ser siempre 0,85 y en Difícil, siempre 1,25. En Normal
 SHALL seguir la curva del requisito «Curva de ritmo en Normal». Una partida
 creada sin indicar la dificultad SHALL ser Normal. La dificultad SHALL NOT
@@ -620,12 +630,13 @@ cambiar la velocidad del chef ni la de las caídas.
 #### Scenario: Difícil
 - **WHEN** en una partida en Difícil un enemigo sube por una escalera durante
   60 ticks al empezar el tablero
-- **THEN** sube 33,75 unidades
+- **THEN** sube 2,109 filas (44,3 unidades)
 
 #### Scenario: Normal al empezar el tablero
 - **WHEN** en una partida en Normal, en el nivel 1, un enemigo anda 60 ticks y
   luego sube por una escalera otros 60, antes de 1305 ticks de juego
-- **THEN** avanza 54 unidades andando y sube 27 por la escalera
+- **THEN** avanza 54 unidades andando y sube 1,6875 filas (35,4 unidades) por
+  la escalera
 
 #### Scenario: Sin dificultad indicada
 - **WHEN** se crea una partida sin indicar la dificultad
@@ -743,3 +754,37 @@ esperar a que se cumplan los 2 s de `dying`.
   chef con el tablero asegurado
 - **THEN** la fase pasa a `levelClear` en ese tick, antes de los 2 s de
   `dying`
+
+### Requirement: Orden de las pantallas
+Cada tablero SHALL jugarse en la pantalla que corresponde a su número de nivel,
+siguiendo el orden de las pantallas del juego: en Normal y en Difícil, una
+pantalla por nivel, y en Fácil, cada pantalla en dos niveles seguidos. Después
+de la última pantalla SHALL volverse a la primera. Perder una vida SHALL NOT
+cambiar de pantalla, y una partida nueva SHALL empezar en el nivel 1, en la
+primera pantalla.
+
+#### Scenario: Pantalla siguiente en Normal
+- **WHEN** en Normal se completa el nivel 1
+- **THEN** el nivel 2 se juega en la segunda pantalla
+
+#### Scenario: Vuelta a la primera pantalla
+- **WHEN** en Difícil se completa el nivel 4, que se juega en la cuarta y
+  última pantalla
+- **THEN** el nivel 5 se juega en la primera pantalla
+
+#### Scenario: Cada pantalla dos veces en Fácil
+- **WHEN** en Fácil se completan los niveles 1 y 2
+- **THEN** los dos se han jugado en la primera pantalla y el nivel 3 se juega
+  en la segunda
+
+#### Scenario: Vuelta en Fácil
+- **WHEN** en Fácil se completa el nivel 8, que se juega en la cuarta pantalla
+- **THEN** el nivel 9 se juega en la primera pantalla
+
+#### Scenario: Perder una vida
+- **WHEN** el chef pierde una vida en la tercera pantalla y le quedan vidas
+- **THEN** la partida sigue en la tercera pantalla, con el mismo nivel
+
+#### Scenario: Partida nueva
+- **WHEN** se empieza una partida nueva después de llegar a la tercera pantalla
+- **THEN** el nivel es 1 y el tablero es el de la primera pantalla

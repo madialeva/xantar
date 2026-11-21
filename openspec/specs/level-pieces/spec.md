@@ -35,7 +35,7 @@ igual al tamaño de unidad del nivel) y `-` pasarela de entrada (el tramo por el
 que entran los enemigos, que no forma parte de los pisos del chef); en la capa
 `ingredients`: `T` pan superior, `L` lechuga, `P` carne y `B` pan inferior
 (ancho igual al tamaño de unidad del nivel, cuatro por defecto); y en la capa
-`actors`: `C` inicio del chef y `h`, `p`, `e` aparición de perrito, pepinillo y
+`actors`: `C` inicio del chef y `h`, `o`, `e` aparición de perrito, cebolla y
 huevo (ancho de una casilla).
 
 #### Scenario: Cargar todas las piezas
@@ -48,6 +48,14 @@ huevo (ancho de una casilla).
   plataforma
 - **THEN** la pasarela no forma parte de ningún tramo de plataforma del grafo
   de navegación
+
+#### Scenario: Aparición de una cebolla
+- **WHEN** se carga un nivel con una `o` en la capa `actors`
+- **THEN** el nivel tiene en esa casilla la aparición de una cebolla
+
+#### Scenario: Sin pepinillo
+- **WHEN** se carga un nivel con una `p` en la capa `actors`
+- **THEN** la carga falla indicando el símbolo, la capa, la fila y la columna
 
 ### Requirement: Piezas de varias casillas
 Una racha de casillas contiguas de la misma pieza en una fila SHALL dividirse en
