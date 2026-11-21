@@ -45,10 +45,10 @@ const actors = (top: string, bottom: string): string[] => [
 ];
 
 const first = screen('First', actors('........', '......C.'));
-const second = screen('Second', actors('.......e', '.......C'), [
+const second = screen('Second', actors('.......m', '.......C'), [
   { row: 2, col: 7, delayMs: LATE }
 ]);
-const third = screen('Third', actors('h......h', '......C.'), [
+const third = screen('Third', actors('z......z', '......C.'), [
   { row: 2, col: 0, delayMs: LATE },
   { row: 2, col: 7, delayMs: LATE }
 ]);
@@ -97,13 +97,13 @@ describe('Simulation: order of the screens', () => {
       ['idle', 5]
     ]);
     expect(sim.plates.map((plate) => plate.landed)).toEqual([0]);
-    expect(sim.enemies.map((enemy) => [enemy.kind, enemy.active])).toEqual([['egg', false]]);
+    expect(sim.enemies.map((enemy) => [enemy.kind, enemy.active])).toEqual([['corn', false]]);
   });
 
   it('goes back to the first screen after the last one, on hard', () => {
     const sim = game([first, second, third], 'hard', 3);
     expect(played(sim)).toEqual([3, 'Third']);
-    expect(sim.enemies.map((enemy) => enemy.kind)).toEqual(['hotdog', 'hotdog']);
+    expect(sim.enemies.map((enemy) => enemy.kind)).toEqual(['chorizo', 'chorizo']);
     clearBoard(sim);
     expect(played(sim)).toEqual([4, 'First']);
     expect(sim.enemies).toEqual([]);
@@ -132,11 +132,11 @@ describe('Simulation: order of the screens', () => {
     expect(sim.enemies).toBe(enemies);
     clearBoard(sim);
     expect(sim.enemies).not.toBe(enemies);
-    expect(sim.enemies.map((enemy) => enemy.kind)).toEqual(['hotdog', 'hotdog']);
+    expect(sim.enemies.map((enemy) => enemy.kind)).toEqual(['chorizo', 'chorizo']);
   });
 
   it('stays on the same screen and level after losing a life', () => {
-    const caught = screen('Caught', actors('........', '.....hC.'));
+    const caught = screen('Caught', actors('........', '.....zC.'));
     const sim = game([first, caught], 'normal', 2);
     for (let i = 0; i < 400 && sim.phase === 'playing'; i++) sim.step(NO_INPUT);
     expect(sim.phase).toBe('dying');

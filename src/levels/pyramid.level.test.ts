@@ -76,12 +76,12 @@ describe('pyramid screen', () => {
     expect(level.chefStart).toEqual({ row: 23, x: 19.5 });
   });
 
-  it('brings in three hot dogs and an egg from the shoulders and the bottom floor', () => {
+  it('brings in three chorizos and an corn from the shoulders and the bottom floor', () => {
     expect(entryOrder(level)).toEqual([
-      ['egg', 23, 'right'],
-      ['hotdog', 13, 'left'],
-      ['hotdog', 13, 'right'],
-      ['hotdog', 23, 'left']
+      ['corn', 23, 'right'],
+      ['chorizo', 13, 'left'],
+      ['chorizo', 13, 'right'],
+      ['chorizo', 23, 'left']
     ]);
     expect(walkwaySides(level)).toEqual([
       [13, 'left', 'right'],

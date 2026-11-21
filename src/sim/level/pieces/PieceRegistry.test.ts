@@ -19,7 +19,8 @@ describe('PieceRegistry', () => {
     expect(registry.resolve('ingredients', 'T')?.id).toBe('bunTop');
     expect(registry.resolve('ingredients', 'Q')?.id).toBe('cheese');
     expect(registry.resolve('ingredients', 'O')?.id).toBe('tomato');
-    expect(registry.resolve('actors', 'h')?.id).toBe('hotdog');
+    expect(registry.resolve('actors', 'z')?.id).toBe('chorizo');
+    expect(registry.resolve('actors', 'm')?.id).toBe('corn');
     expect(registry.resolve('actors', 'C')?.id).toBe('chef');
   });
 
@@ -32,7 +33,7 @@ describe('PieceRegistry', () => {
         .join('');
     expect(symbols('structure')).toBe('.=H+_-');
     expect(symbols('ingredients')).toBe('.TLPBQO');
-    expect(symbols('actors')).toBe('.Choe');
+    expect(symbols('actors')).toBe('.Czom');
   });
 
   it('gives the plate and the ingredients the width of the level unit', () => {
@@ -50,14 +51,14 @@ describe('PieceRegistry', () => {
 
   it('rejects a repeated symbol in the same layer', () => {
     const registry = PieceRegistry.createDefault();
-    expect(() => registry.register(custom({ symbol: 'h' }))).toThrow(/already used.*hotdog/);
+    expect(() => registry.register(custom({ symbol: 'z' }))).toThrow(/already used.*chorizo/);
   });
 
   it('accepts the same symbol in different layers', () => {
     const registry = PieceRegistry.createDefault();
-    expect(() => registry.register(custom({ layer: 'structure', symbol: 'h' }))).not.toThrow();
-    expect(registry.resolve('structure', 'h')?.id).toBe('custom');
-    expect(registry.resolve('actors', 'h')?.id).toBe('hotdog');
+    expect(() => registry.register(custom({ layer: 'structure', symbol: 'z' }))).not.toThrow();
+    expect(registry.resolve('structure', 'z')?.id).toBe('custom');
+    expect(registry.resolve('actors', 'z')?.id).toBe('chorizo');
   });
 
   it('rejects symbols that are not a single character and invalid widths', () => {

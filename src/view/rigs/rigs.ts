@@ -24,27 +24,28 @@ export const chefRig: RigDefinition = {
 };
 
 export const enemyRigs: Readonly<Record<EnemyKind, RigDefinition>> = {
-  hotdog: {
-    scale: 0.82,
+  chorizo: {
+    scale: 0.85,
     widen: CHARACTER_WIDEN,
     parts: [
-      { name: 'legLeft', graphic: 'hotdog.leg', x: -2.2, y: 2, originY: 0 },
-      { name: 'legRight', graphic: 'hotdog.leg', x: 2.6, y: 2, originY: 0 },
+      { name: 'legLeft', graphic: 'chorizo.leg', x: -2.4, y: 2, originY: 0 },
+      { name: 'legRight', graphic: 'chorizo.leg', x: 2.6, y: 2, originY: 0 },
       {
         name: 'body',
-        graphic: 'hotdog.body',
+        graphic: 'chorizo.body',
         x: 0,
-        y: 4,
+        y: 5,
         originY: 1,
         frames: [
-          'hotdog.bendBack2',
-          'hotdog.bendBack1',
-          'hotdog.body',
-          'hotdog.bendFront1',
-          'hotdog.bendFront2'
+          'chorizo.bendBack2',
+          'chorizo.bendBack1',
+          'chorizo.body',
+          'chorizo.bendFront1',
+          'chorizo.bendFront2'
         ]
       },
-      { name: 'eyes', graphic: 'hotdog.eyes', x: 2.6, y: -20 }
+      { name: 'knot', graphic: 'chorizo.knot', x: -0.5, y: -24.6, originY: 0.6 },
+      { name: 'eyes', graphic: 'chorizo.eyes', x: 2.6, y: -15.8 }
     ]
   },
   onion: {
@@ -71,27 +72,17 @@ export const enemyRigs: Readonly<Record<EnemyKind, RigDefinition>> = {
       { name: 'eyes', graphic: 'onion.eyes', x: 1.2, y: -22.5 }
     ]
   },
-  egg: {
+  corn: {
     scale: 0.9,
     widen: CHARACTER_WIDEN,
     parts: [
-      { name: 'legLeft', graphic: 'egg.leg', x: -2.2, y: 2, originY: 0 },
-      { name: 'legRight', graphic: 'egg.leg', x: 2.6, y: 2, originY: 0 },
-      {
-        name: 'body',
-        graphic: 'egg.body',
-        x: 0,
-        y: 4,
-        originY: 1,
-        frames: [
-          'egg.rippleBack2',
-          'egg.rippleBack1',
-          'egg.body',
-          'egg.rippleFront1',
-          'egg.rippleFront2'
-        ]
-      },
-      { name: 'eyes', graphic: 'egg.eyes', x: 1.2, y: -13 }
+      { name: 'huskBack', graphic: 'corn.huskBack', x: 0, y: -2.2, originY: 0 },
+      { name: 'legLeft', graphic: 'corn.leg', x: -2.4, y: 2, originY: 0 },
+      { name: 'legRight', graphic: 'corn.leg', x: 2.6, y: 2, originY: 0 },
+      { name: 'body', graphic: 'corn.body', x: 0, y: 3, originY: 1 },
+      { name: 'huskFront', graphic: 'corn.huskFront', x: 0, y: -2.2, originY: 0 },
+      { name: 'silk', graphic: 'corn.silk', x: 0, y: -19, originY: 1 },
+      { name: 'eyes', graphic: 'corn.eyes', x: 2.0, y: -13 }
     ]
   }
 };

@@ -44,11 +44,35 @@ describe('rigs', () => {
     }
   });
 
-  it('gives every enemy a dancing body: five frames to dance, six for half a turn', () => {
+  it('gives the chorizo five frames to bend, the onion six for half a turn and the corn none', () => {
     const frames = (kind: keyof typeof enemyRigs): readonly string[] =>
       enemyRigs[kind].parts.find((part) => part.name === 'body')?.frames ?? [];
-    expect([frames('hotdog').length, frames('egg').length, frames('onion').length]).toEqual([
-      5, 5, 6
+    expect([frames('chorizo').length, frames('onion').length, frames('corn').length]).toEqual([
+      5, 6, 0
+    ]);
+  });
+
+  it('bends the chorizo from one side to the other through its straight body', () => {
+    const body = enemyRigs.chorizo.parts.find((part) => part.name === 'body');
+    expect(body?.frames?.[2]).toBe(body?.graphic);
+    expect([body?.frames?.[0], body?.frames?.[4]]).toEqual([
+      'chorizo.bendBack2',
+      'chorizo.bendFront2'
+    ]);
+  });
+
+  it('puts the tied tip on top of the chorizo, and the husk round the corn with its silk on top', () => {
+    const names = (kind: keyof typeof enemyRigs): readonly string[] =>
+      enemyRigs[kind].parts.map((part) => part.name);
+    expect(names('chorizo')).toEqual(['legLeft', 'legRight', 'body', 'knot', 'eyes']);
+    expect(names('corn')).toEqual([
+      'huskBack',
+      'legLeft',
+      'legRight',
+      'body',
+      'huskFront',
+      'silk',
+      'eyes'
     ]);
   });
 

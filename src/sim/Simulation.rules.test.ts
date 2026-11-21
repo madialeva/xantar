@@ -61,7 +61,7 @@ const chefAndEnemyOnRow5 = arena([
   '........',
   '........',
   '........',
-  '.C.h....',
+  '.C.z....',
   '........',
   '........'
 ]);
@@ -74,7 +74,7 @@ describe('Simulation: stomping and crushing enemies', () => {
       '......C.',
       '........',
       '........',
-      '..h.e...',
+      '..z.m...',
       '........',
       '........'
     ]
@@ -147,7 +147,7 @@ describe('Simulation: stomping and crushing enemies', () => {
         '......C.',
         '........',
         '........',
-        '...h....',
+        '...z....',
         '........',
         '........'
       ]
@@ -206,7 +206,7 @@ describe('Simulation: enemies entering the board', () => {
             ...documentFromGrid({
               structure: ['----===+==', '.......H..', '=======+==', '..........', '.____.....'],
               ingredients: ['..........', '..........', '.TTTT.....', '..........', '..........'],
-              actors: ['h.......C.', '..........', '.........e', '..........', '..........']
+              actors: ['z.......C.', '..........', '.........m', '..........', '..........']
             }),
             entries
           })
@@ -220,29 +220,29 @@ describe('Simulation: enemies entering the board', () => {
       { row: 0, col: 0, delayMs: 500 },
       { row: 2, col: 9, delayMs: 1000 }
     ]);
-    const [hotdog, egg] = sim.enemies;
+    const [chorizo, corn] = sim.enemies;
     run(sim, 29);
-    expect([hotdog.active, egg.active]).toEqual([false, false]);
+    expect([chorizo.active, corn.active]).toEqual([false, false]);
     run(sim, 1);
-    expect([hotdog.active, hotdog.entering, hotdog.x, egg.active]).toEqual([
+    expect([chorizo.active, chorizo.entering, chorizo.x, corn.active]).toEqual([
       true,
       true,
       0.5,
       false
     ]);
     run(sim, 30);
-    expect(egg.active).toBe(true);
+    expect(corn.active).toBe(true);
   });
 
   it('brings the enemies in again after the chef loses a life', () => {
     const sim = entering([{ row: 0, col: 0, delayMs: 500 }]);
-    const [hotdog] = sim.enemies;
+    const [chorizo] = sim.enemies;
     for (let i = 0; i < 600 && sim.phase === 'playing'; i++) run(sim, 1);
     expect(sim.stats.lives).toBe(START_LIVES - 1);
     for (let i = 0; i < 600 && sim.phase !== 'playing'; i++) run(sim, 1);
-    expect(hotdog.active).toBe(false);
+    expect(chorizo.active).toBe(false);
     run(sim, 30);
-    expect([hotdog.active, hotdog.x]).toEqual([true, 0.5]);
+    expect([chorizo.active, chorizo.x]).toEqual([true, 0.5]);
   });
 });
 
@@ -302,7 +302,7 @@ describe('Simulation: pepper', () => {
   const ladderDuel = (chefRow: number, enemyRow: number): GridSpec => {
     const actors = Array.from({ length: 8 }, () => '........');
     actors[chefRow] = '...C....';
-    actors[enemyRow] = '...h....';
+    actors[enemyRow] = '...z....';
     return { structure: tinyGrid.structure, actors };
   };
 
@@ -431,7 +431,7 @@ describe('Simulation: contact and lives', () => {
           '..........',
           '..........',
           '..........',
-          '.C...h....',
+          '.C...z....',
           '..........',
           '..........'
         ]
@@ -453,7 +453,7 @@ describe('Simulation: contact and lives', () => {
         actors: [
           '........',
           '........',
-          '......h.',
+          '......z.',
           '........',
           '........',
           '......C.',
@@ -480,7 +480,7 @@ describe('Simulation: contact and lives', () => {
             ...documentFromGrid({
               structure: ['........', '========', '........', '........', '========', '........'],
               ingredients: ['........', '.TTTT...', '........', '........', '........', '........'],
-              actors: ['........', 'h.....C.', '........', '........', '........', '........']
+              actors: ['........', 'z.....C.', '........', '........', '........', '........']
             }),
             entries: [{ row: 1, col: 0, delayMs: 950 }]
           })
@@ -545,7 +545,7 @@ describe('Simulation: contact and lives', () => {
       actors: [
         '........',
         '........',
-        '.h......',
+        '.z......',
         '........',
         '........',
         '......C.',
@@ -747,7 +747,7 @@ describe('Simulation: enemies riding an ingredient', () => {
   };
 
   it('carries the enemy down three floors and drops it with a bonus', () => {
-    const sim = create(column('..h...C.............'));
+    const sim = create(column('..z...C.............'));
     dropWithRider(sim);
     const [rider] = sim.enemies;
     const [top] = sim.ingredients;
@@ -776,7 +776,7 @@ describe('Simulation: enemies riding an ingredient', () => {
   });
 
   it('brings the rider back where its ingredient stopped', () => {
-    const sim = create(column('..h...C.............'));
+    const sim = create(column('..z...C.............'));
     dropWithRider(sim);
     const [rider] = sim.enemies;
     const x = rider.x;
@@ -788,7 +788,7 @@ describe('Simulation: enemies riding an ingredient', () => {
   });
 
   it('brings riders that reach the plate back on the lowest floor above it', () => {
-    const grid = column('...hh.C.............');
+    const grid = column('...zz.C.............');
     const withSecondBurger = (rows: readonly string[] | undefined, row: number, piece: string) =>
       (rows ?? []).map((line, index) =>
         index === row ? line.slice(0, 12) + piece.repeat(4) + line.slice(16) : line
@@ -817,7 +817,7 @@ describe('Simulation: enemies riding an ingredient', () => {
   });
 
   it('gives no bonus when the chef loses a life during the ride', () => {
-    const sim = create(column('..h...C.......o.....'));
+    const sim = create(column('..z...C.......o.....'));
     dropWithRider(sim);
     const [rider] = sim.enemies;
     expect(rider.riding).toBe(true);
@@ -876,7 +876,7 @@ describe('Simulation: secured board', () => {
   const lastOne: GridSpec = {
     structure: ['........', '========', '........', '.____...'],
     ingredients: ['........', '.TTTT...', '........', '........'],
-    actors: ['........', 'h.....C.', '........', '........']
+    actors: ['........', 'z.....C.', '........', '........']
   };
 
   it('knocks the chef down without a life while the last ingredient falls, then clears', () => {
@@ -914,7 +914,7 @@ describe('Simulation: secured board', () => {
 
   /** The chef peppers an enemy standing on the ingredient, then drops it with the enemy on. */
   const dropWithRider = (structure: readonly string[], ingredients: readonly string[]) => {
-    const actors = structure.map((_, row) => (row === 1 ? 'e...h.C...' : '..........'));
+    const actors = structure.map((_, row) => (row === 1 ? 'm...z.C...' : '..........'));
     const sim = board({ structure, ingredients, actors }, [{ row: 1, col: 0, delayMs: 1000 }]);
     run(sim, 1, { left: true, pepper: true });
     expect(sim.enemies[1].stunned).toBe(true);
@@ -976,7 +976,7 @@ describe('Simulation: secured board', () => {
     const sim = board({
       structure: ['=+======', '.H......', '.H......', '=+======', '........', '.____...'],
       ingredients: ['........', '........', '........', '.TTTT...', '........', '........'],
-      actors: ['......h.', '........', '........', '......C.', '........', '........']
+      actors: ['......z.', '........', '........', '......C.', '........', '........']
     });
     const [enemy] = sim.enemies;
     for (let i = 0; i < 60 && sim.chef.x >= 3.05; i++) run(sim, 1, { left: true });
@@ -1022,7 +1022,7 @@ describe('Simulation: secured board', () => {
           '........',
           '........'
         ],
-        actors: ['........', 'h.....C.', '........', '........', '........', '........', '........']
+        actors: ['........', 'z.....C.', '........', '........', '........', '........', '........']
       },
       [latecomer]
     );

@@ -5,9 +5,9 @@ import { ChaseBrain, type EnemyBrain } from './EnemyBrain';
 import { Enemy, type EnemyEntry } from './Enemy';
 
 const brains: Record<EnemyKind, EnemyBrain> = {
-  hotdog: new ChaseBrain(),
+  chorizo: new ChaseBrain(),
   onion: new ChaseBrain(),
-  egg: new ChaseBrain()
+  corn: new ChaseBrain()
 };
 
 export const createEnemy = (

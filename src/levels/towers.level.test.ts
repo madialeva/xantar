@@ -62,14 +62,14 @@ describe('towers screen', () => {
     expect(level.chefStart).toEqual({ row: 23, x: 19.5 });
   });
 
-  it('brings in four hot dogs and two onions, the onions halfway up the towers', () => {
+  it('brings in four chorizos and two onions, the onions halfway up the towers', () => {
     expect(entryOrder(level)).toEqual([
-      ['hotdog', 23, 'right'],
-      ['hotdog', 23, 'left'],
+      ['chorizo', 23, 'right'],
+      ['chorizo', 23, 'left'],
       ['onion', 11, 'left'],
       ['onion', 13, 'right'],
-      ['hotdog', 3, 'left'],
-      ['hotdog', 5, 'right']
+      ['chorizo', 3, 'left'],
+      ['chorizo', 5, 'right']
     ]);
     expect(walkwaySides(level)).toEqual([
       [3, 'left'],

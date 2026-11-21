@@ -30,23 +30,23 @@
 
 ## 3. Chorizo y mazorca en lugar de la salchicha y el huevo
 
-- [ ] 3.1 Pasar de `tmp/is56-drafts/enemies.py` a `tools/blender/characters.py`:
+- [x] 3.1 Pasar de `tmp/is56-drafts/enemies.py` a `tools/blender/characters.py`:
   - `add_mouth` e `in_mouth`; el chorizo fresco (`build_chorizo` con `bend`, `build_chorizo_knot`, `chorizo_eyes`, cordel rojo); la mazorca (`build_cob` con la boca entre los granos, `build_husk_front`, `build_husk_back`, `build_silk`, `cob_eyes`).
   - `ENEMIES` con partes extra; `render_enemy` renderiza los fotogramas solo para el cuerpo.
   - Quitar la salchicha y el huevo (constructores, materiales y entradas).
   - Renderizar con `--only chorizo --only corn` y borrar los PNG `hotdog.*` y `egg.*`.
   - Verificar en `tmp/blender/characters/`: las cinco dobleces del chorizo con la boca doblada, la mazorca con la boca entre los granos, cada parte dentro de su recuadro y PNG a 4 veces su tamaño.
-- [ ] 3.2 Simulación y pantallas:
+- [x] 3.2 Simulación y pantallas:
   - `EnemyKind` pasa a `'chorizo' | 'onion' | 'corn'`; `createEnemy` con `ChaseBrain`; piezas `z` y `m` en lugar de `h` y `e`.
   - En los cuatro documentos de `src/levels/`, `h` → `z` y `e` → `m` sin tocar las entradas.
   - Actualizar las pruebas que usan `h`, `e`, `hotdog` o `egg` (rejillas de prueba, simulación, enemigos y una prueba por pantalla con los enemigos de cada una).
   - Verificar con las pruebas de piezas (`z` y `m` cargan; `h` y `e` fallan con símbolo, capa, fila y columna), las de cada pantalla y `npm run test`.
-- [ ] 3.3 Vista:
+- [x] 3.3 Vista:
   - Catálogo sin `hotdog.*` ni `egg.*`, con `chorizo.*` (cuerpo, cuatro dobleces, punta, ojos, pierna) y `corn.*` (cuerpo, hojas de delante y de detrás, pelo, ojos, pierna).
   - Rigs del chorizo (escala 0,85) y la mazorca (escala 0,9) según el diseño.
   - Estados: el chorizo hace el `cycle` del cuerpo, los ojos ±3 y la punta ±14° con retraso; la mazorca hace el hula con `swing` y retrasos en hojas y pelo. Fuera los estados de la salchicha y el huevo.
   - Verificar con `rigs.test.ts` (cinco fotogramas del chorizo, seis de la cebolla, ninguno de la mazorca; partes de cada uno), `rigHeights.test.ts`, las pruebas de arte, `npm run smoke` y la lámina de arte: los dos bailan como en `tmp/is56-drafts/*.walk.gif`, sin huecos entre la mazorca y sus hojas o su pelo ni en el atado del chorizo, y trepan y quedan aturdidos con los estados comunes.
-- [ ] 3.4 Documentar:
+- [x] 3.4 Documentar:
   - `README.md`: "Enemies", con el chorizo y la mazorca y los enemigos de cada pantalla, sin salchicha ni huevo.
   - `docs/STYLE_GUIDE.md`: §2.x aspecto, colores, boca y baile de cada uno.
   - `docs/MANUAL.md`: §8.5 tipos de enemigo; §8.6 símbolos `z` y `m`; §8.7 `--only chorizo|corn`; §9.9 el hula con `swing` y retrasos y la doblez con `cycle`.

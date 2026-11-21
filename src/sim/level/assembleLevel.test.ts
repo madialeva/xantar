@@ -144,16 +144,16 @@ describe('assembleLevel', () => {
   it('accepts pieces added to the registry', () => {
     const registry = PieceRegistry.createDefault();
     registry.register({
-      id: 'extraHotdog',
+      id: 'extraChorizo',
       symbol: 'X',
       layer: 'actors',
       width: 1,
-      contribute: (placement, builder) => builder.addEnemySpawn('hotdog', placement)
+      contribute: (placement, builder) => builder.addEnemySpawn('chorizo', placement)
     });
     const actors = [...(tinyGrid.actors ?? [])];
     actors[2] = '.X......';
     const level = levelFromGrid(withGrid({ actors }), registry);
-    expect(level.enemySpawns).toEqual([{ kind: 'hotdog', row: 2, x: 1.5, delayTicks: 0 }]);
+    expect(level.enemySpawns).toEqual([{ kind: 'chorizo', row: 2, x: 1.5, delayTicks: 0 }]);
   });
 
   it('rejects a piece that is not registered', () => {
@@ -168,6 +168,25 @@ describe('assembleLevel', () => {
     expect(levelFromGrid(withGrid({ actors })).enemySpawns).toEqual([
       { kind: 'onion', row: 2, x: 6.5, delayTicks: 0 }
     ]);
+  });
+
+  it('places a chorizo and a corn cob where a z and an m stand in the actors layer', () => {
+    const actors = [...(tinyGrid.actors ?? [])];
+    actors[2] = '.z....m.';
+    expect(levelFromGrid(withGrid({ actors })).enemySpawns).toEqual([
+      { kind: 'chorizo', row: 2, x: 1.5, delayTicks: 0 },
+      { kind: 'corn', row: 2, x: 6.5, delayTicks: 0 }
+    ]);
+  });
+
+  it('no longer knows the hot dog nor the egg: an h or an e is an unknown symbol', () => {
+    for (const symbol of ['h', 'e']) {
+      const actors = [...(tinyGrid.actors ?? [])];
+      actors[2] = `....${symbol}...`;
+      const error = capture(() => levelFromGrid(withGrid({ actors })));
+      expect([error.layer, error.row, error.col]).toEqual(['actors', 2, 4]);
+      expect(error.message).toMatch(new RegExp(`Unknown symbol "${symbol}"`));
+    }
   });
 
   it('no longer knows the pickle: a p is an unknown symbol with its layer, row and column', () => {
@@ -227,7 +246,7 @@ describe('Level landing and destinations', () => {
   describe('entry walkways', () => {
     const walkways = {
       structure: ['........', '----====', '........', '====----'],
-      actors: ['........', 'h.......', '........', '.C.....e']
+      actors: ['........', 'z.......', '........', '.C.....m']
     };
 
     it('keeps a walkway out of the platforms and the navigation graph', () => {
@@ -241,13 +260,13 @@ describe('Level landing and destinations', () => {
     });
 
     it('lets an enemy on a walkway come in to the end of the platform it leads to', () => {
-      const [hotdog, egg] = levelFromGrid(walkways).enemySpawns;
-      expect([hotdog.x, hotdog.joinX]).toEqual([0.5, 4 + 12 / 16]);
-      expect([egg.x, egg.joinX]).toEqual([7.5, 4 - 12 / 16]);
+      const [chorizo, corn] = levelFromGrid(walkways).enemySpawns;
+      expect([chorizo.x, chorizo.joinX]).toEqual([0.5, 4 + 12 / 16]);
+      expect([corn.x, corn.joinX]).toEqual([7.5, 4 - 12 / 16]);
     });
 
     it('leaves an enemy on a platform without a walk in', () => {
-      const [spawn] = levelFromGrid({ structure: ['========'], actors: ['C..h....'] }).enemySpawns;
+      const [spawn] = levelFromGrid({ structure: ['========'], actors: ['C..z....'] }).enemySpawns;
       expect([spawn.x, spawn.joinX]).toEqual([3.5, undefined]);
     });
 

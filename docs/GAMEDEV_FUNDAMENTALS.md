@@ -488,6 +488,13 @@ Dos ideas del render de Xantar que sirven para cualquier juego:
 - **Guía de estilo**: el documento que fija las reglas visuales (paleta,
   grosores, radios, sombras, tipografía) para que todo parezca hecho por la
   misma mano.
+- **Referencias y bocetos**: un personaje nuevo se diseña mejor a partir de
+  fotos de lo que quiere parecer (el chorizo de Xantar sale de una foto de
+  chorizo fresco gallego) y se valida antes de tocar el juego. En Xantar los
+  bocetos se renderizan con los mismos scripts de Blender y se montan como el
+  juego, junto al chef y a los demás, con una animación del baile propuesto:
+  así el autor decide sobre lo que de verdad va a ver, y el cambio se escribe
+  cuando el diseño ya está aceptado.
 
 ---
 
@@ -539,12 +546,18 @@ sus estados (quieto, andar, trepar, golpeado, aturdido) son objetos State en
 [`states.ts`](../src/view/rigs/states.ts). Qué estado toca lo decide una
 función pura a partir del snapshot de la simulación.
 
-Las piezas rígidas no pueden **deformarse**: girar y escalar no doblan una
-salchicha. Para eso Xantar combina las dos técnicas: el cuerpo de cada enemigo
-tiene cinco fotogramas renderizados (doblado a un lado, a medio camino, recto…)
-y un tween recorre esos fotogramas de ida y vuelta al ritmo de las piernas,
-mientras los ojos, que son otra pieza, se desplazan para seguir la doblez. Así
-la salchicha "baila" al andar con solo cinco imágenes.
+Las piezas rígidas no pueden **deformarse**: girar y escalar no doblan un
+chorizo. Para eso Xantar combina las dos técnicas: el cuerpo del chorizo tiene
+cinco fotogramas renderizados (doblado a un lado, a medio camino, recto…) y un
+tween recorre esos fotogramas de ida y vuelta al ritmo de las piernas, mientras
+los ojos, que son otra pieza, se desplazan para seguir la doblez. Así el
+chorizo "baila" al andar con solo cinco imágenes.
+
+La pregunta que decide entre las dos técnicas es si el baile **cambia la forma**
+del personaje. La mazorca baila el hula sin un solo fotograma extra: su cuerpo
+no se dobla, solo se inclina, y la falda de hojas y el pelo son piezas que se
+inclinan a la contra. Basta con girar piezas, y cada fotograma que no se
+renderiza es una imagen menos que mantener.
 
 ### 9.4 Principios de animación
 
@@ -558,6 +571,10 @@ vigentes. Los más útiles en juegos:
 - **Anticipación**: un pequeño movimiento previo que anuncia la acción.
 - **Acción secundaria**: detalles que acompañan a la principal (el gorro que
   salta cuando golpean al chef).
+- **Acción superpuesta** (*follow-through*): las partes sueltas no se mueven a
+  la vez que el cuerpo, sino un poco después, como arrastradas por él. En
+  Xantar, la falda de hojas y el pelo de la mazorca y la punta atada del chorizo
+  oscilan con un pequeño retraso respecto al cuerpo.
 - **Exageración**: en pantalla pequeña, lo sutil no se ve.
 
 ### 9.5 Máquina de estados de animación

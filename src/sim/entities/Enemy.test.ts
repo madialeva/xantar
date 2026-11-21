@@ -27,7 +27,7 @@ const spawn = (
 ): { enemy: Enemy; events: EventQueue } => {
   const events = new EventQueue();
   const places = spawns.map(([r, sx]) => entryAt(level.graph.placeAt(r, sx)));
-  const enemy = createEnemy(0, 'hotdog', events, level.graph, places);
+  const enemy = createEnemy(0, 'chorizo', events, level.graph, places);
   enemy.reset(level.graph.placeAt(row, x), rng);
   return { enemy, events };
 };
@@ -231,12 +231,12 @@ describe('Enemy riding', () => {
 describe('Enemy entering from a walkway', () => {
   const walkway = levelFromGrid({
     structure: ['----====', '........'],
-    actors: ['h.....C.', '........']
+    actors: ['z.....C.', '........']
   });
   const entry = { place: walkway.graph.placeAt(0, 4.75), fromX: 0.5, delayTicks: 30 };
   const waiting = (): { enemy: Enemy; events: EventQueue } => {
     const events = new EventQueue();
-    const enemy = createEnemy(0, 'hotdog', events, walkway.graph, [entry]);
+    const enemy = createEnemy(0, 'chorizo', events, walkway.graph, [entry]);
     enemy.await(entry, rng);
     return { enemy, events };
   };
@@ -285,7 +285,7 @@ describe('Enemy entering from a walkway', () => {
   it('comes in at once when its entry has no delay and no walkway', () => {
     const events = new EventQueue();
     const place = walkway.graph.placeAt(0, 6.5);
-    const enemy = createEnemy(0, 'hotdog', events, walkway.graph, [entryAt(place)]);
+    const enemy = createEnemy(0, 'chorizo', events, walkway.graph, [entryAt(place)]);
     enemy.await(entryAt(place), rng);
     expect([enemy.active, enemy.entering, enemy.x]).toEqual([true, false, 6.5]);
   });

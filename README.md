@@ -18,8 +18,8 @@
 **Xantar** is an arcade game where you control a chef running over
 giant burger ingredients. Walking across an ingredient from side to side makes
 it fall down the platforms and stack on the plates, eventually building whole
-burgers. Meanwhile, anthropomorphic food (hot dogs, onions and eggs) chases
-you across walkways and ladders.
+burgers. Meanwhile, anthropomorphic food (chorizos, onions and corn cobs)
+chases you across walkways and ladders.
 
 It is written in **TypeScript** with the **Phaser** engine and bundled with
 **Vite**. The same code runs in the browser and ships as a desktop application
@@ -163,11 +163,15 @@ disconnected. The pause menu lets you resume or quit to the main menu.
 
 ### Enemies
 
-- **Mr. Hot Dogs** and **Mr. Eggs** roam the maze and chase you using the
+- **Mr. Chorizos** and **Mr. Corns** roam the maze and chase you using the
   ladders, always taking the shortest way to you. Each screen has its own
-  line-up, as in the original: three hot dogs and an egg on the first two
-  screens, two hot dogs, two onions and an egg on the third, and four hot dogs
-  and two onions on the fourth.
+  line-up, as in the original: three chorizos and a corn cob on the first two
+  screens, two chorizos, two onions and a corn cob on the third, and four
+  chorizos and two onions on the fourth.
+- **Mr. Chorizo** is a plump link of fresh Galician chorizo tied with red
+  string, that **bends one way and the other** as it walks. **Mr. Corn** is a
+  corn cob with its husk peeled down like a skirt and a tuft of silk on top,
+  that walks **swaying its hips like a hula dancer**. Both grin at you.
 - **Mr. Onion**, a thick slice of red onion, white and violet, joins them on
   later screens. It chases you just like the others and keeps **turning like a
   coin** as it walks and climbs.
@@ -251,12 +255,14 @@ while the game is in the background.
   above, so no one ever puts their head through it, and two, three or four runs
   are two, three or four chefs tall.
 - The burger ingredients and the characters are **rendered 3D art**: a sesame
-  bun, a barbecued patty with grill marks, lettuce and a bottom bun that look
-  like real food, a blond chef with a ponytail, and a hot dog, a fried egg and
-  a slice of red onion as tall as the chef. The characters are made of separate
-  parts that bounce, swing and squash as they move, and each enemy **dances its
-  own way** as it walks: the hot dog bends one way and the other, the egg's
-  white wobbles and the onion slice turns round and round.
+  bun, a barbecued patty with grill marks, lettuce, a bottom bun, a slice of
+  cheddar melting over the edge and slices of tomato that look like real food,
+  a blond chef with a ponytail, and a chorizo, a corn cob and a slice of red
+  onion as tall as the chef. The characters are made of separate parts that
+  bounce, swing and squash as they move, and each enemy **dances its own way**
+  as it walks: the chorizo bends one way and the other, the corn cob sways its
+  hips while its husk and its silk swing the other way, and the onion slice
+  turns round and round.
 - Finished burgers stack on their plates piece on piece, like real ones.
 - The ladders are rendered too, in light birch wood with closely spaced rungs; the
   platforms, plates, effects and panels are crisp **vector art**.

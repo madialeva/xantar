@@ -24,7 +24,9 @@ describe('screens of the game', () => {
   it('bring in more enemies screen after screen, with onions from the third one on', () => {
     const lineUps = SCREEN_DOCUMENTS.map((document) => {
       const kinds = loadLevel(parseLevelDocument(document)).enemySpawns.map((spawn) => spawn.kind);
-      return ['hotdog', 'onion', 'egg'].map((kind) => kinds.filter((each) => each === kind).length);
+      return ['chorizo', 'onion', 'corn'].map(
+        (kind) => kinds.filter((each) => each === kind).length
+      );
     });
     expect(lineUps).toEqual([
       [3, 0, 1],

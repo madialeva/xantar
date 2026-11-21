@@ -38,7 +38,12 @@ describe('Simulation', () => {
     const sim = create();
     expect(sim.ingredients).toHaveLength(16);
     expect(sim.plates).toHaveLength(4);
-    expect(sim.enemies.map((enemy) => enemy.kind)).toEqual(['hotdog', 'hotdog', 'hotdog', 'egg']);
+    expect(sim.enemies.map((enemy) => enemy.kind)).toEqual([
+      'chorizo',
+      'chorizo',
+      'chorizo',
+      'corn'
+    ]);
     expect(sim.enemies.some((enemy) => enemy.active)).toBe(false);
   });
 

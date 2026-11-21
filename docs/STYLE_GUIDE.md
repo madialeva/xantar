@@ -67,8 +67,9 @@ Lo generan los scripts de `tools/blender/` (ver el manual del desarrollador,
   de frente, sin inclinación, mirando a la **derecha** (el juego los voltea).
 - **Materiales** realistas pero apetecibles: corteza dorada y brillante en el
   pan, miga pálida y porosa, carne a la brasa con tonos claros y oscuros y
-  marcas de parrilla, lechuga verde translúcida con nervios, salchicha roja y
-  muy brillante, clara de huevo con el borde tostado y crujiente, cebolla
+  marcas de parrilla, lechuga verde translúcida con nervios, queso céreo y
+  brillante, tomate jugoso, chorizo fresco de tripa lisa y brillante, granos de
+  maíz brillantes y algo translúcidos, hojas de la vaina con nervios, cebolla
   morada jugosa y algo translúcida, con la piel brillante, y tela mate con
   brillo suave en la ropa del chef.
 - Sin contorno dibujado: la silueta la marcan la luz y el contraluz.
@@ -127,16 +128,38 @@ Lo generan los scripts de `tools/blender/` (ver el manual del desarrollador,
 - **Tamaño en el juego**: las partes se renderizan para un personaje de unas 38
   unidades de los pies a la cabeza, y cada rig lleva una escala (`scale` en
   `src/view/rigs/rigs.ts`) que lo deja en **32 unidades**, dos casillas: el chef
-  a 0,82 y los enemigos entre 30 y 33 (la salchicha a 0,82, el huevo a 0,9 y
+  a 0,82 y los enemigos entre 30 y 33 (el chorizo a 0,85, la mazorca a 0,9 y
   la cebolla a 0,91). La escala se aplica alrededor de los pies, que siguen en el
   suelo. `rigHeights.test.ts` mide la altura con los píxeles opacos.
 - **Enemigos**: de la altura del chef, con piernas de su color y zapatillas blancas, ojos grandes con cejas
-  de enfadado. Partes: `body`, `eyes` y `leg` (una imagen para las dos piernas).
-- **Bailes**: la salchicha y el huevo tienen cinco imágenes de su cuerpo, del
-  mismo tamaño, de un extremo a otro de su baile con `body` en el centro:
-  `<enemigo>.<baile>Back2`, `Back1`, `body`, `Front1`, `Front2`. La salchicha
-  se dobla (`bend`) y la clara del huevo ondula (`ripple`). Los ojos son una
-  parte aparte que el juego desplaza para seguir el baile.
+  de enfadado. Partes: `body`, `eyes` y `leg` (una imagen para las dos piernas);
+  además, el chorizo tiene `knot` y la mazorca `huskBack`, `huskFront` y `silk`.
+- **Boca sonriente** (chorizo y mazorca; la cebolla no, porque gira de canto):
+  bajo los ojos, abierta, con las comisuras hacia arriba, una sola fila de
+  dientes continua a lo largo del borde de arriba (nunca dientes sueltos) y una
+  lengua rosa al fondo. Va dentro de la imagen del cuerpo, para que se doble o
+  se incline con él.
+- **Chorizo**: un chorizo fresco gallego de pie, gordo y de tripa lisa y
+  brillante (5,6 de radio y 27,5 de alto), rojo pimentón con vetas de grasa
+  naranjas y amarillas que se transparentan, los extremos redondeados y atados
+  con tres vueltas de cordel rojo. Arriba, por encima del atado, la punta
+  retorcida de la tripa con un cabo de cordel suelto hacia atrás y otro corto
+  hacia delante (`chorizo.knot`). Piernas rojo oscuro. **Baila doblándose**:
+  cinco imágenes de su cuerpo, del mismo tamaño, de un extremo a otro de la
+  doblez con el cuerpo recto en el centro (`chorizo.bendBack2`, `bendBack1`,
+  `body`, `bendFront1`, `bendFront2`); los ojos son una parte aparte que el juego
+  desplaza para seguir la doblez y la punta atada se inclina a un lado y a otro
+  un poco por detrás.
+- **Mazorca**: una mazorca de maíz amarillo de pie (5,4 de radio y 23 de alto),
+  con 16 filas de granos brillantes, cada uno de un amarillo algo distinto,
+  sobre un núcleo más oscuro; las hojas de la vaina, verdes con nervios y más
+  claras en la punta, peladas hacia abajo alrededor de su base como una falda
+  (las de delante, `corn.huskFront`, y las de detrás, `corn.huskBack`); y un
+  mechón de pelo de maíz rubio que oscurece hacia las puntas (`corn.silk`).
+  Piernas verde hoja. **Baila el hula** sin imágenes extra: el cuerpo se inclina
+  a un lado en un paso y al otro en el siguiente, los ojos y el pelo siguen lo
+  alto del cuerpo, y la falda y el pelo se inclinan a la contra, un poco por
+  detrás.
 - **Cebolla**: una rodaja gruesa de cebolla morada (24 unidades de diámetro y 5
   de grueso, con los bordes redondeados) de pie sobre dos piernas moradas. De
   frente se ven anillos concéntricos blancos con el borde violeta, más morados
