@@ -37,7 +37,7 @@
 ## 4. Integración
 
 - [x] 4.1 Servir el repositorio público en local y comprobar en el navegador (o con una captura de Electron): la portada abre, GAME lleva a Xantar en `js/xantar/`, suena la música tras el primer toque y Salir vuelve a la portada; ejecutar `openspec validate is62-publish-through-web-repo --strict`
-- [ ] 4.2 Primer commit y push de `../web` y `../madialeva.github.io`, GitHub Pages activado en el público sobre `main` desde la raíz y el juego jugable en https://madialeva.github.io/js/xantar/ (lo hace y lo verifica el autor)
+- [x] 4.2 Primer commit y push de `../web` y `../madialeva.github.io`, GitHub Pages activado en el público sobre `main` desde la raíz y el juego jugable en https://madialeva.github.io/js/xantar/ (lo hace y lo verifica el autor)
 
 ## Workflow follow-up
 
