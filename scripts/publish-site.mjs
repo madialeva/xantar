@@ -4,8 +4,8 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const site = resolve(root, process.env.XANTAR_SITE_DIR ?? '../madialeva.github.io');
-const target = join(site, 'src', 'js', 'xantar');
+const web = resolve(root, process.env.XANTAR_WEB_DIR ?? '../web');
+const target = join(web, 'public', 'js', 'xantar');
 
 const fail = (message) => {
   console.error(message);
@@ -17,11 +17,11 @@ const run = (command, args, cwd) =>
     .status === 0;
 
 try {
-  await access(join(site, 'deploy.sh'));
-  await access(join(site, 'src', 'index.html'));
+  await access(join(web, 'deploy.sh'));
+  await access(join(web, 'astro.config.mjs'));
 } catch {
   fail(
-    `${site} is not the personal site (deploy.sh and src/index.html are missing). Set XANTAR_SITE_DIR to its folder.`
+    `${web} is not the source of the personal site (deploy.sh and astro.config.mjs are missing). Set XANTAR_WEB_DIR to its folder.`
   );
 }
 
@@ -32,10 +32,10 @@ await rm(target, { recursive: true, force: true });
 await cp(join(root, 'dist'), target, { recursive: true });
 console.log(`\nCopied dist/ to ${target}`);
 
-if (!run('bash', ['deploy.sh'], site)) fail('deploy.sh failed in the personal site.');
+if (!run('bash', ['deploy.sh'], web))
+  fail(`deploy.sh failed in ${web}: the public site was not published.`);
 
 console.log(`
-Published to ${join(site, 'docs', 'js', 'xantar')}. Next steps in ${site}:
-  1. python3 -m http.server -d docs   (check http://localhost:8000: GAME, play, Quit)
-  2. git add -A && git commit
-  3. git push   (GitHub Pages publishes https://madialeva.github.io/js/xantar/)`);
+Xantar is in ${target} and in js/xantar/ of the public site. Follow the steps above: check it
+locally (entrar → Juegos → Xantar, play, Quit), then commit and push both repositories of the site. GitHub Pages
+serves the public one from the root of main: https://madialeva.github.io/js/xantar/`);

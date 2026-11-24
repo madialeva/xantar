@@ -66,7 +66,7 @@ tools/blender/ingredients.py --` works as written in the manual.
 | `npm run dev:desktop`             | Vite + Electron window (renderer hot-reload)             |
 | `npm run build`                   | Type-check renderer + web build into `dist/`             |
 | `npm run preview`                 | Serve `dist/` to test the production web build           |
-| `npm run publish:site`            | Web build into the personal site (`madialeva.github.io`) |
+| `npm run publish:site`            | Web build into the personal site (`../web`, then public) |
 | `npm run build:electron`          | Compile `electron/*.ts` into `dist-electron/`            |
 | `npm run build:desktop`           | Type-check + web + Electron + installers in `release/`   |
 | `npm run build:desktop:dir`       | Same, unpacked app (fast local test)                     |
