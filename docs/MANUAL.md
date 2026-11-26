@@ -115,7 +115,7 @@ xantar/
 ├── scripts/
 │   ├── build-electron.mjs       # Compila electron/*.ts -> dist-electron/ (CJS)
 │   ├── build-icon.mjs           # Rasteriza build/icon.svg a build/icon.png (npm run icon)
-│   ├── publish-site.mjs         # Lleva el build web a las fuentes de la web personal y la publica (npm run publish:site)
+│   ├── publish-site.mjs         # Lleva el build web a las fuentes de la web personal y las valida (npm run publish:site)
 │   └── smoke.mjs                # Lanzador de la prueba de humo (compila tools/smoke y abre Electron)
 ├── tools/                       # Herramientas de desarrollo (no van en la build publicada)
 │   ├── blender/                 # Scripts de Blender que renderizan ingredientes y personajes (ver 8.7)
@@ -202,7 +202,7 @@ xantar/
 | `npm run dev:desktop` | Compila Electron y lanza Vite + ventana Electron con recarga |
 | `npm run build` | Comprueba tipos (renderer) y genera la web en `dist/` |
 | `npm run preview` | Sirve `dist/` para probar el build de producción web |
-| `npm run publish:site` | Compila la web, la lleva a `src/js/xantar/` de las fuentes de la web personal (`../web`) y ejecuta su `deploy.sh`, que publica en `madialeva.github.io` (ver 9.4) |
+| `npm run publish:site` | Compila la web, la lleva a `public/js/xantar/` de las fuentes de la web personal (`../web`) y pasa su batería de calidad. No publica: eso lo hace el CI de la web (ver 9.4) |
 | `npm run build:electron` | Compila `electron/*.ts` -> `dist-electron/` |
 | `npm run build:desktop` | Typecheck + build web + Electron + instaladores en `release/` |
 | `npm run build:desktop:dir` | Igual, pero sin instalador (app desempaquetada, más rápido) |
@@ -655,19 +655,29 @@ Si en el futuro necesitas guardar datos en disco, mostrar diálogos nativos, etc
 
 ### 9.4 Publicar en web (GitHub Pages)
 
-La versión web se publica en la web personal del autor, en https://madialeva.github.io/js/xantar/. La web vive en dos repositorios más:
+La versión web se publica en la web personal del autor, en https://madialeva.com/js/xantar/. La web vive en dos repositorios más:
 
-- **`madialeva/web`**, las fuentes de la web: su portada en `src/` y su `deploy.sh`, que publica `src/` en el repositorio público.
-- **`madialeva/madialeva.github.io`**, el sitio publicado: lo genera entero `deploy.sh` de la web y GitHub Pages lo sirve desde la raíz de su rama `main`. No se edita a mano.
+- **`madialeva/web`**, las fuentes de la web (privado). Es un proyecto Astro: el build de Xantar va en `public/js/xantar/`, y Astro lo copia tal cual a `/js/xantar/`. Su CI (GitHub Actions) verifica cada push y publica cuando se lanza a mano.
+- **`madialeva/madialeva.github.io`**, el sitio publicado (público). Solo contiene el resultado compilado, lo genera la publicación de la web y GitHub Pages lo sirve desde la raíz de su rama `main`. No se edita a mano.
 
 Como `vite.config.ts` usa `base: './'`, las rutas son relativas y el build funciona en la subruta `js/xantar/` sin configuración.
 
-1. Clona los dos junto a Xantar (`../web` y `../madialeva.github.io`). Si están en otro sitio, indica las fuentes de la web con `XANTAR_WEB_DIR` y el repositorio público con `WEB_PUBLIC_DIR` (lo usa `deploy.sh`, relativo a las fuentes de la web).
-2. Ejecuta `npm run publish:site`. El script (`scripts/publish-site.mjs`) comprueba que `XANTAR_WEB_DIR` son las fuentes de la web (tiene `deploy.sh` y `src/index.html`) antes de tocar nada. Después compila (`npm run build`; si falla, no cambia la web), sustituye entero `src/js/xantar/` de la web por `dist/` (sin dejar bundles de builds anteriores) y ejecuta `deploy.sh` de la web. `deploy.sh`, a su vez, comprueba que su destino es la raíz de un repositorio git con `origin` en `madialeva/madialeva.github.io`, copia `src/` en él con `rsync --delete` (lo que empieza por punto, como su `.git`, ni se copia ni se borra) y quita los comentarios de los `.js` salvo en `js/3rd/` y `js/xantar/`, así que el juego llega tal cual.
-3. Revisa en local: `python3 -m http.server -d ../madialeva.github.io` → http://localhost:8000 → GAME → partida → Salir vuelve a la portada.
-4. Haz commit de `src/` en `../web` y del sitio en `../madialeva.github.io`, y push de los dos. GitHub Pages publica en uno o dos minutos (en el repositorio público tiene que estar activado sobre `main`, desde la raíz).
+1. Clona las fuentes de la web junto a Xantar (`../web`). Si están en otro sitio, indícalas con `XANTAR_WEB_DIR`.
+2. Ejecuta `npm run publish:site`. El script (`scripts/publish-site.mjs`):
+   1. Comprueba que `XANTAR_WEB_DIR` son las fuentes de la web (tienen `deploy.sh` y `astro.config.mjs`) antes de tocar nada.
+   2. Compila (`npm run build`). Si falla, no cambia la web.
+   3. Sustituye entero `public/js/xantar/` de la web por `dist/`, sin dejar bundles de builds anteriores.
+   4. Pasa la batería de calidad de la web (`npm run check`). Si falla, avisa de que no se ha validado nada y explica cómo deshacer la copia.
+3. Revisa en local desde la web: `npm run build && npm run preview` → entrar → Juegos → Xantar → partida → Salir vuelve a la página del portal desde la que se abrió.
+4. Haz commit de `public/js/xantar/` en `../web` y súbelo. Su CI lo verifica: lint, tipos, tests, build y pruebas en navegador.
+5. Publica lanzando el workflow de la web sobre `main`, con «Run workflow» en GitHub o con `gh workflow run ci.yml --repo madialeva/web --ref main`. La propia ejecución:
+   - vuelve a verificar el commit;
+   - publica en `madialeva.github.io` exactamente lo verificado;
+   - comprueba que producción sirve la versión nueva.
 
-Ni el script ni `deploy.sh` hacen commit ni push. Un workflow de GitHub Actions que publicara automáticamente necesitaría un token con escritura en el repositorio de la web; queda pendiente.
+   Síguela con `gh run watch --repo madialeva/web`.
+
+El script no hace commit, ni push, ni publica. Si el CI de la web no estuviera disponible, la web tiene una publicación de emergencia local (`./deploy.sh`), documentada en su README.
 
 ---
 
